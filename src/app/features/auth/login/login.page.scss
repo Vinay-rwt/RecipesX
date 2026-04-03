@@ -1,0 +1,38 @@
+.login-container {
+  max-width: 400px;
+  margin: 2rem auto;
+
+  h2 {
+    text-align: center;
+    margin-bottom: 0.25rem;
+  }
+
+  .subtitle {
+    text-align: center;
+    color: var(--ion-color-medium);
+    margin-bottom: 1.5rem;
+  }
+}
+
+.validation-error {
+  color: var(--ion-color-danger);
+  font-size: 0.75rem;
+  padding: 0.25rem 1rem;
+}
+
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--ion-color-danger-tint);
+  color: var(--ion-color-danger-shade);
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-top: 1rem;
+  font-size: 0.875rem;
+
+  ion-icon {
+    font-size: 1.25rem;
+    flex-shrink: 0;
+  }
+}

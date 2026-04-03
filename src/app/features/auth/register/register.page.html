@@ -1,0 +1,79 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-title>RecipeShare</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div class="register-container">
+    <h2>Create Account</h2>
+    <p class="subtitle">Join RecipeShare and start cooking</p>
+
+    <form [formGroup]="registerForm" (ngSubmit)="onRegister()">
+      <ion-item>
+        <ion-input
+          label="Display Name"
+          type="text"
+          formControlName="displayName"
+          labelPlacement="floating"
+          placeholder="Your name"
+        ></ion-input>
+      </ion-item>
+      <div class="validation-error" *ngIf="registerForm.get('displayName')?.touched && registerForm.get('displayName')?.errors?.['minlength']">
+        Name must be at least 2 characters.
+      </div>
+
+      <ion-item>
+        <ion-input
+          label="Email"
+          type="email"
+          formControlName="email"
+          labelPlacement="floating"
+          placeholder="your@email.com"
+        ></ion-input>
+      </ion-item>
+      <div class="validation-error" *ngIf="registerForm.get('email')?.touched && registerForm.get('email')?.errors?.['email']">
+        Please enter a valid email address.
+      </div>
+
+      <ion-item>
+        <ion-input
+          label="Password"
+          type="password"
+          formControlName="password"
+          labelPlacement="floating"
+          placeholder="At least 6 characters"
+        ></ion-input>
+      </ion-item>
+      <div class="validation-error" *ngIf="registerForm.get('password')?.touched && registerForm.get('password')?.errors?.['minlength']">
+        Password must be at least 6 characters.
+      </div>
+
+      <ion-item>
+        <ion-input
+          label="Confirm Password"
+          type="password"
+          formControlName="confirmPassword"
+          labelPlacement="floating"
+          placeholder="Re-enter your password"
+        ></ion-input>
+      </ion-item>
+      <div class="validation-error" *ngIf="registerForm.get('confirmPassword')?.touched && registerForm.errors?.['passwordsMismatch']">
+        Passwords do not match.
+      </div>
+
+      <div class="error-banner" *ngIf="errorMessage">
+        <ion-icon name="alert-circle-outline"></ion-icon>
+        {{ errorMessage }}
+      </div>
+
+      <ion-button expand="block" type="submit" [disabled]="registerForm.invalid || isLoading" class="ion-margin-top">
+        {{ isLoading ? 'Creating account...' : 'Create Account' }}
+      </ion-button>
+    </form>
+
+    <ion-button expand="block" fill="clear" routerLink="/auth/login" class="ion-margin-top">
+      Already have an account? Sign In
+    </ion-button>
+  </div>
+</ion-content>

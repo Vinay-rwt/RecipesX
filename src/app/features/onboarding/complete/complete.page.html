@@ -1,0 +1,21 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/onboarding/measurements"></ion-back-button>
+    </ion-buttons>
+    <ion-title>All Set!</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding ion-text-center">
+  <div class="complete-content">
+    <ion-icon name="checkmark-circle-outline" size="large" color="success"></ion-icon>
+    <h2>You're All Set!</h2>
+    <p>Your kitchen profile is ready. Start discovering recipes adapted to your equipment.</p>
+
+    <ion-button expand="block" (click)="onGetStarted()" [disabled]="isLoading" class="ion-margin-top">
+      {{ isLoading ? 'Setting up...' : 'Get Started' }}
+      <ion-icon slot="end" name="arrow-forward-outline"></ion-icon>
+    </ion-button>
+  </div>
+</ion-content>
