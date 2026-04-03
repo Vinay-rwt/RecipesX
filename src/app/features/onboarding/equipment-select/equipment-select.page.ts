@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
+import { OnboardingStateService } from '../services/onboarding-state.service';
 
 @Component({
   selector: 'app-equipment-select',
@@ -6,4 +7,14 @@ import { Component } from '@angular/core';
   styleUrls: ['./equipment-select.page.scss'],
   standalone: false,
 })
-export class EquipmentSelectPage {}
+export class EquipmentSelectPage {
+  readonly onboardingState = inject(OnboardingStateService);
+
+  get canProceed(): boolean {
+    return this.onboardingState.selectedEquipment().length > 0;
+  }
+
+  onEquipmentChange(equipment: string[]): void {
+    this.onboardingState.selectedEquipment.set(equipment);
+  }
+}

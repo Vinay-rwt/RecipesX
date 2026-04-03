@@ -1,17 +1,25 @@
-.placeholder-content {
-  margin-top: 4rem;
+.profile-content {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.section-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 1.5rem 0 0.5rem;
+  padding-left: 0.25rem;
+}
+
+ion-card ion-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   ion-icon {
-    font-size: 4rem;
     color: var(--ion-color-primary);
   }
+}
 
-  h2 {
-    margin-top: 1rem;
-  }
-
-  p {
-    color: var(--ion-color-medium);
-    margin-bottom: 2rem;
-  }
+ion-segment {
+  margin-top: 0.5rem;
 }

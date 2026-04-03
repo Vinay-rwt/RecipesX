@@ -11,7 +11,8 @@
     "test": "ng test",
     "lint": "ng lint",
     "emulators": "firebase emulators:start",
-    "dev": "concurrently \"npm run emulators\" \"npm run start\""
+    "dev": "concurrently \"npm run emulators\" \"npm run start\"",
+    "seed:conversions": "npx ts-node --esm scripts/seed-conversion-matrix.ts"
   },
   "private": true,
   "dependencies": {
