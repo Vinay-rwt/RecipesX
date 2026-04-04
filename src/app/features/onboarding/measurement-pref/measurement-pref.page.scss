@@ -1,17 +1,26 @@
-.placeholder-content {
-  max-width: 400px;
-  margin: 4rem auto;
-
-  ion-icon {
-    font-size: 4rem;
-    color: var(--ion-color-primary);
-  }
+.page-content {
+  max-width: 500px;
+  margin: 0 auto;
 
   h2 {
-    margin-top: 1rem;
+    text-align: center;
+    margin-bottom: 0.25rem;
   }
 
-  p {
+  .subtitle {
+    text-align: center;
     color: var(--ion-color-medium);
+    margin-bottom: 2rem;
+  }
+}
+
+.pref-section {
+  margin-bottom: 2rem;
+
+  .section-label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
   }
 }

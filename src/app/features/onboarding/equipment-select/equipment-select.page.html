@@ -4,13 +4,21 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="ion-padding ion-text-center">
-  <div class="placeholder-content">
-    <ion-icon name="construct-outline" size="large"></ion-icon>
+<ion-content class="ion-padding">
+  <div class="page-content">
     <h2>What's in Your Kitchen?</h2>
-    <p>Equipment selection coming in Phase 2</p>
+    <p class="subtitle">Tap to select the equipment you have. We'll adapt recipes to your setup.</p>
 
-    <ion-button expand="block" routerLink="/onboarding/measurements" class="ion-margin-top">
+    <app-equipment-selector
+      [selectedEquipment]="onboardingState.selectedEquipment()"
+      (equipmentChange)="onEquipmentChange($event)">
+    </app-equipment-selector>
+
+    <ion-button
+      expand="block"
+      routerLink="/onboarding/measurements"
+      [disabled]="!canProceed"
+      class="ion-margin-top">
       Next
       <ion-icon slot="end" name="arrow-forward-outline"></ion-icon>
     </ion-button>

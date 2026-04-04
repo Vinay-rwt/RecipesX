@@ -1,8 +1,9 @@
 .complete-content {
-  max-width: 400px;
-  margin: 4rem auto;
+  max-width: 500px;
+  margin: 0 auto;
+  text-align: center;
 
-  ion-icon {
+  ion-icon[size="large"] {
     font-size: 5rem;
   }
 
@@ -12,6 +13,24 @@
 
   p {
     color: var(--ion-color-medium);
-    line-height: 1.5;
+    margin-bottom: 1.5rem;
   }
+}
+
+.summary-section {
+  text-align: left;
+  margin-bottom: 1.5rem;
+
+  .section-label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+  }
+}
+
+.equipment-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
 }

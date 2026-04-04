@@ -1,7 +1,8 @@
 import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { Auth } from '@angular/fire/auth';
-import { AuthService } from '../../../core/services/auth.service';
+import { OnboardingStateService } from '../services/onboarding-state.service';
+import { UserProfileService } from '../../../core/services/user-profile.service';
 
 @Component({
   selector: 'app-complete',
@@ -11,10 +12,19 @@ import { AuthService } from '../../../core/services/auth.service';
 })
 export class CompletePage {
   private auth = inject(Auth);
-  private authService = inject(AuthService);
   private router = inject(Router);
+  readonly onboardingState = inject(OnboardingStateService);
+  private userProfileService = inject(UserProfileService);
 
   isLoading = false;
+
+  get measurementLabel(): string {
+    return this.onboardingState.measurementSystem() === 'metric' ? 'Metric (g, ml)' : 'Imperial (oz, cups)';
+  }
+
+  get temperatureLabel(): string {
+    return this.onboardingState.temperatureUnit() === 'celsius' ? 'Celsius' : 'Fahrenheit';
+  }
 
   async onGetStarted(): Promise<void> {
     const user = this.auth.currentUser;
@@ -22,7 +32,13 @@ export class CompletePage {
 
     this.isLoading = true;
     try {
-      await this.authService.completeOnboarding(user.uid);
+      await this.userProfileService.saveOnboardingData(
+        user.uid,
+        this.onboardingState.selectedEquipment(),
+        this.onboardingState.measurementSystem(),
+        this.onboardingState.temperatureUnit(),
+      );
+      this.onboardingState.reset();
       this.router.navigate(['/tabs/feed']);
     } finally {
       this.isLoading = false;

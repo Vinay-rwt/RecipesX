@@ -4,21 +4,71 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true" class="ion-padding ion-text-center">
+<ion-content [fullscreen]="true" class="ion-padding">
   <ion-header collapse="condense">
     <ion-toolbar>
       <ion-title size="large">Profile</ion-title>
     </ion-toolbar>
   </ion-header>
 
-  <div class="placeholder-content">
-    <ion-icon name="person-outline" size="large"></ion-icon>
-    <h2>Profile</h2>
-    <p>User profile coming in Phase 2</p>
+  <div class="profile-content" *ngIf="profileService.userProfile() as profile">
+    <!-- User Info -->
+    <ion-card>
+      <ion-card-header>
+        <ion-item lines="none">
+          <ion-avatar slot="start">
+            <ion-icon name="person-circle-outline" style="font-size: 3rem;"></ion-icon>
+          </ion-avatar>
+          <ion-label>
+            <h2>{{ profile.displayName }}</h2>
+            <p>{{ profile.email }}</p>
+          </ion-label>
+        </ion-item>
+      </ion-card-header>
+    </ion-card>
 
-    <ion-button expand="block" color="danger" fill="outline" (click)="onLogout()" class="ion-margin-top">
-      <ion-icon slot="start" name="log-out-outline"></ion-icon>
-      Sign Out
-    </ion-button>
+    <!-- My Equipment -->
+    <h3 class="section-title">My Equipment</h3>
+    <app-equipment-selector
+      [selectedEquipment]="profile.equipment"
+      (equipmentChange)="onEquipmentChange($event)">
+    </app-equipment-selector>
+
+    <!-- Preferences -->
+    <h3 class="section-title">Preferences</h3>
+    <ion-list>
+      <ion-item>
+        <ion-label position="stacked">Measurement System</ion-label>
+        <ion-segment
+          [value]="profile.measurementSystem"
+          (ionChange)="onMeasurementChange($event)">
+          <ion-segment-button value="metric">
+            <ion-label>Metric</ion-label>
+          </ion-segment-button>
+          <ion-segment-button value="imperial">
+            <ion-label>Imperial</ion-label>
+          </ion-segment-button>
+        </ion-segment>
+      </ion-item>
+      <ion-item>
+        <ion-label position="stacked">Temperature</ion-label>
+        <ion-segment
+          [value]="profile.temperatureUnit"
+          (ionChange)="onTemperatureChange($event)">
+          <ion-segment-button value="celsius">
+            <ion-label>Celsius</ion-label>
+          </ion-segment-button>
+          <ion-segment-button value="fahrenheit">
+            <ion-label>Fahrenheit</ion-label>
+          </ion-segment-button>
+        </ion-segment>
+      </ion-item>
+    </ion-list>
   </div>
+
+  <!-- Logout -->
+  <ion-button expand="block" color="danger" fill="outline" (click)="onLogout()" class="ion-margin-top">
+    <ion-icon slot="start" name="log-out-outline"></ion-icon>
+    Sign Out
+  </ion-button>
 </ion-content>
