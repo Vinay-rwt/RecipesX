@@ -1,0 +1,17 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/feed"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Recipe</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding ion-text-center">
+  <div class="placeholder-content">
+    <ion-icon name="restaurant-outline" size="large"></ion-icon>
+    <h2>Recipe Detail</h2>
+    <p *ngIf="recipeId$ | async as id">Recipe ID: {{ id }}</p>
+    <p>Full recipe view coming in Phase 3</p>
+  </div>
+</ion-content>

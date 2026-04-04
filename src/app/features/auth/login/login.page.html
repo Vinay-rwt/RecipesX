@@ -1,0 +1,53 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-title>RecipeShare</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div class="login-container">
+    <h2>Welcome Back</h2>
+    <p class="subtitle">Sign in to continue</p>
+
+    <form [formGroup]="loginForm" (ngSubmit)="onLogin()">
+      <ion-item>
+        <ion-input
+          label="Email"
+          type="email"
+          formControlName="email"
+          labelPlacement="floating"
+          placeholder="your@email.com"
+        ></ion-input>
+      </ion-item>
+      <div class="validation-error" *ngIf="loginForm.get('email')?.touched && loginForm.get('email')?.errors?.['email']">
+        Please enter a valid email address.
+      </div>
+
+      <ion-item>
+        <ion-input
+          label="Password"
+          type="password"
+          formControlName="password"
+          labelPlacement="floating"
+          placeholder="Enter your password"
+        ></ion-input>
+      </ion-item>
+      <div class="validation-error" *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.errors?.['minlength']">
+        Password must be at least 6 characters.
+      </div>
+
+      <div class="error-banner" *ngIf="errorMessage">
+        <ion-icon name="alert-circle-outline"></ion-icon>
+        {{ errorMessage }}
+      </div>
+
+      <ion-button expand="block" type="submit" [disabled]="loginForm.invalid || isLoading" class="ion-margin-top">
+        {{ isLoading ? 'Signing in...' : 'Sign In' }}
+      </ion-button>
+    </form>
+
+    <ion-button expand="block" fill="clear" routerLink="/auth/register" class="ion-margin-top">
+      Don't have an account? Register
+    </ion-button>
+  </div>
+</ion-content>
