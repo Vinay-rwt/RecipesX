@@ -215,25 +215,31 @@ scripts/                  — seed-conversion-matrix.ts
 
 ---
 
-## Phase 4: Equipment Conversion Engine (Core Feature) — NOT STARTED
+## Phase 4: Equipment Conversion Engine (Core Feature) — COMPLETED
 
-### Conversion formula:
-`newTemp = sourceTemp * tempFactor + tempOffset`
-`newTime = sourceDuration * timeFactor + timeOffset`
+**Branch:** `feature/phase4-conversion-engine` (PR targeting develop)
 
-### Implementation:
-1. `equipment-conversion.service.ts` — loads full matrix on app init, caches in memory + localStorage (~200 entries)
-2. Equipment similarity map for "best match" when user lacks exact equipment
-3. `convertRecipe(recipe, userEquipment[])` — picks best target, converts all steps
-4. Fallback chain: technique-specific → default technique → "no conversion available" warning
-5. `recipe-detail.page.ts` — conversion banner, equipment switcher dropdown, converted step display
-6. `temperature.pipe.ts`, `measurement.pipe.ts` — C↔F, metric↔imperial at view layer
-7. Serving size scaler: `displayQty = (quantity / baseServings) * selectedServings`
+### Key files:
+- `src/app/core/services/equipment-conversion.service.ts` — matrix loading, similarity map, getBestTarget(), convertStep(), convertRecipe()
+- `src/app/core/models/conversion.model.ts` — added ConvertedRecipe interface
+- `src/app/shared/pipes/temperature.pipe.ts` — C↔F display pipe
+- `src/app/shared/pipes/measurement.pipe.ts` — metric↔imperial ingredient display pipe
+- `src/app/features/recipe/detail/recipe-detail.page.ts` — conversion signals (selectedEquipment, convertedData, displaySteps), serving scaler
+- `src/app/features/recipe/detail/recipe-detail.page.html` — equipment switcher, conversion banner, technique notes, serving scaler, piped temperatures/measurements
 
 ### Key decisions:
-- All temps stored as Celsius, all durations as minutes — conversion is display-only
-- Client-side engine (zero latency, matrix is tiny)
-- Signals + computed() for reactive recalculation
+- Client-side engine: load full Firestore matrix once, cache in memory (signal) — zero latency
+- Signals + `computed()` for reactive recalculation when equipment or servings change
+- Auto-selects best-match equipment on page load using similarity map
+- Fallback chain: technique-specific → 'default' technique → keep original step + 'none' confidence
+
+### Verification:
+- [x] `ng build` passes — zero errors
+- [ ] Seed matrix: `npm run seed:conversions` (runtime)
+- [ ] Air fryer recipe viewed by oven-only user → conversion banner + converted steps (runtime)
+- [ ] Equipment switcher changes → instant recalculation (runtime)
+- [ ] Serving scaler → ingredient quantities scale correctly (runtime)
+- [ ] Source equipment matches user's equipment → no conversion banner (runtime)
 
 ---
 
