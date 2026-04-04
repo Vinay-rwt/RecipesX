@@ -27,6 +27,13 @@
       </ion-card-header>
     </ion-card>
 
+    <!-- My Recipes -->
+    <h3 class="section-title">My Recipes</h3>
+    <app-my-recipes
+      [recipes]="recipeService.myRecipes()"
+      [loading]="recipeService.loading()">
+    </app-my-recipes>
+
     <!-- My Equipment -->
     <h3 class="section-title">My Equipment</h3>
     <app-equipment-selector

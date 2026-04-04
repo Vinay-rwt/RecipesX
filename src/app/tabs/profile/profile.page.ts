@@ -4,6 +4,7 @@ import { ViewWillEnter } from '@ionic/angular';
 import { AuthService } from '../../core/services/auth.service';
 import { UserProfileService } from '../../core/services/user-profile.service';
 import { OnboardingStateService } from '../../features/onboarding/services/onboarding-state.service';
+import { RecipeService } from '../../core/services/recipe.service';
 
 @Component({
   selector: 'app-profile',
@@ -16,11 +17,13 @@ export class ProfilePage implements ViewWillEnter {
   private authService = inject(AuthService);
   private onboardingState = inject(OnboardingStateService);
   readonly profileService = inject(UserProfileService);
+  readonly recipeService = inject(RecipeService);
 
   ionViewWillEnter(): void {
     const user = this.auth.currentUser;
     if (user) {
       this.profileService.loadProfile(user.uid);
+      this.recipeService.loadMyRecipes(user.uid);
     }
   }
 

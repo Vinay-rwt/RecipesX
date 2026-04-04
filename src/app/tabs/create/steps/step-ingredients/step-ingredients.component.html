@@ -1,0 +1,42 @@
+<div class="step-content ion-padding">
+
+  <div class="section-header">
+    <h3>Ingredients</h3>
+    <ion-note *ngIf="ingredientsArray.length === 0" color="medium">Add at least one ingredient</ion-note>
+  </div>
+
+  <ion-reorder-group [disabled]="false" (ionItemReorder)="onReorder($event)">
+    <ion-item-sliding *ngFor="let ctrl of ingredientsArray.controls; let i = index">
+      <ion-item [formGroup]="getGroup(i)">
+        <ion-reorder slot="start"></ion-reorder>
+        <div class="ingredient-row">
+          <ion-input
+            formControlName="quantity"
+            type="number"
+            placeholder="Qty"
+            class="qty-input">
+          </ion-input>
+          <ion-select formControlName="unit" placeholder="Unit" class="unit-select">
+            <ion-select-option *ngFor="let u of units" [value]="u">{{ u || '—' }}</ion-select-option>
+          </ion-select>
+          <ion-input
+            formControlName="name"
+            placeholder="Ingredient name"
+            class="name-input">
+          </ion-input>
+        </div>
+      </ion-item>
+      <ion-item-options side="end">
+        <ion-item-option color="danger" (click)="removeIngredient(i)">
+          <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+        </ion-item-option>
+      </ion-item-options>
+    </ion-item-sliding>
+  </ion-reorder-group>
+
+  <ion-button expand="block" fill="outline" class="ion-margin-top" (click)="addIngredient()">
+    <ion-icon slot="start" name="add-outline"></ion-icon>
+    Add Ingredient
+  </ion-button>
+
+</div>

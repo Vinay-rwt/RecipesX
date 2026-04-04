@@ -1,0 +1,63 @@
+<div class="step-content ion-padding">
+
+  <div class="section-header">
+    <h3>Directions</h3>
+    <ion-note *ngIf="stepsArray.length === 0" color="medium">Add at least one step</ion-note>
+  </div>
+
+  <ion-reorder-group [disabled]="false" (ionItemReorder)="onReorder($event)">
+    <ion-item-sliding *ngFor="let ctrl of stepsArray.controls; let i = index">
+      <ion-item [formGroup]="getGroup(i)" lines="none" class="step-item">
+        <ion-reorder slot="start"></ion-reorder>
+        <div class="step-body">
+          <div class="step-number-row">
+            <ion-badge color="primary">Step {{ i + 1 }}</ion-badge>
+            <ion-button fill="clear" size="small" (click)="toggleExpanded(i)">
+              <ion-icon slot="icon-only" [name]="isExpanded(i) ? 'chevron-up-outline' : 'options-outline'"></ion-icon>
+            </ion-button>
+          </div>
+          <ion-textarea
+            formControlName="instruction"
+            placeholder="Describe this step..."
+            rows="2"
+            auto-grow="true">
+          </ion-textarea>
+
+          <!-- Optional fields panel -->
+          <div class="optional-fields" *ngIf="isExpanded(i)">
+            <ion-item>
+              <ion-label position="stacked">Temperature (°C)</ion-label>
+              <ion-input formControlName="temperature" type="number" placeholder="e.g. 180"></ion-input>
+            </ion-item>
+            <ion-item>
+              <ion-label position="stacked">Duration (minutes)</ion-label>
+              <ion-input formControlName="duration" type="number" placeholder="e.g. 25"></ion-input>
+            </ion-item>
+            <ion-item>
+              <ion-label position="stacked">Equipment</ion-label>
+              <ion-select formControlName="equipment" placeholder="Optional">
+                <ion-select-option value="">None</ion-select-option>
+                <ion-select-option *ngFor="let eq of equipmentTypes" [value]="eq.id">{{ eq.label }}</ion-select-option>
+              </ion-select>
+            </ion-item>
+            <ion-item>
+              <ion-label position="stacked">Technique</ion-label>
+              <ion-input formControlName="technique" placeholder="e.g. bake, roast, sauté"></ion-input>
+            </ion-item>
+          </div>
+        </div>
+      </ion-item>
+      <ion-item-options side="end">
+        <ion-item-option color="danger" (click)="removeStep(i)">
+          <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+        </ion-item-option>
+      </ion-item-options>
+    </ion-item-sliding>
+  </ion-reorder-group>
+
+  <ion-button expand="block" fill="outline" class="ion-margin-top" (click)="addStep()">
+    <ion-icon slot="start" name="add-outline"></ion-icon>
+    Add Step
+  </ion-button>
+
+</div>

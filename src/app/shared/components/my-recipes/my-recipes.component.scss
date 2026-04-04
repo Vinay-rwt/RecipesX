@@ -1,0 +1,25 @@
+.my-recipes-container {
+  .recipe-scroll {
+    display: flex;
+    gap: 0.75rem;
+    overflow-x: auto;
+    padding: 0.5rem 0;
+    -webkit-overflow-scrolling: touch;
+
+    &::-webkit-scrollbar { display: none; }
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 1.5rem;
+    color: var(--ion-color-medium);
+
+    ion-icon {
+      font-size: 2.5rem;
+      display: block;
+      margin: 0 auto 0.5rem;
+    }
+
+    p { margin-bottom: 1rem; }
+  }
+}
