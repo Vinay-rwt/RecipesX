@@ -18,4 +18,15 @@
       </span>
     </ion-card-subtitle>
   </ion-card-header>
+
+  <div class="social-actions" *ngIf="showSocialActions">
+    <button class="social-btn" (click)="onLike($event)">
+      <ion-icon [name]="isLiked ? 'heart' : 'heart-outline'" [color]="isLiked ? 'danger' : 'medium'"></ion-icon>
+      <span>{{ recipe.likeCount || 0 }}</span>
+    </button>
+    <button class="social-btn" (click)="onSave($event)">
+      <ion-icon [name]="isSaved ? 'bookmark' : 'bookmark-outline'" [color]="isSaved ? 'primary' : 'medium'"></ion-icon>
+      <span>{{ recipe.saveCount || 0 }}</span>
+    </button>
+  </div>
 </ion-card>

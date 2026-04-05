@@ -1,16 +1,61 @@
-.placeholder-content {
-  margin-top: 4rem;
+.filter-toolbar {
+  --min-height: auto;
+
+  .filter-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.5rem;
+
+    .filter-select {
+      flex: 1;
+      font-size: 0.85rem;
+      --padding-start: 0.5rem;
+    }
+  }
+}
+
+.feed-list {
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+
+  app-recipe-card {
+    display: block;
+
+    ion-card {
+      width: 100%;
+      margin: 0.25rem 0;
+    }
+  }
+}
+
+.skeleton-card {
+  margin: 0.25rem 0.5rem;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2rem;
+  text-align: center;
 
   ion-icon {
     font-size: 4rem;
-    color: var(--ion-color-primary);
+    color: var(--ion-color-medium);
+    margin-bottom: 1rem;
   }
 
-  h2 {
-    margin-top: 1rem;
+  h3 {
+    margin: 0 0 0.5rem;
+    color: var(--ion-color-dark);
   }
 
   p {
     color: var(--ion-color-medium);
+    margin: 0 0 1rem;
   }
 }

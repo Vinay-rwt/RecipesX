@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { Recipe } from '../../../core/models/recipe.model';
 
 @Component({
@@ -9,4 +9,19 @@ import { Recipe } from '../../../core/models/recipe.model';
 })
 export class RecipeCardComponent {
   @Input() recipe!: Recipe;
+  @Input() showSocialActions = false;
+  @Input() isLiked = false;
+  @Input() isSaved = false;
+  @Output() likeToggled = new EventEmitter<void>();
+  @Output() saveToggled = new EventEmitter<void>();
+
+  onLike(event: Event): void {
+    event.stopPropagation();
+    this.likeToggled.emit();
+  }
+
+  onSave(event: Event): void {
+    event.stopPropagation();
+    this.saveToggled.emit();
+  }
 }

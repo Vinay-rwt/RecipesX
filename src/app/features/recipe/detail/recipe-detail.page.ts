@@ -5,6 +5,7 @@ import { ViewWillEnter } from '@ionic/angular';
 import { RecipeService } from '../../../core/services/recipe.service';
 import { EquipmentConversionService } from '../../../core/services/equipment-conversion.service';
 import { UserProfileService } from '../../../core/services/user-profile.service';
+import { SocialService } from '../../../core/services/social.service';
 import { getEquipmentById, EQUIPMENT_TYPES } from '../../../core/models/equipment.model';
 
 @Component({
@@ -18,6 +19,7 @@ export class RecipeDetailPage implements ViewWillEnter {
   private auth = inject(Auth);
   private recipeService = inject(RecipeService);
   private conversionService = inject(EquipmentConversionService);
+  private socialService = inject(SocialService);
   readonly profileService = inject(UserProfileService);
 
   readonly recipe = this.recipeService.currentRecipe;
@@ -25,6 +27,8 @@ export class RecipeDetailPage implements ViewWillEnter {
 
   readonly selectedEquipment = signal<string | null>(null);
   readonly selectedServings = signal<number>(1);
+  readonly isLiked = signal(false);
+  readonly isSaved = signal(false);
 
   readonly viewingOptions = computed(() => {
     const r = this.recipe();
@@ -63,7 +67,33 @@ export class RecipeDetailPage implements ViewWillEnter {
       const bestTarget = this.conversionService.getBestTarget(r.sourceEquipment, userEq);
       this.selectedEquipment.set(bestTarget ?? r.sourceEquipment);
       this.selectedServings.set(r.baseServings);
+
+      const uid = this.auth.currentUser?.uid;
+      if (uid && r.id) {
+        const [liked, saved] = await Promise.all([
+          this.socialService.isLiked(uid, r.id),
+          this.socialService.isSaved(uid, r.id),
+        ]);
+        this.isLiked.set(liked);
+        this.isSaved.set(saved);
+      }
     }
+  }
+
+  async toggleLike(): Promise<void> {
+    const uid = this.auth.currentUser?.uid;
+    const recipeId = this.recipe()?.id;
+    if (!uid || !recipeId) return;
+    const liked = await this.socialService.toggleLike(uid, recipeId);
+    this.isLiked.set(liked);
+  }
+
+  async toggleSave(): Promise<void> {
+    const uid = this.auth.currentUser?.uid;
+    const recipeId = this.recipe()?.id;
+    if (!uid || !recipeId) return;
+    const saved = await this.socialService.toggleSave(uid, recipeId);
+    this.isSaved.set(saved);
   }
 
   onEquipmentChange(id: string): void {
