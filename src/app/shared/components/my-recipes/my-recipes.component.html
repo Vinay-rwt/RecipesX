@@ -1,0 +1,18 @@
+<div class="my-recipes-container">
+  <!-- Loading skeleton -->
+  <div *ngIf="loading" class="recipe-scroll">
+    <ion-skeleton-text *ngFor="let i of [1,2,3]" animated style="width:180px;height:200px;border-radius:12px;flex-shrink:0"></ion-skeleton-text>
+  </div>
+
+  <!-- Recipe cards -->
+  <div *ngIf="!loading && recipes.length > 0" class="recipe-scroll">
+    <app-recipe-card *ngFor="let recipe of recipes" [recipe]="recipe"></app-recipe-card>
+  </div>
+
+  <!-- Empty state -->
+  <div *ngIf="!loading && recipes.length === 0" class="empty-state">
+    <ion-icon name="book-outline"></ion-icon>
+    <p>No recipes yet</p>
+    <ion-button size="small" fill="outline" routerLink="/tabs/create">Create your first recipe</ion-button>
+  </div>
+</div>

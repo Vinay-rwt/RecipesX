@@ -1,16 +1,111 @@
-.placeholder-content {
-  margin-top: 4rem;
+ion-content {
+  --padding-bottom: 0;
+}
 
-  ion-icon {
-    font-size: 4rem;
-    color: var(--ion-color-primary);
+// Equipment card selected state
+app-step-equipment ion-card.selected {
+  --background: var(--ion-color-primary-tint);
+  border: 2px solid var(--ion-color-primary);
+}
+
+// Photo area in step-basics
+app-step-basics {
+  .photo-area {
+    width: 100%;
+    height: 180px;
+    border-radius: 12px;
+    border: 2px dashed var(--ion-color-medium);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+    overflow: hidden;
+    cursor: pointer;
+
+    &:hover {
+      border-color: var(--ion-color-primary);
+    }
+
+    .photo-preview {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .photo-placeholder {
+      text-align: center;
+      color: var(--ion-color-medium);
+      ion-icon { font-size: 2.5rem; }
+      p { margin-top: 0.5rem; font-size: 0.9rem; }
+    }
   }
 
-  h2 {
-    margin-top: 1rem;
+  .tags-section {
+    ion-label {
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--ion-color-medium);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .tags-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.25rem;
+      margin: 0.5rem 0;
+    }
+  }
+}
+
+// Ingredient row layout
+app-step-ingredients {
+  .ingredient-row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    width: 100%;
+    padding: 0.25rem 0;
+
+    .qty-input { flex: 0 0 70px; }
+    .unit-select { flex: 0 0 90px; }
+    .name-input { flex: 1; }
   }
 
-  p {
-    color: var(--ion-color-medium);
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+}
+
+// Step direction item
+app-step-directions {
+  .step-item {
+    --inner-padding-end: 0;
+
+    .step-body {
+      width: 100%;
+      padding: 0.5rem 0;
+
+      .step-number-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+      }
+
+      .optional-fields {
+        background: var(--ion-color-light);
+        border-radius: 8px;
+        margin-top: 0.5rem;
+        padding: 0.25rem;
+      }
+    }
+  }
+
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
   }
 }

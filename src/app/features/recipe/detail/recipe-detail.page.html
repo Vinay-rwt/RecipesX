@@ -3,15 +3,105 @@
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/tabs/feed"></ion-back-button>
     </ion-buttons>
-    <ion-title>Recipe</ion-title>
+    <ion-title>{{ recipe()?.title || 'Recipe' }}</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="ion-padding ion-text-center">
-  <div class="placeholder-content">
-    <ion-icon name="restaurant-outline" size="large"></ion-icon>
-    <h2>Recipe Detail</h2>
-    <p *ngIf="recipeId$ | async as id">Recipe ID: {{ id }}</p>
-    <p>Full recipe view coming in Phase 3</p>
+<ion-content>
+  <!-- Loading -->
+  <div *ngIf="loading()" class="ion-padding">
+    <ion-skeleton-text animated style="height: 200px; border-radius: 0;"></ion-skeleton-text>
+    <ion-skeleton-text animated style="width: 60%; height: 1.5rem; margin-top: 1rem;"></ion-skeleton-text>
+    <ion-skeleton-text animated style="width: 40%; height: 1rem; margin-top: 0.5rem;"></ion-skeleton-text>
   </div>
+
+  <!-- Not found -->
+  <div *ngIf="!loading() && !recipe()" class="ion-padding ion-text-center">
+    <ion-icon name="alert-circle-outline" size="large" color="medium"></ion-icon>
+    <h2>Recipe not found</h2>
+  </div>
+
+  <!-- Recipe content -->
+  <ng-container *ngIf="!loading() && recipe() as r">
+    <!-- Cover photo -->
+    <div class="cover-photo">
+      <img *ngIf="r.photoURLs?.length" [src]="r.photoURLs[0]" [alt]="r.title" />
+      <div *ngIf="!r.photoURLs?.length" class="cover-placeholder">
+        <ion-icon name="restaurant-outline"></ion-icon>
+      </div>
+    </div>
+
+    <div class="recipe-body ion-padding">
+      <!-- Title & meta -->
+      <h1 class="recipe-title">{{ r.title }}</h1>
+
+      <div class="recipe-meta">
+        <ion-chip [color]="getDifficultyColor(r.difficulty)" outline>
+          {{ r.difficulty | titlecase }}
+        </ion-chip>
+        <ion-chip color="medium" outline>
+          <ion-icon name="globe-outline" slot="start"></ion-icon>
+          {{ r.cuisineType }}
+        </ion-chip>
+        <ion-chip color="medium" outline *ngIf="r.sourceEquipment">
+          <ion-icon name="hardware-chip-outline" slot="start"></ion-icon>
+          {{ getEquipmentLabel(r.sourceEquipment) }}
+        </ion-chip>
+      </div>
+
+      <div class="timing-row">
+        <div class="timing-item" *ngIf="r.prepTime">
+          <ion-icon name="timer-outline"></ion-icon>
+          <span>Prep: {{ r.prepTime }}m</span>
+        </div>
+        <div class="timing-item" *ngIf="r.cookTime">
+          <ion-icon name="flame-outline"></ion-icon>
+          <span>Cook: {{ r.cookTime }}m</span>
+        </div>
+        <div class="timing-item">
+          <ion-icon name="people-outline"></ion-icon>
+          <span>{{ r.baseServings }} serving{{ r.baseServings !== 1 ? 's' : '' }}</span>
+        </div>
+      </div>
+
+      <p *ngIf="r.description" class="recipe-description">{{ r.description }}</p>
+
+      <!-- Tags -->
+      <div class="tags-row" *ngIf="r.tags?.length">
+        <ion-chip *ngFor="let tag of r.tags" outline size="small">{{ tag }}</ion-chip>
+      </div>
+
+      <!-- Ingredients -->
+      <h2 class="section-heading">Ingredients</h2>
+      <ion-list lines="full">
+        <ion-item *ngFor="let ing of r.ingredients">
+          <ion-label>
+            <span class="ing-qty" *ngIf="ing.quantity">{{ ing.quantity }}</span>
+            <span class="ing-unit" *ngIf="ing.unit"> {{ ing.unit }}</span>
+            {{ ing.name }}
+          </ion-label>
+        </ion-item>
+      </ion-list>
+
+      <!-- Steps -->
+      <h2 class="section-heading">Directions</h2>
+      <div class="step-card" *ngFor="let step of r.steps">
+        <div class="step-header">
+          <ion-badge color="primary">Step {{ step.order }}</ion-badge>
+          <div class="step-details" *ngIf="hasOptionalDetails(step)">
+            <span *ngIf="step.temperature">
+              <ion-icon name="thermometer-outline"></ion-icon>
+              {{ step.temperature }}°C
+            </span>
+            <span *ngIf="step.duration">
+              <ion-icon name="time-outline"></ion-icon>
+              {{ step.duration }}m
+            </span>
+            <span *ngIf="step.technique">{{ step.technique }}</span>
+          </div>
+        </div>
+        <p class="step-instruction">{{ step.instruction }}</p>
+      </div>
+    </div>
+  </ng-container>
 </ion-content>

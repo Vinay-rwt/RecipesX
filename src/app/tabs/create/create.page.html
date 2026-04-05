@@ -1,19 +1,84 @@
-<ion-header [translucent]="true">
+<ion-header>
   <ion-toolbar>
-    <ion-title>Create</ion-title>
+    <ion-buttons slot="start">
+      <ion-button (click)="discard()" color="medium">Cancel</ion-button>
+    </ion-buttons>
+    <ion-title>New Recipe</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="saveDraft()" color="primary">Save Draft</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+  <ion-toolbar>
+    <ion-segment
+      [value]="formState.currentStep()"
+      (ionChange)="onStepSegmentChange($event)"
+      scrollable="true">
+      <ion-segment-button *ngFor="let label of stepLabels; let i = index" [value]="i">
+        <ion-label>{{ label }}</ion-label>
+        <ion-icon
+          [name]="formState.isStepValid(i) ? 'checkmark-circle' : 'ellipse-outline'"
+          [color]="formState.isStepValid(i) ? 'success' : 'medium'"
+          size="small">
+        </ion-icon>
+      </ion-segment-button>
+    </ion-segment>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true" class="ion-padding ion-text-center">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Create</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-content>
+  <div [ngSwitch]="formState.currentStep()">
+    <app-step-basics
+      *ngSwitchCase="0"
+      [form]="formState.form"
+      [photoPreview]="formState.coverPhotoPreview()"
+      (capturePhoto)="onCapturePhoto()">
+    </app-step-basics>
 
-  <div class="placeholder-content">
-    <ion-icon name="add-circle-outline" size="large"></ion-icon>
-    <h2>Create Recipe</h2>
-    <p>Recipe creation coming in Phase 3</p>
+    <app-step-equipment
+      *ngSwitchCase="1"
+      [form]="formState.form">
+    </app-step-equipment>
+
+    <app-step-ingredients
+      *ngSwitchCase="2"
+      [formState]="formState">
+    </app-step-ingredients>
+
+    <app-step-directions
+      *ngSwitchCase="3"
+      [formState]="formState">
+    </app-step-directions>
   </div>
 </ion-content>
+
+<ion-footer>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button
+        (click)="prevStep()"
+        [disabled]="formState.currentStep() === 0"
+        fill="clear">
+        <ion-icon slot="start" name="arrow-back-outline"></ion-icon>
+        Back
+      </ion-button>
+    </ion-buttons>
+    <ion-buttons slot="end">
+      <ion-button
+        *ngIf="formState.currentStep() < stepLabels.length - 1"
+        (click)="nextStep()"
+        fill="solid"
+        color="primary">
+        Next
+        <ion-icon slot="end" name="arrow-forward-outline"></ion-icon>
+      </ion-button>
+      <ion-button
+        *ngIf="formState.currentStep() === stepLabels.length - 1"
+        (click)="publish()"
+        fill="solid"
+        color="success">
+        <ion-icon slot="start" name="cloud-upload-outline"></ion-icon>
+        Publish
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-footer>

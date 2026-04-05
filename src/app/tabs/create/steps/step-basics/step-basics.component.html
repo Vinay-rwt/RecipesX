@@ -1,0 +1,65 @@
+<div class="step-content ion-padding" [formGroup]="form">
+
+  <!-- Cover Photo -->
+  <div class="photo-area" (click)="capturePhoto.emit()">
+    <img *ngIf="photoPreview" [src]="photoPreview" alt="Cover photo" class="photo-preview" />
+    <div *ngIf="!photoPreview" class="photo-placeholder">
+      <ion-icon name="camera-outline" size="large"></ion-icon>
+      <p>Tap to add cover photo</p>
+    </div>
+  </div>
+
+  <!-- Title -->
+  <ion-item>
+    <ion-label position="stacked">Recipe Title <ion-text color="danger">*</ion-text></ion-label>
+    <ion-input formControlName="title" placeholder="e.g. Crispy Air Fryer Chicken"></ion-input>
+  </ion-item>
+  <ion-note color="danger" *ngIf="form.get('title')?.invalid && form.get('title')?.touched" class="ion-padding-start">
+    Title is required (3–100 characters)
+  </ion-note>
+
+  <!-- Description -->
+  <ion-item>
+    <ion-label position="stacked">Description</ion-label>
+    <ion-textarea formControlName="description" placeholder="Briefly describe your recipe..." rows="3" auto-grow="true"></ion-textarea>
+  </ion-item>
+
+  <!-- Cuisine -->
+  <ion-item>
+    <ion-label position="stacked">Cuisine <ion-text color="danger">*</ion-text></ion-label>
+    <ion-select formControlName="cuisineType" placeholder="Select cuisine">
+      <ion-select-option *ngFor="let c of cuisineTypes" [value]="c">{{ c }}</ion-select-option>
+    </ion-select>
+  </ion-item>
+
+  <!-- Difficulty -->
+  <ion-item>
+    <ion-label position="stacked">Difficulty</ion-label>
+    <ion-segment formControlName="difficulty" class="ion-margin-top">
+      <ion-segment-button value="easy"><ion-label>Easy</ion-label></ion-segment-button>
+      <ion-segment-button value="medium"><ion-label>Medium</ion-label></ion-segment-button>
+      <ion-segment-button value="hard"><ion-label>Hard</ion-label></ion-segment-button>
+    </ion-segment>
+  </ion-item>
+
+  <!-- Tags -->
+  <div class="tags-section ion-padding-top">
+    <ion-label>Tags</ion-label>
+    <div class="tags-chips">
+      <ion-chip *ngFor="let tag of tagsArray.controls; let i = index" color="primary" outline>
+        {{ tag.value }}
+        <ion-icon name="close-circle" (click)="removeTag(i)"></ion-icon>
+      </ion-chip>
+    </div>
+    <ion-item>
+      <ion-input
+        [(ngModel)]="tagInput"
+        [ngModelOptions]="{ standalone: true }"
+        placeholder="Add a tag..."
+        (keyup.enter)="onAddTag()">
+      </ion-input>
+      <ion-button slot="end" fill="clear" size="small" (click)="onAddTag()">Add</ion-button>
+    </ion-item>
+  </div>
+
+</div>

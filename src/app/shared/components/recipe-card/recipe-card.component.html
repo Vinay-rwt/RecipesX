@@ -1,0 +1,21 @@
+<ion-card [routerLink]="['/recipe', recipe.id]" button class="recipe-card">
+  <div class="recipe-card-photo">
+    <img *ngIf="recipe.photoURLs?.length" [src]="recipe.photoURLs[0]" [alt]="recipe.title" />
+    <div *ngIf="!recipe.photoURLs?.length" class="photo-placeholder">
+      <ion-icon name="restaurant-outline"></ion-icon>
+    </div>
+    <ion-badge [color]="recipe.status === 'published' ? 'success' : 'warning'" class="status-badge">
+      {{ recipe.status }}
+    </ion-badge>
+  </div>
+  <ion-card-header>
+    <ion-card-title class="recipe-title">{{ recipe.title }}</ion-card-title>
+    <ion-card-subtitle>
+      <ion-chip color="medium" outline size="small">{{ recipe.cuisineType }}</ion-chip>
+      <span class="cook-time" *ngIf="recipe.cookTime">
+        <ion-icon name="time-outline"></ion-icon>
+        {{ recipe.cookTime }}m
+      </span>
+    </ion-card-subtitle>
+  </ion-card-header>
+</ion-card>
