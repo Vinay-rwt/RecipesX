@@ -2,9 +2,41 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow all reads/writes in development (will be locked down in Phase 7)
-    match /{document=**} {
-      allow read, write: if true;
+
+    // Users: any authenticated user can read profiles, only owner can write
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth.uid == userId;
+
+      // Likes subcollection: only the owning user
+      match /likes/{recipeId} {
+        allow read, write: if request.auth.uid == userId;
+      }
+
+      // Saves subcollection: only the owning user
+      match /saves/{recipeId} {
+        allow read, write: if request.auth.uid == userId;
+      }
+    }
+
+    // Recipes: authenticated users can read published recipes or their own drafts
+    match /recipes/{recipeId} {
+      allow read: if request.auth != null
+        && (resource.data.status == 'published'
+            || resource.data.authorId == request.auth.uid);
+      allow create: if request.auth != null
+        && request.resource.data.authorId == request.auth.uid;
+      allow update: if request.auth != null
+        && resource.data.authorId == request.auth.uid;
+      allow delete: if request.auth != null
+        && resource.data.authorId == request.auth.uid;
+    }
+
+    // Conversion matrix: read-only for authenticated users
+    // Writes come only from the seed script which bypasses rules via emulator
+    match /conversionMatrix/{entry} {
+      allow read: if request.auth != null;
+      allow write: if false;
     }
   }
 }

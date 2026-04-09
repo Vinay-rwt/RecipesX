@@ -2,8 +2,8 @@
   <ion-toolbar>
     <ion-title>Feed</ion-title>
     <ion-buttons slot="end">
-      <ion-button (click)="showFilters = !showFilters">
-        <ion-icon slot="icon-only" name="filter-outline"></ion-icon>
+      <ion-button (click)="showFilters = !showFilters" [attr.aria-label]="showFilters ? 'Hide filters' : 'Show filters'" [attr.aria-expanded]="showFilters">
+        <ion-icon slot="icon-only" name="filter-outline" aria-hidden="true"></ion-icon>
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
@@ -60,8 +60,18 @@
     </ion-card>
   </div>
 
+  <!-- Error state -->
+  <div *ngIf="!feedService.loading() && feedService.error()" class="error-state ion-text-center ion-padding">
+    <ion-icon name="cloud-offline-outline" style="font-size: 3rem;" color="medium" aria-hidden="true"></ion-icon>
+    <h3>{{ feedService.error() }}</h3>
+    <ion-button fill="outline" (click)="onRefreshManual()" aria-label="Retry loading feed">
+      <ion-icon slot="start" name="refresh-outline" aria-hidden="true"></ion-icon>
+      Retry
+    </ion-button>
+  </div>
+
   <!-- Empty state -->
-  <div *ngIf="!feedService.loading() && feedService.recipes().length === 0" class="empty-state">
+  <div *ngIf="!feedService.loading() && !feedService.error() && feedService.recipes().length === 0" class="empty-state">
     <ion-icon name="restaurant-outline"></ion-icon>
     <h3>No recipes found</h3>
     <p>Try adjusting your filters or be the first to share a recipe!</p>
@@ -69,7 +79,7 @@
   </div>
 
   <!-- Recipe feed -->
-  <div class="feed-list" *ngIf="feedService.recipes().length > 0">
+  <div class="feed-list" *ngIf="!feedService.error() && feedService.recipes().length > 0">
     <app-recipe-card
       *ngFor="let recipe of feedService.recipes()"
       [recipe]="recipe"

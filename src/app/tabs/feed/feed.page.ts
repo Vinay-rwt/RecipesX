@@ -48,6 +48,11 @@ export class FeedPage implements ViewWillEnter {
     event.target.complete();
   }
 
+  async onRefreshManual(): Promise<void> {
+    await this.feedService.loadInitial();
+    await this._loadSocialState();
+  }
+
   async onToggleLike(recipeId: string): Promise<void> {
     const uid = this.auth.currentUser?.uid;
     if (!uid) return;

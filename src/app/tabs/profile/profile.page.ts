@@ -20,6 +20,10 @@ export class ProfilePage implements ViewWillEnter {
   readonly recipeService = inject(RecipeService);
 
   ionViewWillEnter(): void {
+    this.loadData();
+  }
+
+  loadData(): void {
     const user = this.auth.currentUser;
     if (user) {
       this.profileService.loadProfile(user.uid);

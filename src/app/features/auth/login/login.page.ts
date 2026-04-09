@@ -21,6 +21,7 @@ export class LoginPage {
 
   errorMessage: string | null = null;
   isLoading = false;
+  isSocialLoading = false;
 
   async onLogin(): Promise<void> {
     if (this.loginForm.invalid) return;
@@ -37,6 +38,19 @@ export class LoginPage {
       this.errorMessage = this.mapFirebaseError(err);
     } finally {
       this.isLoading = false;
+    }
+  }
+
+  async onGoogleLogin(): Promise<void> {
+    this.isSocialLoading = true;
+    this.errorMessage = null;
+    try {
+      await this.authService.loginWithGoogle();
+      this.router.navigate(['/tabs/feed']);
+    } catch (err: unknown) {
+      this.errorMessage = this.mapFirebaseError(err);
+    } finally {
+      this.isSocialLoading = false;
     }
   }
 

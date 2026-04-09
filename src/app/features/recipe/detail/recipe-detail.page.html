@@ -15,10 +15,15 @@
     <ion-skeleton-text animated style="width: 40%; height: 1rem; margin-top: 0.5rem;"></ion-skeleton-text>
   </div>
 
-  <!-- Not found -->
-  <div *ngIf="!loading() && !recipe()" class="ion-padding ion-text-center">
-    <ion-icon name="alert-circle-outline" size="large" color="medium"></ion-icon>
+  <!-- Not found / error -->
+  <div *ngIf="!loading() && !recipe()" class="ion-padding ion-text-center error-state">
+    <ion-icon name="alert-circle-outline" style="font-size: 3rem;" color="medium" aria-hidden="true"></ion-icon>
     <h2>Recipe not found</h2>
+    <p color="medium">This recipe may have been removed or you may be offline.</p>
+    <ion-button fill="outline" (click)="ionViewWillEnter()" aria-label="Retry loading recipe">
+      <ion-icon slot="start" name="refresh-outline" aria-hidden="true"></ion-icon>
+      Retry
+    </ion-button>
   </div>
 
   <ng-container *ngIf="!loading() && recipe() as r">
@@ -32,13 +37,13 @@
 
     <!-- Social actions bar -->
     <div class="social-bar ion-padding-horizontal">
-      <ion-button fill="clear" (click)="toggleLike()">
-        <ion-icon slot="start" [name]="isLiked() ? 'heart' : 'heart-outline'" [color]="isLiked() ? 'danger' : 'medium'"></ion-icon>
-        <span>{{ r.likeCount || 0 }}</span>
+      <ion-button fill="clear" (click)="toggleLike()" [attr.aria-label]="(isLiked() ? 'Unlike' : 'Like') + ' recipe, ' + (r.likeCount || 0) + ' likes'">
+        <ion-icon slot="start" [name]="isLiked() ? 'heart' : 'heart-outline'" [color]="isLiked() ? 'danger' : 'medium'" aria-hidden="true"></ion-icon>
+        <span aria-hidden="true">{{ r.likeCount || 0 }}</span>
       </ion-button>
-      <ion-button fill="clear" (click)="toggleSave()">
-        <ion-icon slot="start" [name]="isSaved() ? 'bookmark' : 'bookmark-outline'" [color]="isSaved() ? 'primary' : 'medium'"></ion-icon>
-        <span>{{ r.saveCount || 0 }}</span>
+      <ion-button fill="clear" (click)="toggleSave()" [attr.aria-label]="(isSaved() ? 'Unsave' : 'Save') + ' recipe, ' + (r.saveCount || 0) + ' saves'">
+        <ion-icon slot="start" [name]="isSaved() ? 'bookmark' : 'bookmark-outline'" [color]="isSaved() ? 'primary' : 'medium'" aria-hidden="true"></ion-icon>
+        <span aria-hidden="true">{{ r.saveCount || 0 }}</span>
       </ion-button>
     </div>
 
@@ -120,12 +125,12 @@
           <ion-icon name="people-outline" slot="start"></ion-icon>
           <ion-label>Servings</ion-label>
           <div class="scaler-controls" slot="end">
-            <ion-button fill="clear" size="small" (click)="decrementServings()" [disabled]="selectedServings() <= 1">
-              <ion-icon slot="icon-only" name="remove-outline"></ion-icon>
+            <ion-button fill="clear" size="small" (click)="decrementServings()" [disabled]="selectedServings() <= 1" aria-label="Decrease servings">
+              <ion-icon slot="icon-only" name="remove-outline" aria-hidden="true"></ion-icon>
             </ion-button>
-            <span class="serving-count">{{ selectedServings() }}</span>
-            <ion-button fill="clear" size="small" (click)="incrementServings()" [disabled]="selectedServings() >= 100">
-              <ion-icon slot="icon-only" name="add-outline"></ion-icon>
+            <span class="serving-count" aria-live="polite" aria-label="{{ selectedServings() }} servings">{{ selectedServings() }}</span>
+            <ion-button fill="clear" size="small" (click)="incrementServings()" [disabled]="selectedServings() >= 100" aria-label="Increase servings">
+              <ion-icon slot="icon-only" name="add-outline" aria-hidden="true"></ion-icon>
             </ion-button>
           </div>
         </ion-item>
@@ -170,8 +175,8 @@
   </ng-container>
   <!-- Share FAB -->
   <ion-fab vertical="bottom" horizontal="end" slot="fixed">
-    <ion-fab-button (click)="onShare()" color="primary" *ngIf="recipe()">
-      <ion-icon name="share-outline"></ion-icon>
+    <ion-fab-button (click)="onShare()" color="primary" *ngIf="recipe()" aria-label="Share this recipe">
+      <ion-icon name="share-outline" aria-hidden="true"></ion-icon>
     </ion-fab-button>
   </ion-fab>
 </ion-content>

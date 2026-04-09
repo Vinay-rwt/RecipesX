@@ -5,6 +5,8 @@ import {
   authState,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
   signOut,
   updateProfile,
   User,
@@ -17,7 +19,7 @@ import {
   updateDoc,
 } from '@angular/fire/firestore';
 import { Observable, of } from 'rxjs';
-import { switchMap, map } from 'rxjs/operators';
+import { switchMap } from 'rxjs/operators';
 import { UserProfile } from '../models/user.model';
 
 @Injectable({ providedIn: 'root' })
@@ -48,6 +50,19 @@ export class AuthService {
     const credential = await createUserWithEmailAndPassword(this.auth, email, password);
     await updateProfile(credential.user, { displayName });
     await this.createUserDoc(credential.user, displayName);
+  }
+
+  async loginWithGoogle(): Promise<void> {
+    const provider = new GoogleAuthProvider();
+    provider.addScope('profile');
+    provider.addScope('email');
+    const result = await signInWithPopup(this.auth, provider);
+    // Create user doc on first sign-in (idempotent: setDoc with merge)
+    const userRef = doc(this.firestore, `users/${result.user.uid}`);
+    const snapshot = await getDoc(userRef);
+    if (!snapshot.exists()) {
+      await this.createUserDoc(result.user, result.user.displayName ?? 'User');
+    }
   }
 
   async logout(): Promise<void> {
