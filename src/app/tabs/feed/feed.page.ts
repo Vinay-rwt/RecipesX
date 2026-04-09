@@ -3,7 +3,8 @@ import { Auth } from '@angular/fire/auth';
 import { InfiniteScrollCustomEvent, RefresherCustomEvent, ViewWillEnter } from '@ionic/angular';
 import { FeedService } from '../../core/services/feed.service';
 import { SocialService } from '../../core/services/social.service';
-import { CUISINE_TYPES } from '../../core/models/recipe.model';
+import { ShareService } from '../../core/services/share.service';
+import { CUISINE_TYPES, Recipe } from '../../core/models/recipe.model';
 
 @Component({
   selector: 'app-feed',
@@ -14,6 +15,7 @@ import { CUISINE_TYPES } from '../../core/models/recipe.model';
 export class FeedPage implements ViewWillEnter {
   readonly feedService = inject(FeedService);
   private socialService = inject(SocialService);
+  private shareService = inject(ShareService);
   private auth = inject(Auth);
 
   likedRecipes = signal<Set<string>>(new Set());
@@ -92,6 +94,10 @@ export class FeedPage implements ViewWillEnter {
     this.selectedCuisine = '';
     this.selectedDifficulty = '';
     this.feedService.resetFilters();
+  }
+
+  async onShare(recipe: Recipe): Promise<void> {
+    await this.shareService.shareText(recipe);
   }
 
   private async _loadSocialState(): Promise<void> {

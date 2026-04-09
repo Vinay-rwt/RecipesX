@@ -14,6 +14,7 @@ export class RecipeCardComponent {
   @Input() isSaved = false;
   @Output() likeToggled = new EventEmitter<void>();
   @Output() saveToggled = new EventEmitter<void>();
+  @Output() shareClicked = new EventEmitter<void>();
 
   onLike(event: Event): void {
     event.stopPropagation();
@@ -23,5 +24,10 @@ export class RecipeCardComponent {
   onSave(event: Event): void {
     event.stopPropagation();
     this.saveToggled.emit();
+  }
+
+  onShare(event: Event): void {
+    event.stopPropagation();
+    this.shareClicked.emit();
   }
 }

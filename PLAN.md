@@ -532,9 +532,9 @@ export class FeedPage implements ViewWillEnter {
 
 ---
 
-## Phase 6: Sharing System — NOT STARTED
+## Phase 6: Sharing System — COMPLETED
 
-**Branch:** `feature/phase6-sharing` (create from develop, merge phase5 in)
+**Branch:** `feature/phase6-sharing` (PR targeting develop)
 
 ### What already exists (do not recreate):
 - `@capacitor/share` plugin already installed (v8.0.1) in package.json
@@ -653,14 +653,21 @@ export class RecipeCardGeneratorService {
 - `src/app/shared/components/recipe-card/recipe-card.component.ts` + `.html` — optional share button
 - `src/app/tabs/feed/feed.page.ts` — handle share from card
 
+### Key files added/modified:
+- `src/app/core/services/share.service.ts` — platform-aware sharing (native Capacitor, navigator.share, clipboard/download fallback)
+- `src/app/core/services/recipe-card-generator.service.ts` — offscreen canvas 1080×1350 PNG, cover-fit photo crop, chip overlays, watermark
+- `src/app/features/recipe/detail/recipe-detail.page.ts` — onShare() with ActionSheet (Image/Text/Copy Link); FAB button added to HTML
+- `src/app/shared/components/recipe-card/recipe-card.component.ts` — shareClicked EventEmitter; share icon in social-actions row
+- `src/app/tabs/feed/feed.page.ts` — onShare(recipe) → shareService.shareText()
+
 ### Verification:
-- [ ] `ng build` passes
-- [ ] Tap share FAB on recipe detail → action sheet appears
-- [ ] "Share as Text" → native share dialog (or clipboard on web) with recipe content
-- [ ] "Share as Image" → generates canvas card image, opens share dialog
-- [ ] "Copy Link" → clipboard contains URL, toast shown
-- [ ] Share from feed card → shares recipe text
-- [ ] On web: file sharing fallback (download) works when navigator.share({ files }) not supported
+- [x] `ng build` passes — zero errors (12.6s)
+- [ ] Tap share FAB on recipe detail → action sheet appears (runtime)
+- [ ] "Share as Text" → native share dialog (or clipboard on web) with recipe content (runtime)
+- [ ] "Share as Image" → generates canvas card image, opens share dialog (runtime)
+- [ ] "Copy Link" → clipboard contains URL, toast shown (runtime)
+- [ ] Share from feed card → shares recipe text (runtime)
+- [ ] On web: file sharing fallback (download) works when navigator.share({ files }) not supported (runtime)
 
 ---
 

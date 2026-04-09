@@ -28,5 +28,8 @@
       <ion-icon [name]="isSaved ? 'bookmark' : 'bookmark-outline'" [color]="isSaved ? 'primary' : 'medium'"></ion-icon>
       <span>{{ recipe.saveCount || 0 }}</span>
     </button>
+    <button class="social-btn share-btn" (click)="onShare($event)">
+      <ion-icon name="share-outline" color="medium"></ion-icon>
+    </button>
   </div>
 </ion-card>

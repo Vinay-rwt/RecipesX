@@ -77,7 +77,8 @@
       [isLiked]="likedRecipes().has(recipe.id!)"
       [isSaved]="savedRecipes().has(recipe.id!)"
       (likeToggled)="onToggleLike(recipe.id!)"
-      (saveToggled)="onToggleSave(recipe.id!)">
+      (saveToggled)="onToggleSave(recipe.id!)"
+      (shareClicked)="onShare(recipe)">
     </app-recipe-card>
   </div>
 
