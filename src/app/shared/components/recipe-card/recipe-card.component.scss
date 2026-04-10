@@ -53,4 +53,24 @@
       gap: 2px;
     }
   }
+
+  .social-actions {
+    display: flex;
+    gap: 0.75rem;
+    padding: 0.25rem 1rem 0.5rem;
+
+    .social-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.75rem;
+      color: var(--ion-color-medium);
+      padding: 2px 0;
+
+      ion-icon { font-size: 1rem; }
+    }
+  }
 }

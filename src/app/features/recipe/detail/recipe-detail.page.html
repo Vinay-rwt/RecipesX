@@ -30,6 +30,18 @@
       </div>
     </div>
 
+    <!-- Social actions bar -->
+    <div class="social-bar ion-padding-horizontal">
+      <ion-button fill="clear" (click)="toggleLike()">
+        <ion-icon slot="start" [name]="isLiked() ? 'heart' : 'heart-outline'" [color]="isLiked() ? 'danger' : 'medium'"></ion-icon>
+        <span>{{ r.likeCount || 0 }}</span>
+      </ion-button>
+      <ion-button fill="clear" (click)="toggleSave()">
+        <ion-icon slot="start" [name]="isSaved() ? 'bookmark' : 'bookmark-outline'" [color]="isSaved() ? 'primary' : 'medium'"></ion-icon>
+        <span>{{ r.saveCount || 0 }}</span>
+      </ion-button>
+    </div>
+
     <div class="recipe-body ion-padding">
       <!-- Title & meta -->
       <h1 class="recipe-title">{{ r.title }}</h1>
