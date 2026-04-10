@@ -1,47 +1,39 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
-    <ion-title>Feed</ion-title>
-    <ion-buttons slot="end">
-      <ion-button (click)="showFilters = !showFilters" [attr.aria-label]="showFilters ? 'Hide filters' : 'Show filters'" [attr.aria-expanded]="showFilters">
-        <ion-icon slot="icon-only" name="filter-outline" aria-hidden="true"></ion-icon>
-      </ion-button>
-    </ion-buttons>
-  </ion-toolbar>
-
-  <ion-toolbar>
+    <div class="header-row">
+      <div class="app-wordmark">recipe<span>share</span></div>
+      <div class="header-actions">
+        <button class="icon-btn"
+          (click)="showFilters = !showFilters"
+          [attr.aria-label]="showFilters ? 'Hide filters' : 'Show filters'"
+          [attr.aria-expanded]="showFilters">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="20" height="20" aria-hidden="true">
+            <line x1="4" y1="6" x2="20" y2="6"/>
+            <line x1="8" y1="12" x2="16" y2="12"/>
+            <line x1="11" y1="18" x2="13" y2="18"/>
+          </svg>
+        </button>
+      </div>
+    </div>
     <ion-searchbar
       [(ngModel)]="searchQuery"
       (ionInput)="onSearch()"
       [debounce]="400"
-      placeholder="Search recipes...">
+      placeholder="Search recipes…">
     </ion-searchbar>
   </ion-toolbar>
 
-  <ion-toolbar *ngIf="showFilters" class="filter-toolbar">
-    <div class="filter-row">
-      <ion-select
-        placeholder="Cuisine"
-        [(ngModel)]="selectedCuisine"
-        (ionChange)="onCuisineChange(selectedCuisine)"
-        interface="popover"
-        class="filter-select">
-        <ion-select-option value="">All cuisines</ion-select-option>
-        <ion-select-option *ngFor="let c of cuisineTypes" [value]="c">{{ c }}</ion-select-option>
-      </ion-select>
-
-      <ion-select
-        placeholder="Difficulty"
-        [(ngModel)]="selectedDifficulty"
-        (ionChange)="onDifficultyChange(selectedDifficulty)"
-        interface="popover"
-        class="filter-select">
-        <ion-select-option value="">All levels</ion-select-option>
-        <ion-select-option *ngFor="let d of difficulties" [value]="d">{{ d | titlecase }}</ion-select-option>
-      </ion-select>
-
-      <ion-button fill="clear" size="small" (click)="clearFilters()">Clear</ion-button>
-    </div>
-  </ion-toolbar>
+  <!-- Filter chips — horizontal scroll row -->
+  <div class="filter-row" *ngIf="showFilters" role="group" aria-label="Filter recipes">
+    <button class="filter-chip" [class.active]="!selectedCuisine && !selectedDifficulty" (click)="clearFilters()">All</button>
+    <button class="filter-chip" *ngFor="let c of cuisineTypes"
+      [class.active]="selectedCuisine === c"
+      (click)="onCuisineChange(selectedCuisine === c ? '' : c)">{{ c }}</button>
+    <div class="filter-divider" aria-hidden="true"></div>
+    <button class="filter-chip" *ngFor="let d of difficulties"
+      [class.active]="selectedDifficulty === d"
+      (click)="onDifficultyChange(selectedDifficulty === d ? '' : d)">{{ d | titlecase }}</button>
+  </div>
 </ion-header>
 
 <ion-content [fullscreen]="true">
@@ -51,29 +43,32 @@
 
   <!-- Loading skeleton -->
   <div *ngIf="feedService.loading() && feedService.recipes().length === 0" class="feed-list">
-    <ion-card *ngFor="let i of [1,2,3]" class="skeleton-card">
-      <ion-skeleton-text animated style="height: 160px;"></ion-skeleton-text>
-      <ion-card-header>
-        <ion-skeleton-text animated style="height: 1rem; width: 70%;"></ion-skeleton-text>
-        <ion-skeleton-text animated style="height: 0.8rem; width: 40%;"></ion-skeleton-text>
-      </ion-card-header>
-    </ion-card>
+    <div *ngFor="let i of [1,2,3]" class="skeleton-row">
+      <ion-skeleton-text animated class="skeleton-thumb"></ion-skeleton-text>
+      <div class="skeleton-body">
+        <ion-skeleton-text animated style="width: 30%; height: 0.7rem;"></ion-skeleton-text>
+        <ion-skeleton-text animated style="width: 85%; height: 1rem; margin-top: 5px;"></ion-skeleton-text>
+        <ion-skeleton-text animated style="width: 60%; height: 1rem; margin-top: 3px;"></ion-skeleton-text>
+        <ion-skeleton-text animated style="width: 50%; height: 0.7rem; margin-top: 8px;"></ion-skeleton-text>
+      </div>
+    </div>
   </div>
 
   <!-- Error state -->
-  <div *ngIf="!feedService.loading() && feedService.error()" class="error-state ion-text-center ion-padding">
-    <ion-icon name="cloud-offline-outline" style="font-size: 3rem;" color="medium" aria-hidden="true"></ion-icon>
-    <h3>{{ feedService.error() }}</h3>
+  <div *ngIf="!feedService.loading() && feedService.error()" class="rs-error-state">
+    <ion-icon name="cloud-offline-outline" aria-hidden="true"></ion-icon>
+    <h3>Couldn't load recipes</h3>
+    <p>{{ feedService.error() }}</p>
     <ion-button fill="outline" (click)="onRefreshManual()" aria-label="Retry loading feed">
       <ion-icon slot="start" name="refresh-outline" aria-hidden="true"></ion-icon>
-      Retry
+      Try again
     </ion-button>
   </div>
 
   <!-- Empty state -->
-  <div *ngIf="!feedService.loading() && !feedService.error() && feedService.recipes().length === 0" class="empty-state">
-    <ion-icon name="restaurant-outline"></ion-icon>
-    <h3>No recipes found</h3>
+  <div *ngIf="!feedService.loading() && !feedService.error() && feedService.recipes().length === 0" class="rs-empty-state">
+    <ion-icon name="restaurant-outline" aria-hidden="true"></ion-icon>
+    <h3>No recipes here yet</h3>
     <p>Try adjusting your filters or be the first to share a recipe!</p>
     <ion-button fill="clear" (click)="clearFilters()">Clear filters</ion-button>
   </div>
@@ -81,9 +76,10 @@
   <!-- Recipe feed -->
   <div class="feed-list" *ngIf="!feedService.error() && feedService.recipes().length > 0">
     <app-recipe-card
-      *ngFor="let recipe of feedService.recipes()"
+      *ngFor="let recipe of feedService.recipes(); let first = first"
       [recipe]="recipe"
       [showSocialActions]="true"
+      [featured]="first"
       [isLiked]="likedRecipes().has(recipe.id!)"
       [isSaved]="savedRecipes().has(recipe.id!)"
       (likeToggled)="onToggleLike(recipe.id!)"
@@ -93,6 +89,6 @@
   </div>
 
   <ion-infinite-scroll (ionInfinite)="loadMore($event)" [disabled]="!feedService.hasMore()">
-    <ion-infinite-scroll-content loadingText="Loading more recipes..."></ion-infinite-scroll-content>
+    <ion-infinite-scroll-content loadingText="Loading more recipes…"></ion-infinite-scroll-content>
   </ion-infinite-scroll>
 </ion-content>

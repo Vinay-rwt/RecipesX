@@ -4,22 +4,49 @@
 }
 
 .section-title {
-  font-size: 1.1rem;
-  font-weight: 600;
-  margin: 1.5rem 0 0.5rem;
-  padding-left: 0.25rem;
+  font-family: var(--rs-font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--rs-text-primary);
+  margin: var(--rs-space-lg) 0 var(--rs-space-sm);
+  padding-left: 2px;
+}
+
+ion-card {
+  border-radius: var(--rs-radius-lg);
+  border: 1px solid var(--rs-border);
+  box-shadow: none;
+  margin: 0 0 var(--rs-space-sm);
 }
 
 ion-card ion-avatar {
   display: flex;
   align-items: center;
   justify-content: center;
+  background: var(--rs-accent-subtle);
+  border-radius: var(--rs-radius-full);
 
   ion-icon {
-    color: var(--ion-color-primary);
+    color: var(--rs-accent);
+    font-size: 2rem;
   }
 }
 
+ion-card h2 {
+  font-family: var(--rs-font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--rs-text-primary);
+}
+
+ion-card p {
+  font-size: 13px;
+  color: var(--rs-text-muted);
+  margin: 0;
+}
+
 ion-segment {
-  margin-top: 0.5rem;
+  margin-top: var(--rs-space-sm);
 }
