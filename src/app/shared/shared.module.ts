@@ -6,6 +6,8 @@ import { EquipmentSelectorComponent } from './components/equipment-selector/equi
 import { EquipmentBadgeComponent } from './components/equipment-badge/equipment-badge.component';
 import { RecipeCardComponent } from './components/recipe-card/recipe-card.component';
 import { MyRecipesComponent } from './components/my-recipes/my-recipes.component';
+import { TemperaturePipe } from './pipes/temperature.pipe';
+import { MeasurementPipe } from './pipes/measurement.pipe';
 
 @NgModule({
   imports: [CommonModule, RouterModule, IonicModule],
@@ -14,12 +16,16 @@ import { MyRecipesComponent } from './components/my-recipes/my-recipes.component
     EquipmentBadgeComponent,
     RecipeCardComponent,
     MyRecipesComponent,
+    TemperaturePipe,
+    MeasurementPipe,
   ],
   exports: [
     EquipmentSelectorComponent,
     EquipmentBadgeComponent,
     RecipeCardComponent,
     MyRecipesComponent,
+    TemperaturePipe,
+    MeasurementPipe,
   ],
 })
 export class SharedModule {}

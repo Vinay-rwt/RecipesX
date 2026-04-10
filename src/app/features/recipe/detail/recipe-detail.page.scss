@@ -62,7 +62,76 @@
     display: flex;
     flex-wrap: wrap;
     gap: 0.25rem;
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  // Conversion section
+  .conversion-section {
+    background: var(--ion-color-light);
+    border-radius: 12px;
+    margin: 1rem 0;
+    overflow: hidden;
+
+    .equipment-switcher {
+      --background: transparent;
+    }
+
+    .conversion-banner {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: color-mix(in srgb, var(--ion-color-primary) 10%, transparent);
+      font-size: 0.9rem;
+      color: var(--ion-color-primary);
+      font-weight: 500;
+
+      ion-badge { margin-left: auto; }
+    }
+
+    .no-conversion-warning {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      font-size: 0.85rem;
+      color: var(--ion-color-warning-shade);
+    }
+
+    .technique-notes {
+      padding: 0.5rem 1rem;
+      border-top: 1px solid var(--ion-color-light-shade);
+
+      p {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5rem;
+        font-size: 0.85rem;
+        color: var(--ion-color-medium);
+        margin: 0.25rem 0;
+        line-height: 1.5;
+
+        ion-icon { flex-shrink: 0; margin-top: 2px; }
+      }
+    }
+
+    .serving-scaler {
+      --background: transparent;
+      border-top: 1px solid var(--ion-color-light-shade);
+
+      .scaler-controls {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+
+        .serving-count {
+          min-width: 2rem;
+          text-align: center;
+          font-weight: 600;
+          font-size: 1.1rem;
+        }
+      }
+    }
   }
 
   .section-heading {
@@ -73,8 +142,10 @@
     border-bottom: 2px solid var(--ion-color-primary);
   }
 
-  .ing-qty { font-weight: 600; }
-  .ing-unit { color: var(--ion-color-medium); font-size: 0.9rem; }
+  .ing-qty {
+    font-weight: 600;
+    margin-right: 0.25rem;
+  }
 
   .step-card {
     background: var(--ion-color-light);
@@ -87,24 +158,44 @@
       align-items: center;
       gap: 0.75rem;
       margin-bottom: 0.5rem;
+      flex-wrap: wrap;
 
       .step-details {
         display: flex;
-        gap: 0.75rem;
-        font-size: 0.85rem;
-        color: var(--ion-color-medium);
+        gap: 0.5rem;
+        flex-wrap: wrap;
 
-        span {
-          display: flex;
+        .detail-chip {
+          display: inline-flex;
           align-items: center;
           gap: 3px;
+          font-size: 0.85rem;
+          color: var(--ion-color-medium);
+          background: var(--ion-color-light-shade);
+          padding: 2px 8px;
+          border-radius: 12px;
         }
+
+        .temp-chip { color: var(--ion-color-danger); }
       }
     }
 
     .step-instruction {
-      margin: 0;
+      margin: 0 0 0.25rem;
       line-height: 1.6;
+    }
+
+    .technique-note {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.4rem;
+      font-size: 0.85rem;
+      color: var(--ion-color-warning-shade);
+      font-style: italic;
+      margin: 0.5rem 0 0;
+      line-height: 1.5;
+
+      ion-icon { flex-shrink: 0; margin-top: 2px; }
     }
   }
 }
