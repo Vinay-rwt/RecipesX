@@ -11,7 +11,34 @@
     </ion-toolbar>
   </ion-header>
 
-  <div class="profile-content" *ngIf="profileService.userProfile() as profile">
+  <!-- Loading skeleton -->
+  <div *ngIf="profileService.loading()">
+    <ion-card>
+      <ion-card-header>
+        <ion-item lines="none">
+          <ion-skeleton-text animated style="width: 48px; height: 48px; border-radius: 50%;" slot="start"></ion-skeleton-text>
+          <ion-label>
+            <ion-skeleton-text animated style="width: 50%; height: 1rem;"></ion-skeleton-text>
+            <ion-skeleton-text animated style="width: 70%; height: 0.8rem; margin-top: 6px;"></ion-skeleton-text>
+          </ion-label>
+        </ion-item>
+      </ion-card-header>
+    </ion-card>
+    <ion-skeleton-text animated style="width: 40%; height: 1.2rem; margin: 1rem 0 0.5rem;"></ion-skeleton-text>
+    <ion-skeleton-text animated style="width: 100%; height: 80px; border-radius: 8px;"></ion-skeleton-text>
+  </div>
+
+  <!-- Error state -->
+  <div *ngIf="!profileService.loading() && profileService.error()" class="error-state ion-text-center ion-padding">
+    <ion-icon name="cloud-offline-outline" color="medium" style="font-size: 3rem;"></ion-icon>
+    <p color="medium">{{ profileService.error() }}</p>
+    <ion-button fill="outline" (click)="loadData()" aria-label="Retry loading profile">
+      <ion-icon slot="start" name="refresh-outline" aria-hidden="true"></ion-icon>
+      Retry
+    </ion-button>
+  </div>
+
+  <div class="profile-content" *ngIf="!profileService.loading() && !profileService.error() && profileService.userProfile() as profile">
     <!-- User Info -->
     <ion-card>
       <ion-card-header>

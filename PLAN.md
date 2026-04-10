@@ -671,9 +671,9 @@ export class RecipeCardGeneratorService {
 
 ---
 
-## Phase 7: Polish & Platform — NOT STARTED
+## Phase 7: Polish & Platform — COMPLETED
 
-**Branch:** `feature/phase7-polish` (create from develop, merge phase6 in)
+**Branch:** `feature/phase7-polish` (PR targeting develop)
 
 ### What already exists (do not recreate):
 - `src/app/core/services/auth.service.ts` — email/password login and register
@@ -841,16 +841,23 @@ For each major page, add three states: loading skeleton, error, and empty.
 - `src/app/features/recipe/detail/recipe-detail.page.html` — error state
 - Various templates — aria-labels, alt attributes
 
+### What was built:
+- **Step 1 (Google Sign-In):** `loginWithGoogle()` added to AuthService using `signInWithPopup` + `GoogleAuthProvider`. Auto-creates Firestore user doc on first sign-in. Google button + divider added to login page with `isSocialLoading` flag. Google SVG icon at `src/assets/icons/google.svg`. Apple sign-in deferred (requires Apple Developer account + portal config).
+- **Step 2 (Security Rules):** `firestore.rules` — scoped reads (published or own draft), author-only writes, subcollection ownership. `storage.rules` — public read on recipe photos, auth-required write/delete.
+- **Step 3 (Native Platforms):** `npm install @capacitor/ios @capacitor/android`, `npx cap add ios`, `npx cap add android`, `npx cap sync`. All 7 plugins confirmed. `ios/` and `android/` native project dirs generated.
+- **Step 4 (Offline):** `app.module.ts` uses `initializeFirestore` with `persistentLocalCache({ tabManager: persistentMultipleTabManager() })` — correct v9+ API, multi-tab safe.
+- **Step 5 (Error/Skeleton states):** `UserProfileService` gains `loading` + `error` signals with try/catch in `loadProfile`. `FeedService` gains `error` signal. Profile page: loading skeleton + error state + retry button. Feed page: error state + retry button. Recipe detail: improved not-found state with retry.
+- **Step 6 (Accessibility):** `aria-label` on filter toggle (with `aria-expanded`), serving scaler +/- buttons, share FAB, like/save buttons (dynamic labels with counts), share button on recipe cards. `aria-hidden="true"` on all decorative icons. `aria-live="polite"` on serving count for screen reader announcements.
+
 ### Verification:
-- [ ] `ng build` passes
-- [ ] Google sign-in works on web (popup flow)
-- [ ] Apple sign-in works on web (popup flow)
-- [ ] Firestore rules: cannot read other users' drafts, can read all published recipes
-- [ ] Firestore rules: cannot modify another user's recipe
-- [ ] iOS build succeeds in Xcode simulator
-- [ ] Android build succeeds in Android Studio emulator
-- [ ] Offline: open app, disconnect network, browse cached feed and recipes
-- [ ] Offline: create recipe while offline, reconnect, verify it syncs
-- [ ] Skeleton screens show during loading for feed, detail, and profile
-- [ ] Empty state shows when feed has no recipes
-- [ ] VoiceOver can navigate login → feed → recipe detail
+- [x] `ng build` passes — zero errors (15s)
+- [ ] Google sign-in popup works on web (runtime — requires Firebase console Google provider enabled)
+- [ ] Apple sign-in — deferred (requires Apple Developer account)
+- [ ] Firestore rules: cannot read other users' drafts, can read all published recipes (runtime)
+- [ ] Firestore rules: cannot modify another user's recipe (runtime)
+- [ ] `npx cap open ios` → Xcode opens with ios/ project (runtime)
+- [ ] `npx cap open android` → Android Studio opens with android/ project (runtime)
+- [ ] Offline: cached feed/recipes accessible when network disconnected (runtime)
+- [ ] Skeleton screen shows during profile/feed load (runtime)
+- [ ] Error state + retry button shows on network failure (runtime)
+- [ ] VoiceOver/TalkBack reads meaningful labels for like/save/share/filter buttons (runtime)

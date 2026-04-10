@@ -18,12 +18,14 @@ export class FeedService {
   private _recipes = signal<Recipe[]>([]);
   private _loading = signal(false);
   private _hasMore = signal(true);
+  private _error = signal<string | null>(null);
   private _lastDoc: QueryDocumentSnapshot<DocumentData> | null = null;
   private _filters = signal<FeedFilters>({});
 
   readonly recipes = this._recipes.asReadonly();
   readonly loading = this._loading.asReadonly();
   readonly hasMore = this._hasMore.asReadonly();
+  readonly error = this._error.asReadonly();
   readonly filters = this._filters.asReadonly();
 
   readonly PAGE_SIZE = 10;
@@ -32,6 +34,7 @@ export class FeedService {
     this._recipes.set([]);
     this._lastDoc = null;
     this._hasMore.set(true);
+    this._error.set(null);
     await this._fetchPage();
   }
 
@@ -52,6 +55,7 @@ export class FeedService {
 
   private async _fetchPage(): Promise<void> {
     this._loading.set(true);
+    this._error.set(null);
     try {
       const filters = this._filters();
       const recipesRef = collection(this.firestore, 'recipes');
@@ -97,6 +101,8 @@ export class FeedService {
       if (snapshot.docs.length < this.PAGE_SIZE) {
         this._hasMore.set(false);
       }
+    } catch {
+      this._error.set('Failed to load recipes. Pull down to retry.');
     } finally {
       this._loading.set(false);
     }

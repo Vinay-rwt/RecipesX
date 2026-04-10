@@ -46,6 +46,23 @@
       </ion-button>
     </form>
 
+    <!-- Social sign-in divider -->
+    <div class="divider ion-margin-top">
+      <span>or continue with</span>
+    </div>
+
+    <ion-button
+      expand="block"
+      fill="outline"
+      color="medium"
+      (click)="onGoogleLogin()"
+      [disabled]="isSocialLoading"
+      class="google-btn ion-margin-top"
+      aria-label="Sign in with Google">
+      <ion-icon slot="start" src="assets/icons/google.svg" aria-hidden="true"></ion-icon>
+      {{ isSocialLoading ? 'Signing in...' : 'Continue with Google' }}
+    </ion-button>
+
     <ion-button expand="block" fill="clear" routerLink="/auth/register" class="ion-margin-top">
       Don't have an account? Register
     </ion-button>

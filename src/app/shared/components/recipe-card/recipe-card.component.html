@@ -1,8 +1,8 @@
 <ion-card [routerLink]="['/recipe', recipe.id]" button class="recipe-card">
   <div class="recipe-card-photo">
     <img *ngIf="recipe.photoURLs?.length" [src]="recipe.photoURLs[0]" [alt]="recipe.title" />
-    <div *ngIf="!recipe.photoURLs?.length" class="photo-placeholder">
-      <ion-icon name="restaurant-outline"></ion-icon>
+    <div *ngIf="!recipe.photoURLs?.length" class="photo-placeholder" aria-hidden="true">
+      <ion-icon name="restaurant-outline" aria-hidden="true"></ion-icon>
     </div>
     <ion-badge [color]="recipe.status === 'published' ? 'success' : 'warning'" class="status-badge">
       {{ recipe.status }}
@@ -20,16 +20,16 @@
   </ion-card-header>
 
   <div class="social-actions" *ngIf="showSocialActions">
-    <button class="social-btn" (click)="onLike($event)">
-      <ion-icon [name]="isLiked ? 'heart' : 'heart-outline'" [color]="isLiked ? 'danger' : 'medium'"></ion-icon>
-      <span>{{ recipe.likeCount || 0 }}</span>
+    <button class="social-btn" (click)="onLike($event)" [attr.aria-label]="(isLiked ? 'Unlike' : 'Like') + ' — ' + (recipe.likeCount || 0) + ' likes'">
+      <ion-icon [name]="isLiked ? 'heart' : 'heart-outline'" [color]="isLiked ? 'danger' : 'medium'" aria-hidden="true"></ion-icon>
+      <span aria-hidden="true">{{ recipe.likeCount || 0 }}</span>
     </button>
-    <button class="social-btn" (click)="onSave($event)">
-      <ion-icon [name]="isSaved ? 'bookmark' : 'bookmark-outline'" [color]="isSaved ? 'primary' : 'medium'"></ion-icon>
-      <span>{{ recipe.saveCount || 0 }}</span>
+    <button class="social-btn" (click)="onSave($event)" [attr.aria-label]="(isSaved ? 'Unsave' : 'Save') + ' — ' + (recipe.saveCount || 0) + ' saves'">
+      <ion-icon [name]="isSaved ? 'bookmark' : 'bookmark-outline'" [color]="isSaved ? 'primary' : 'medium'" aria-hidden="true"></ion-icon>
+      <span aria-hidden="true">{{ recipe.saveCount || 0 }}</span>
     </button>
-    <button class="social-btn share-btn" (click)="onShare($event)">
-      <ion-icon name="share-outline" color="medium"></ion-icon>
+    <button class="social-btn share-btn" (click)="onShare($event)" aria-label="Share recipe">
+      <ion-icon name="share-outline" color="medium" aria-hidden="true"></ion-icon>
     </button>
   </div>
 </ion-card>
