@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Auth } from '@angular/fire/auth';
 import { AlertController, LoadingController, ToastController, ViewWillEnter, ViewWillLeave } from '@ionic/angular';
 import { RecipeFormStateService } from './services/recipe-form-state.service';
@@ -19,6 +19,7 @@ export class CreatePage implements ViewWillEnter, ViewWillLeave {
   private photoService = inject(PhotoService);
   private auth = inject(Auth);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private alertCtrl = inject(AlertController);
   private toastCtrl = inject(ToastController);
   private loadingCtrl = inject(LoadingController);
@@ -26,6 +27,31 @@ export class CreatePage implements ViewWillEnter, ViewWillLeave {
   readonly stepLabels = ['Basics', 'Equipment', 'Ingredients', 'Steps'];
 
   async ionViewWillEnter(): Promise<void> {
+    const editId = this.route.snapshot.paramMap.get('id');
+
+    if (editId) {
+      // Edit mode: load the recipe and populate the form
+      const loading = await this.loadingCtrl.create({ message: 'Loading recipe...' });
+      await loading.present();
+      try {
+        await this.recipeService.getRecipe(editId);
+        const recipe = this.recipeService.currentRecipe();
+        if (recipe) {
+          this.formState.loadRecipeForEdit(recipe);
+        } else {
+          await this.showToast('Recipe not found', 'danger');
+          await this.router.navigate(['/tabs/profile']);
+        }
+      } catch {
+        await this.showToast('Failed to load recipe', 'danger');
+        await this.router.navigate(['/tabs/profile']);
+      } finally {
+        await loading.dismiss();
+      }
+      return;
+    }
+
+    // Create mode: check for existing local draft
     const hasDraft = this.formState.loadDraftFromLocal();
     if (hasDraft) {
       const alert = await this.alertCtrl.create({
@@ -45,7 +71,8 @@ export class CreatePage implements ViewWillEnter, ViewWillLeave {
   }
 
   ionViewWillLeave(): void {
-    if (this.formState.form.dirty) {
+    // Don't pollute the draft slot with edit state
+    if (!this.formState.isEditMode() && this.formState.form.dirty) {
       this.formState.saveDraftToLocal();
     }
   }
@@ -54,7 +81,9 @@ export class CreatePage implements ViewWillEnter, ViewWillLeave {
     const current = this.formState.currentStep();
     if (current < this.stepLabels.length - 1) {
       this.formState.currentStep.set(current + 1);
-      this.formState.saveDraftToLocal();
+      if (!this.formState.isEditMode()) {
+        this.formState.saveDraftToLocal();
+      }
     }
   }
 
@@ -88,6 +117,7 @@ export class CreatePage implements ViewWillEnter, ViewWillLeave {
       URL.revokeObjectURL(this.formState.coverPhotoPreview()!);
     }
     this.formState.coverPhotoPreview.set(null);
+    this.formState.existingPhotoURLs.set([]); // user chose emoji, drop existing photos
   }
 
   async saveDraft(): Promise<void> {
@@ -140,14 +170,18 @@ export class CreatePage implements ViewWillEnter, ViewWillLeave {
     const user = this.auth.currentUser;
     if (!user) return;
 
-    const loading = await this.loadingCtrl.create({ message: 'Publishing...' });
+    const isEdit = this.formState.isEditMode();
+    const loading = await this.loadingCtrl.create({ message: isEdit ? 'Saving changes...' : 'Publishing...' });
     await loading.present();
     try {
       const formValue = this.formState.form.value;
       const existingId = this.formState.firestoreDraftId();
       let recipeId: string;
 
-      const recipeData = this.buildRecipeData(user.uid, formValue, [], 'published', this.formState.coverEmoji() ?? undefined);
+      // In edit mode, preserve existing photos unless user picked a new one
+      const photoURLs = this.formState.existingPhotoURLs();
+      const recipeData = this.buildRecipeData(user.uid, formValue, photoURLs, 'published', this.formState.coverEmoji() ?? undefined);
+
       if (existingId) {
         await this.recipeService.updateRecipe(existingId, recipeData);
         recipeId = existingId;
@@ -161,31 +195,39 @@ export class CreatePage implements ViewWillEnter, ViewWillLeave {
       }
 
       this.formState.reset();
-      await this.showToast('Recipe published!', 'success');
+      await this.showToast(isEdit ? 'Recipe updated!' : 'Recipe published!', 'success');
       await this.router.navigate(['/recipe', recipeId]);
     } catch (err) {
       console.error(err);
-      await this.showToast('Failed to publish', 'danger');
+      await this.showToast(isEdit ? 'Failed to save changes' : 'Failed to publish', 'danger');
     } finally {
       await loading.dismiss();
     }
   }
 
   async discard(): Promise<void> {
+    const isEdit = this.formState.isEditMode();
+    const recipeId = this.formState.firestoreDraftId();
+
     const alert = await this.alertCtrl.create({
-      header: 'Discard Recipe?',
-      message: 'Your draft will be deleted. This cannot be undone.',
+      header: isEdit ? 'Discard Changes?' : 'Discard Recipe?',
+      message: isEdit
+        ? 'Your changes will not be saved.'
+        : 'Your draft will be deleted. This cannot be undone.',
       buttons: [
         { text: 'Keep Editing', role: 'cancel' },
         {
           text: 'Discard',
           role: 'destructive',
           handler: async () => {
-            const draftId = this.formState.firestoreDraftId();
-            if (draftId) {
-              try { await this.recipeService.deleteRecipe(draftId); } catch { /* ignore */ }
+            if (!isEdit && recipeId) {
+              // Only delete the Firestore doc for new drafts, not published recipes
+              try { await this.recipeService.deleteRecipe(recipeId); } catch { /* ignore */ }
             }
             this.formState.reset();
+            if (isEdit && recipeId) {
+              await this.router.navigate(['/recipe', recipeId]);
+            }
           },
         },
       ],

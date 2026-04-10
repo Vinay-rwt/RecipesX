@@ -4,6 +4,15 @@
       <ion-back-button defaultHref="/tabs/feed"></ion-back-button>
     </ion-buttons>
     <ion-title>{{ recipe()?.title || 'Recipe' }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button
+        *ngIf="isAuthor()"
+        (click)="navigateToEdit()"
+        aria-label="Edit recipe"
+        class="edit-recipe-btn">
+        <ion-icon slot="icon-only" name="create-outline" aria-hidden="true"></ion-icon>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 

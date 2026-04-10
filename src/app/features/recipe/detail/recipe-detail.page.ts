@@ -1,5 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Auth } from '@angular/fire/auth';
 import { ActionSheetController, ToastController, ViewWillEnter } from '@ionic/angular';
 import { RecipeService } from '../../../core/services/recipe.service';
@@ -19,6 +19,7 @@ import { Recipe } from '../../../core/models/recipe.model';
 })
 export class RecipeDetailPage implements ViewWillEnter {
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private auth = inject(Auth);
   private recipeService = inject(RecipeService);
   private conversionService = inject(EquipmentConversionService);
@@ -36,6 +37,12 @@ export class RecipeDetailPage implements ViewWillEnter {
   readonly selectedServings = signal<number>(1);
   readonly isLiked = signal(false);
   readonly isSaved = signal(false);
+
+  readonly isAuthor = computed(() => {
+    const r = this.recipe();
+    const uid = this.auth.currentUser?.uid;
+    return !!r && !!uid && r.authorId === uid;
+  });
 
   readonly viewingOptions = computed(() => {
     const r = this.recipe();
@@ -101,6 +108,13 @@ export class RecipeDetailPage implements ViewWillEnter {
     if (!uid || !recipeId) return;
     const saved = await this.socialService.toggleSave(uid, recipeId);
     this.isSaved.set(saved);
+  }
+
+  navigateToEdit(): void {
+    const id = this.recipe()?.id;
+    if (id) {
+      this.router.navigate(['/tabs/create/edit', id]);
+    }
   }
 
   onEquipmentChange(id: string): void {
