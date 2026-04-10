@@ -75,9 +75,19 @@ export class CreatePage implements ViewWillEnter, ViewWillLeave {
       const url = URL.createObjectURL(blob);
       this.formState.coverPhotoBlob.set(blob);
       this.formState.coverPhotoPreview.set(url);
+      this.formState.coverEmoji.set(null); // clear emoji when photo chosen
     } catch {
       // User cancelled photo capture — no action needed
     }
+  }
+
+  onSelectEmoji(emoji: string): void {
+    this.formState.coverEmoji.set(emoji);
+    this.formState.coverPhotoBlob.set(null); // clear photo when emoji chosen
+    if (this.formState.coverPhotoPreview()) {
+      URL.revokeObjectURL(this.formState.coverPhotoPreview()!);
+    }
+    this.formState.coverPhotoPreview.set(null);
   }
 
   async saveDraft(): Promise<void> {
@@ -89,7 +99,7 @@ export class CreatePage implements ViewWillEnter, ViewWillLeave {
     try {
       const formValue = this.formState.form.value;
       const draftId = this.formState.firestoreDraftId();
-      const recipeData = this.buildRecipeData(user.uid, formValue, [], 'draft');
+      const recipeData = this.buildRecipeData(user.uid, formValue, [], 'draft', this.formState.coverEmoji() ?? undefined);
 
       if (draftId) {
         await this.recipeService.updateRecipe(draftId, recipeData);
@@ -137,7 +147,7 @@ export class CreatePage implements ViewWillEnter, ViewWillLeave {
       const existingId = this.formState.firestoreDraftId();
       let recipeId: string;
 
-      const recipeData = this.buildRecipeData(user.uid, formValue, [], 'published');
+      const recipeData = this.buildRecipeData(user.uid, formValue, [], 'published', this.formState.coverEmoji() ?? undefined);
       if (existingId) {
         await this.recipeService.updateRecipe(existingId, recipeData);
         recipeId = existingId;
@@ -188,12 +198,14 @@ export class CreatePage implements ViewWillEnter, ViewWillLeave {
     formValue: Record<string, unknown>,
     photoURLs: string[],
     status: 'draft' | 'published',
+    coverEmoji?: string,
   ): Omit<Recipe, 'id' | 'createdAt' | 'updatedAt' | 'likeCount' | 'saveCount'> {
     return {
       authorId,
       title: (formValue['title'] as string) || '',
       description: (formValue['description'] as string) || '',
       photoURLs,
+      ...(coverEmoji ? { coverEmoji } : {}),
       sourceEquipment: (formValue['sourceEquipment'] as string) || '',
       ingredients: (formValue['ingredients'] as Recipe['ingredients']) || [],
       baseServings: Number(formValue['baseServings']) || 4,

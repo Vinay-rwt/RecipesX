@@ -1,11 +1,61 @@
 <div class="step-content ion-padding" [formGroup]="form">
 
-  <!-- Cover Photo -->
-  <div class="photo-area" (click)="capturePhoto.emit()">
-    <img *ngIf="photoPreview" [src]="photoPreview" alt="Cover photo" class="photo-preview" />
-    <div *ngIf="!photoPreview" class="photo-placeholder">
-      <ion-icon name="camera-outline" size="large"></ion-icon>
-      <p>Tap to add cover photo</p>
+  <!-- Cover media area -->
+  <div class="cover-area">
+
+    <!-- Preview: real photo -->
+    <div *ngIf="photoPreview" class="cover-preview photo-preview-wrap">
+      <img [src]="photoPreview" alt="Cover photo" class="cover-preview-img" />
+      <button class="cover-clear-btn" (click)="capturePhoto.emit()" type="button" aria-label="Change photo">
+        Change
+      </button>
+    </div>
+
+    <!-- Preview: emoji -->
+    <div *ngIf="!photoPreview && selectedEmoji" class="cover-preview emoji-preview-wrap">
+      <span class="cover-emoji-display">{{ selectedEmoji }}</span>
+      <button class="cover-clear-btn" (click)="showEmojiPicker = true" type="button" aria-label="Change emoji">
+        Change
+      </button>
+    </div>
+
+    <!-- Empty state — two options -->
+    <div *ngIf="!photoPreview && !selectedEmoji" class="cover-empty">
+      <button class="cover-option-btn" (click)="capturePhoto.emit()" type="button">
+        <span class="cover-option-icon">📷</span>
+        <span class="cover-option-label">Upload photo</span>
+      </button>
+      <div class="cover-option-divider" aria-hidden="true">or</div>
+      <button class="cover-option-btn" (click)="showEmojiPicker = true" type="button">
+        <span class="cover-option-icon">🍽️</span>
+        <span class="cover-option-label">Pick an emoji</span>
+      </button>
+    </div>
+
+  </div>
+
+  <!-- Emoji picker panel -->
+  <div class="emoji-picker-panel" *ngIf="showEmojiPicker" role="dialog" aria-label="Pick a food emoji">
+    <div class="emoji-picker-header">
+      <span class="emoji-picker-title">Pick a food emoji</span>
+      <button class="emoji-picker-close" (click)="showEmojiPicker = false" type="button" aria-label="Close emoji picker">✕</button>
+    </div>
+    <div class="emoji-picker-body">
+      <div *ngFor="let group of foodEmojis" class="emoji-group">
+        <div class="emoji-group-label">{{ group.label }}</div>
+        <div class="emoji-grid">
+          <button
+            *ngFor="let emoji of group.emojis"
+            class="emoji-btn"
+            [class.selected]="selectedEmoji === emoji"
+            (click)="onPickEmoji(emoji)"
+            type="button"
+            [attr.aria-label]="emoji"
+            [attr.aria-pressed]="selectedEmoji === emoji">
+            {{ emoji }}
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 

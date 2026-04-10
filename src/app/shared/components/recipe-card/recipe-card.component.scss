@@ -162,6 +162,17 @@
   ion-icon { font-size: 2rem; color: var(--rs-text-muted); }
 }
 
+.emoji-placeholder {
+  background: var(--rs-accent-subtle);
+  font-size: 36px;
+  line-height: 1;
+  user-select: none;
+
+  &.featured-photo-placeholder {
+    font-size: 72px;
+  }
+}
+
 // ─── Social actions ───────────────────────────────────────────────────────────
 
 .social-row {

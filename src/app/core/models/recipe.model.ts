@@ -23,6 +23,7 @@ export interface Recipe {
   title: string;
   description: string;
   photoURLs: string[];
+  coverEmoji?: string;
   sourceEquipment: string;
   ingredients: Ingredient[];
   baseServings: number;

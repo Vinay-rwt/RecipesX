@@ -31,7 +31,9 @@
       *ngSwitchCase="0"
       [form]="formState.form"
       [photoPreview]="formState.coverPhotoPreview()"
-      (capturePhoto)="onCapturePhoto()">
+      [selectedEmoji]="formState.coverEmoji()"
+      (capturePhoto)="onCapturePhoto()"
+      (emojiSelected)="onSelectEmoji($event)">
     </app-step-basics>
 
     <app-step-equipment

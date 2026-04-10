@@ -11,6 +11,7 @@ export class RecipeFormStateService {
   readonly firestoreDraftId = signal<string | null>(null);
   readonly coverPhotoBlob = signal<Blob | null>(null);
   readonly coverPhotoPreview = signal<string | null>(null);
+  readonly coverEmoji = signal<string | null>(null);
 
   readonly form: FormGroup = this.fb.group({
     // Step 1 — Basics
@@ -137,6 +138,7 @@ export class RecipeFormStateService {
         form: this.form.value,
         draftId: this.firestoreDraftId(),
         preview: this.coverPhotoPreview(),
+        emoji: this.coverEmoji(),
         step: this.currentStep(),
       };
       localStorage.setItem(this.DRAFT_KEY, JSON.stringify(value));
@@ -160,6 +162,7 @@ export class RecipeFormStateService {
       this.form.patchValue(value.form);
       this.firestoreDraftId.set(value.draftId ?? null);
       this.coverPhotoPreview.set(value.preview ?? null);
+      this.coverEmoji.set(value.emoji ?? null);
       this.currentStep.set(value.step ?? 0);
       return true;
     } catch {
@@ -187,6 +190,7 @@ export class RecipeFormStateService {
       URL.revokeObjectURL(this.coverPhotoPreview()!);
     }
     this.coverPhotoPreview.set(null);
+    this.coverEmoji.set(null);
     this.clearDraftFromLocal();
   }
 

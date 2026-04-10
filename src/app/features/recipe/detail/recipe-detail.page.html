@@ -30,7 +30,10 @@
     <!-- Cover photo -->
     <div class="cover-photo">
       <img *ngIf="r.photoURLs?.length" [src]="r.photoURLs[0]" [alt]="r.title" />
-      <div *ngIf="!r.photoURLs?.length" class="cover-placeholder">
+      <div *ngIf="!r.photoURLs?.length && r.coverEmoji" class="cover-placeholder cover-emoji-placeholder" aria-hidden="true">
+        {{ r.coverEmoji }}
+      </div>
+      <div *ngIf="!r.photoURLs?.length && !r.coverEmoji" class="cover-placeholder">
         <ion-icon name="restaurant-outline"></ion-icon>
       </div>
     </div>
