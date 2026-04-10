@@ -177,6 +177,141 @@ ion-back-button {
   font-family: var(--rs-font-display);
 }
 
+// ─── Create flow shared step styles ─────────────────────────────────────────
+
+.step-heading {
+  font-family: var(--rs-font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--rs-text-primary);
+  margin: 0 0 var(--rs-space-xs);
+}
+
+.step-hint {
+  font-family: var(--rs-font-body);
+  font-size: 14px;
+  color: var(--rs-text-muted);
+  margin: 0 0 var(--rs-space-md);
+  max-width: 100%;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: var(--rs-space-sm);
+}
+
+.ingredient-count,
+.step-count {
+  font-family: var(--rs-font-display);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--rs-text-muted);
+}
+
+// Empty state hint inside steps
+.empty-hint {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--rs-space-sm);
+  padding: var(--rs-space-xl) var(--rs-space-md);
+  text-align: center;
+
+  .empty-hint-icon {
+    font-size: 36px;
+    line-height: 1;
+  }
+
+  p {
+    font-family: var(--rs-font-display);
+    font-size: 14px;
+    color: var(--rs-text-muted);
+    margin: 0;
+    max-width: 30ch;
+  }
+}
+
+// Swipe hint
+.swipe-hint {
+  font-family: var(--rs-font-display);
+  font-size: 11px;
+  color: var(--rs-text-muted);
+  text-align: center;
+  margin: var(--rs-space-sm) 0 var(--rs-space-xs);
+  letter-spacing: 0.02em;
+}
+
+// Add row button — understated, not full-width block
+.add-row-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--rs-space-sm);
+  width: 100%;
+  padding: var(--rs-space-md);
+  background: var(--rs-surface-2);
+  border: 1.5px dashed var(--rs-border);
+  border-radius: var(--rs-radius-md);
+  font-family: var(--rs-font-display);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--rs-text-secondary);
+  cursor: pointer;
+  margin-top: var(--rs-space-sm);
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+  justify-content: center;
+
+  svg { flex-shrink: 0; }
+
+  &:hover {
+    border-color: var(--rs-accent);
+    color: var(--rs-accent);
+    background: var(--rs-accent-subtle);
+  }
+
+  &:active { transform: scale(0.98); }
+}
+
+// Step number badge used in directions
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--rs-radius-full);
+  background: var(--rs-accent);
+  color: oklch(97% 0.006 55);
+  font-family: var(--rs-font-display);
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+// Expand/collapse details button in directions
+.expand-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--rs-surface-2);
+  border: 1px solid var(--rs-border);
+  border-radius: var(--rs-radius-full);
+  font-family: var(--rs-font-display);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--rs-text-muted);
+  cursor: pointer;
+  padding: 3px var(--rs-space-sm);
+  transition: border-color 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    border-color: var(--rs-accent);
+    color: var(--rs-accent);
+  }
+}
+
 // ─── Shared utility classes ──────────────────────────────────────────────────
 
 .rs-section-heading {
