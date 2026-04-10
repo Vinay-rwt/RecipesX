@@ -1,0 +1,259 @@
+// ─── RecipeShare Responsive Adaptation ────────────────────────────────────────
+// Strategy: Twitter/Reddit model
+//   mobile  (<768px)   — bottom tab bar, full-width content   [unchanged]
+//   tablet  (768–1023) — icon-only left sidebar, centered content
+//   desktop (≥1024px)  — full left sidebar, centered feed column
+
+// ─── Breakpoint tokens ────────────────────────────────────────────────────────
+$bp-tablet:  768px;
+$bp-desktop: 1024px;
+
+$sidebar-width-tablet:  64px;   // icon only
+$sidebar-width-desktop: 220px;  // icon + label
+$feed-max-width:        680px;
+$detail-max-width:      760px;
+$form-max-width:        680px;
+
+// ─── Tablet & Desktop shared ──────────────────────────────────────────────────
+@media (min-width: #{$bp-tablet}) {
+
+  // ── Ionic structural layout ──────────────────────────────────────────────────
+  // Move the tab bar from bottom → left side
+  ion-tab-bar {
+    flex-direction: column;
+    position: fixed !important;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: $sidebar-width-tablet;
+    height: 100% !important;
+    border-right: 1px solid var(--rs-border);
+    border-top: none !important;
+    padding: var(--rs-space-lg) 0 var(--rs-space-lg) !important;
+    justify-content: flex-start;
+    gap: var(--rs-space-xs);
+    z-index: 100;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  ion-tab-button {
+    flex-direction: column;
+    height: 52px;
+    min-height: 52px;
+    width: 100%;
+    border-radius: var(--rs-radius-md);
+    margin: 0 var(--rs-space-xs);
+    width: calc(#{$sidebar-width-tablet} - #{var(--rs-space-sm)});
+
+    ion-label { display: none; }
+
+    ion-icon {
+      font-size: 22px;
+      margin: 0;
+    }
+  }
+
+  // Shift all page content to the right to make room for the sidebar
+  ion-router-outlet,
+  ion-tabs > ion-router-outlet {
+    margin-left: $sidebar-width-tablet;
+  }
+
+  // ── Feed ────────────────────────────────────────────────────────────────────
+  .feed-list {
+    max-width: $feed-max-width;
+    margin: 0 auto;
+  }
+
+  // Center the header content too
+  ion-header ion-toolbar .header-row,
+  ion-header ion-toolbar ion-searchbar,
+  ion-header .filter-row {
+    max-width: $feed-max-width;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  // ── Recipe detail ────────────────────────────────────────────────────────────
+  .recipe-body {
+    max-width: $detail-max-width;
+    padding-left: var(--rs-space-xl);
+    padding-right: var(--rs-space-xl);
+  }
+
+  .cover-photo {
+    height: 300px;
+  }
+
+  // ── Auth / onboarding ────────────────────────────────────────────────────────
+  .login-container,
+  .register-container,
+  .onboarding-container {
+    max-width: 420px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  // ── Profile ──────────────────────────────────────────────────────────────────
+  .profile-content {
+    max-width: 560px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0 var(--rs-space-lg);
+  }
+
+  // ── Create form ──────────────────────────────────────────────────────────────
+  .step-content {
+    max-width: $form-max-width;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+// ─── Desktop only ─────────────────────────────────────────────────────────────
+@media (min-width: #{$bp-desktop}) {
+
+  // ── Sidebar expands to show labels ───────────────────────────────────────────
+  ion-tab-bar {
+    width: $sidebar-width-desktop;
+    padding: var(--rs-space-xl) var(--rs-space-sm) var(--rs-space-xl) !important;
+    gap: var(--rs-space-xs);
+  }
+
+  // Wordmark at top of sidebar
+  ion-tab-bar::before {
+    content: 'recipe share';
+    display: block;
+    font-family: var(--rs-font-display);
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--rs-text-primary);
+    padding: 0 var(--rs-space-md) var(--rs-space-lg);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  ion-tab-button {
+    flex-direction: row;
+    justify-content: flex-start;
+    height: 44px;
+    min-height: 44px;
+    width: calc(#{$sidebar-width-desktop} - #{var(--rs-space-md)});
+    padding: 0 var(--rs-space-md) !important;
+    gap: var(--rs-space-sm);
+
+    ion-label {
+      display: block !important;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: var(--rs-font-display);
+      text-transform: none;
+      letter-spacing: 0;
+    }
+
+    ion-icon {
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+  }
+
+  // Shift content further right
+  ion-router-outlet,
+  ion-tabs > ion-router-outlet {
+    margin-left: $sidebar-width-desktop;
+  }
+
+  // ── Feed — two-panel layout ──────────────────────────────────────────────────
+  // Feed gets centered column + right gutter
+  .feed-page-inner {
+    display: grid;
+    grid-template-columns: $feed-max-width 1fr;
+    max-width: calc(#{$feed-max-width} + 340px);
+    margin: 0 auto;
+    gap: var(--rs-space-xl);
+    align-items: start;
+  }
+
+  // Feed header stays full-width within its ion-header
+  ion-header ion-toolbar .header-row {
+    max-width: $feed-max-width;
+  }
+
+  // ── Recipe detail ────────────────────────────────────────────────────────────
+  .cover-photo {
+    height: 360px;
+    max-width: $detail-max-width;
+    margin: 0 auto;
+    border-radius: 0 0 var(--rs-radius-lg) var(--rs-radius-lg);
+    overflow: hidden;
+  }
+
+  .recipe-body {
+    max-width: $detail-max-width;
+    padding-left: var(--rs-space-2xl);
+    padding-right: var(--rs-space-2xl);
+  }
+
+  // ── Hover states (mouse-only) ─────────────────────────────────────────────────
+  .recipe-row:hover,
+  .recipe-featured:hover {
+    background: var(--rs-surface-2);
+    cursor: pointer;
+  }
+
+  // Subtle link underline on recipe titles on hover
+  .recipe-row:hover .recipe-title,
+  .recipe-featured:hover .featured-title {
+    color: var(--rs-accent);
+    transition: color 0.15s ease;
+  }
+
+  // Social action hover glow
+  .social-action:hover {
+    background: var(--rs-surface-2);
+    border-radius: var(--rs-radius-full);
+    padding: 3px var(--rs-space-xs);
+  }
+
+  // ── Filter chips row ─────────────────────────────────────────────────────────
+  .filter-row {
+    max-width: $feed-max-width;
+    margin: 0 auto;
+  }
+
+  // ── Create form — 2-column at desktop ────────────────────────────────────────
+  .step-content {
+    max-width: $form-max-width;
+    padding-left: var(--rs-space-xl);
+    padding-right: var(--rs-space-xl);
+  }
+}
+
+// ─── Large desktop (1440px+) — prevent over-stretching ────────────────────────
+@media (min-width: 1440px) {
+  ion-router-outlet,
+  ion-tabs > ion-router-outlet {
+    // Still shift by sidebar width, content stays constrained by max-widths
+    margin-left: $sidebar-width-desktop;
+  }
+
+  // Vertically center the sidebar wordmark area
+  ion-tab-bar {
+    padding-top: var(--rs-space-2xl) !important;
+  }
+}
+
+// ─── Landscape phone (special case) ───────────────────────────────────────────
+// At 568–767px landscape, keep mobile layout but give a little breathing room
+@media (min-width: 568px) and (max-width: #{$bp-tablet - 1px}) and (orientation: landscape) {
+  .feed-list {
+    max-width: 560px;
+    margin: 0 auto;
+  }
+
+  .recipe-body {
+    max-width: 560px;
+  }
+}

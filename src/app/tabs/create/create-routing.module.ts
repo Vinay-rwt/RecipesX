@@ -2,7 +2,10 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { CreatePage } from './create.page';
 
-const routes: Routes = [{ path: '', component: CreatePage }];
+const routes: Routes = [
+  { path: '', component: CreatePage },
+  { path: 'edit/:id', component: CreatePage },
+];
 
 @NgModule({
   imports: [RouterModule.forChild(routes)],

@@ -10,6 +10,7 @@ import { Recipe } from '../../../core/models/recipe.model';
 export class RecipeCardComponent {
   @Input() recipe!: Recipe;
   @Input() showSocialActions = false;
+  @Input() featured = false;
   @Input() isLiked = false;
   @Input() isSaved = false;
   @Output() likeToggled = new EventEmitter<void>();

@@ -12,7 +12,8 @@
     "lint": "ng lint",
     "emulators": "firebase emulators:start",
     "dev": "concurrently \"npm run emulators\" \"npm run start\"",
-    "seed:conversions": "npx tsx scripts/seed-conversion-matrix.ts"
+    "seed:conversions": "npx tsx scripts/seed-conversion-matrix.ts",
+    "seed:recipes": "npx tsx scripts/seed-recipes.ts"
   },
   "private": true,
   "dependencies": {

@@ -1,5 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { Recipe } from '../../../core/models/recipe.model';
 
 @Injectable({ providedIn: 'root' })
 export class RecipeFormStateService {
@@ -11,6 +12,10 @@ export class RecipeFormStateService {
   readonly firestoreDraftId = signal<string | null>(null);
   readonly coverPhotoBlob = signal<Blob | null>(null);
   readonly coverPhotoPreview = signal<string | null>(null);
+  readonly coverEmoji = signal<string | null>(null);
+  readonly isEditMode = signal(false);
+  // Stores existing photoURLs when editing, so we don't lose them if no new photo is picked
+  readonly existingPhotoURLs = signal<string[]>([]);
 
   readonly form: FormGroup = this.fb.group({
     // Step 1 — Basics
@@ -130,6 +135,61 @@ export class RecipeFormStateService {
     return allFieldsValid;
   }
 
+  // --- Edit mode: populate form from existing recipe ---
+  loadRecipeForEdit(recipe: Recipe): void {
+    this.reset();
+
+    // Rebuild FormArrays from recipe data
+    (recipe.tags ?? []).forEach((t: string) => this.addTag(t));
+    (recipe.ingredients ?? []).forEach(ing => {
+      this.ingredientsArray.push(
+        this.fb.group({
+          name: [ing.name, Validators.required],
+          quantity: [ing.quantity, [Validators.required, Validators.min(0)]],
+          unit: [ing.unit ?? ''],
+          group: [ing.group ?? ''],
+        }),
+      );
+    });
+    (recipe.steps ?? []).forEach(step => {
+      this.stepsArray.push(
+        this.fb.group({
+          order: [step.order],
+          instruction: [step.instruction, Validators.required],
+          temperature: [step.temperature ?? null],
+          duration: [step.duration ?? null],
+          equipment: [step.equipment ?? ''],
+          technique: [step.technique ?? ''],
+        }),
+      );
+    });
+
+    this.form.patchValue({
+      title: recipe.title,
+      description: recipe.description ?? '',
+      cuisineType: recipe.cuisineType,
+      difficulty: recipe.difficulty,
+      sourceEquipment: recipe.sourceEquipment,
+      baseServings: recipe.baseServings,
+      prepTime: recipe.prepTime,
+      cookTime: recipe.cookTime,
+    });
+
+    this.firestoreDraftId.set(recipe.id!);
+    this.isEditMode.set(true);
+    this.existingPhotoURLs.set(recipe.photoURLs ?? []);
+
+    if (recipe.coverEmoji) {
+      this.coverEmoji.set(recipe.coverEmoji);
+    } else if (recipe.photoURLs?.length) {
+      // Show existing photo as preview (display only — no blob until user picks a new one)
+      this.coverPhotoPreview.set(recipe.photoURLs[0]);
+    }
+
+    this.currentStep.set(0);
+    this.form.markAsPristine();
+  }
+
   // --- localStorage draft persistence ---
   saveDraftToLocal(): void {
     try {
@@ -137,6 +197,7 @@ export class RecipeFormStateService {
         form: this.form.value,
         draftId: this.firestoreDraftId(),
         preview: this.coverPhotoPreview(),
+        emoji: this.coverEmoji(),
         step: this.currentStep(),
       };
       localStorage.setItem(this.DRAFT_KEY, JSON.stringify(value));
@@ -160,6 +221,7 @@ export class RecipeFormStateService {
       this.form.patchValue(value.form);
       this.firestoreDraftId.set(value.draftId ?? null);
       this.coverPhotoPreview.set(value.preview ?? null);
+      this.coverEmoji.set(value.emoji ?? null);
       this.currentStep.set(value.step ?? 0);
       return true;
     } catch {
@@ -182,11 +244,14 @@ export class RecipeFormStateService {
     });
     this.currentStep.set(0);
     this.firestoreDraftId.set(null);
+    this.isEditMode.set(false);
+    this.existingPhotoURLs.set([]);
     this.coverPhotoBlob.set(null);
     if (this.coverPhotoPreview()) {
       URL.revokeObjectURL(this.coverPhotoPreview()!);
     }
     this.coverPhotoPreview.set(null);
+    this.coverEmoji.set(null);
     this.clearDraftFromLocal();
   }
 

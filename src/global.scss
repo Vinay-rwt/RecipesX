@@ -1,14 +1,3 @@
-/*
- * App Global CSS
- * ----------------------------------------------------------------------------
- * Put style rules here that you want to apply globally. These styles are for
- * the entire app and not just one component. Additionally, this file can be
- * used as an entry point to import other CSS/Sass files to be included in the
- * output CSS.
- * For more information on global stylesheets, visit the documentation:
- * https://ionicframework.com/docs/layout/global-stylesheets
- */
-
 /* Core CSS required for Ionic components to work properly */
 @import "@ionic/angular/css/core.css";
 
@@ -18,20 +7,402 @@
 @import "@ionic/angular/css/typography.css";
 @import "@ionic/angular/css/display.css";
 
-/* Optional CSS utils that can be commented out */
+/* Optional CSS utils */
 @import "@ionic/angular/css/padding.css";
 @import "@ionic/angular/css/float-elements.css";
 @import "@ionic/angular/css/text-alignment.css";
 @import "@ionic/angular/css/text-transformation.css";
 @import "@ionic/angular/css/flex-utils.css";
 
-/**
- * Ionic Dark Mode
- * -----------------------------------------------------
- * For more info, please see:
- * https://ionicframework.com/docs/theming/dark-mode
- */
-
-/* @import "@ionic/angular/css/palettes/dark.always.css"; */
-/* @import "@ionic/angular/css/palettes/dark.class.css"; */
+/* Ionic Dark Mode — system-based */
 @import "@ionic/angular/css/palettes/dark.system.css";
+
+/* Responsive adaptation — tablet & desktop */
+@import "theme/responsive";
+
+/* ─── Global typography & base resets ──────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--rs-font-body);
+  color: var(--rs-text-primary);
+  background: var(--rs-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+// Display font for all headings
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--rs-font-display);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--rs-text-primary);
+}
+
+h1 { font-size: clamp(1.6rem, 5vw, 2rem); }
+h2 { font-size: clamp(1.2rem, 4vw, 1.5rem); }
+h3 { font-size: 1.1rem; font-weight: 600; }
+
+p {
+  font-family: var(--rs-font-body);
+  line-height: 1.65;
+  color: var(--rs-text-secondary);
+  max-width: 70ch;
+}
+
+// ─── Ionic component overrides ──────────────────────────────────────────────
+
+// Toolbar — clean, no shadow
+ion-toolbar {
+  --background: var(--rs-surface);
+  --border-color: var(--rs-border);
+  --padding-top: 0;
+  --padding-bottom: 0;
+  --min-height: 52px;
+}
+
+ion-title {
+  font-family: var(--rs-font-display);
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: -0.02em;
+  color: var(--rs-text-primary);
+}
+
+// Tab bar — frosted glass feel
+ion-tab-bar {
+  --background: oklch(from var(--rs-surface) l c h / 0.92);
+  --border: 1px solid var(--rs-border);
+  padding-bottom: env(safe-area-inset-bottom);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+ion-tab-button {
+  --color: var(--rs-text-muted);
+  --color-selected: var(--rs-accent);
+  font-family: var(--rs-font-display);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+// Buttons
+ion-button {
+  --border-radius: var(--rs-radius-full);
+  font-family: var(--rs-font-display);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-transform: none;
+}
+
+// Chips — flat, no shadow
+ion-chip {
+  --background: var(--rs-surface-2);
+  --color: var(--rs-text-secondary);
+  border-radius: var(--rs-radius-full);
+  font-family: var(--rs-font-display);
+  font-size: 12px;
+  font-weight: 600;
+  height: 26px;
+  border: 1px solid var(--rs-border);
+}
+
+// Segments
+ion-segment {
+  --background: var(--rs-surface-2);
+  border-radius: var(--rs-radius-md);
+  border: 1px solid var(--rs-border);
+}
+
+ion-segment-button {
+  --color: var(--rs-text-muted);
+  --color-checked: var(--rs-accent);
+  --indicator-color: var(--rs-accent-subtle);
+  --border-radius: var(--rs-radius-md);
+  font-family: var(--rs-font-display);
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+  min-height: 36px;
+}
+
+// Searchbar
+ion-searchbar {
+  --background: var(--rs-surface-2);
+  --border-radius: var(--rs-radius-full);
+  --box-shadow: none;
+  --placeholder-color: var(--rs-text-muted);
+  --icon-color: var(--rs-text-muted);
+  --color: var(--rs-text-primary);
+  --cancel-button-color: var(--rs-accent);
+  font-family: var(--rs-font-body);
+  font-size: 14px;
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+// List items
+ion-item {
+  --background: transparent;
+  --border-color: var(--rs-border);
+  --color: var(--rs-text-primary);
+  --padding-start: 0;
+  font-family: var(--rs-font-body);
+}
+
+// Badges
+ion-badge {
+  font-family: var(--rs-font-display);
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  border-radius: var(--rs-radius-full);
+  padding: 3px 8px;
+}
+
+// Skeleton text
+ion-skeleton-text {
+  --border-radius: var(--rs-radius-sm);
+  opacity: 0.6;
+}
+
+// Back button
+ion-back-button {
+  --color: var(--rs-accent);
+  font-family: var(--rs-font-display);
+}
+
+// ─── Create flow shared step styles ─────────────────────────────────────────
+
+.step-heading {
+  font-family: var(--rs-font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--rs-text-primary);
+  margin: 0 0 var(--rs-space-xs);
+}
+
+.step-hint {
+  font-family: var(--rs-font-body);
+  font-size: 14px;
+  color: var(--rs-text-muted);
+  margin: 0 0 var(--rs-space-md);
+  max-width: 100%;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: var(--rs-space-sm);
+}
+
+.ingredient-count,
+.step-count {
+  font-family: var(--rs-font-display);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--rs-text-muted);
+}
+
+// Empty state hint inside steps
+.empty-hint {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--rs-space-sm);
+  padding: var(--rs-space-xl) var(--rs-space-md);
+  text-align: center;
+
+  .empty-hint-icon {
+    font-size: 36px;
+    line-height: 1;
+  }
+
+  p {
+    font-family: var(--rs-font-display);
+    font-size: 14px;
+    color: var(--rs-text-muted);
+    margin: 0;
+    max-width: 30ch;
+  }
+}
+
+// Swipe hint
+.swipe-hint {
+  font-family: var(--rs-font-display);
+  font-size: 11px;
+  color: var(--rs-text-muted);
+  text-align: center;
+  margin: var(--rs-space-sm) 0 var(--rs-space-xs);
+  letter-spacing: 0.02em;
+}
+
+// Add row button — understated, not full-width block
+.add-row-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--rs-space-sm);
+  width: 100%;
+  padding: var(--rs-space-md);
+  background: var(--rs-surface-2);
+  border: 1.5px dashed var(--rs-border);
+  border-radius: var(--rs-radius-md);
+  font-family: var(--rs-font-display);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--rs-text-secondary);
+  cursor: pointer;
+  margin-top: var(--rs-space-sm);
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+  justify-content: center;
+
+  svg { flex-shrink: 0; }
+
+  &:hover {
+    border-color: var(--rs-accent);
+    color: var(--rs-accent);
+    background: var(--rs-accent-subtle);
+  }
+
+  &:active { transform: scale(0.98); }
+}
+
+// Step number badge used in directions
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--rs-radius-full);
+  background: var(--rs-accent);
+  color: oklch(97% 0.006 55);
+  font-family: var(--rs-font-display);
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+// Expand/collapse details button in directions
+.expand-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--rs-surface-2);
+  border: 1px solid var(--rs-border);
+  border-radius: var(--rs-radius-full);
+  font-family: var(--rs-font-display);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--rs-text-muted);
+  cursor: pointer;
+  padding: 3px var(--rs-space-sm);
+  transition: border-color 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    border-color: var(--rs-accent);
+    color: var(--rs-accent);
+  }
+}
+
+// ─── Shared utility classes ──────────────────────────────────────────────────
+
+.rs-section-heading {
+  font-family: var(--rs-font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--rs-text-primary);
+  margin: var(--rs-space-lg) 0 var(--rs-space-sm);
+  padding-bottom: var(--rs-space-xs);
+}
+
+.rs-cuisine-tag {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--rs-font-display);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--rs-accent-text);
+  background: var(--rs-accent-subtle);
+  padding: 2px var(--rs-space-sm);
+  border-radius: var(--rs-radius-full);
+}
+
+.rs-convert-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--rs-font-display);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--rs-convert-text);
+  background: var(--rs-convert-bg);
+  padding: 3px var(--rs-space-sm);
+  border-radius: var(--rs-radius-full);
+
+  &::before {
+    content: '⟳';
+    font-size: 11px;
+  }
+}
+
+.rs-meta-dot {
+  display: inline-block;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--rs-border);
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+.rs-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-family: var(--rs-font-display);
+  font-size: 12px;
+  color: var(--rs-text-muted);
+}
+
+// Error and empty states
+.rs-empty-state,
+.rs-error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--rs-space-2xl) var(--rs-space-lg);
+  text-align: center;
+  gap: var(--rs-space-sm);
+
+  ion-icon {
+    font-size: 3rem;
+    color: var(--rs-text-muted);
+    margin-bottom: var(--rs-space-sm);
+  }
+
+  h3 {
+    font-family: var(--rs-font-display);
+    font-size: 1.1rem;
+    color: var(--rs-text-primary);
+    margin: 0;
+  }
+
+  p {
+    color: var(--rs-text-muted);
+    font-size: 14px;
+    max-width: 40ch;
+    margin: 0;
+  }
+}

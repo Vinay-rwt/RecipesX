@@ -4,6 +4,15 @@
       <ion-back-button defaultHref="/tabs/feed"></ion-back-button>
     </ion-buttons>
     <ion-title>{{ recipe()?.title || 'Recipe' }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button
+        *ngIf="isAuthor()"
+        (click)="navigateToEdit()"
+        aria-label="Edit recipe"
+        class="edit-recipe-btn">
+        <ion-icon slot="icon-only" name="create-outline" aria-hidden="true"></ion-icon>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
@@ -30,7 +39,10 @@
     <!-- Cover photo -->
     <div class="cover-photo">
       <img *ngIf="r.photoURLs?.length" [src]="r.photoURLs[0]" [alt]="r.title" />
-      <div *ngIf="!r.photoURLs?.length" class="cover-placeholder">
+      <div *ngIf="!r.photoURLs?.length && r.coverEmoji" class="cover-placeholder cover-emoji-placeholder" aria-hidden="true">
+        {{ r.coverEmoji }}
+      </div>
+      <div *ngIf="!r.photoURLs?.length && !r.coverEmoji" class="cover-placeholder">
         <ion-icon name="restaurant-outline"></ion-icon>
       </div>
     </div>

@@ -1,0 +1,135 @@
+.step-heading {
+  font-family: var(--rs-font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--rs-text-primary);
+  margin: 0 0 var(--rs-space-xs);
+}
+
+.step-hint {
+  font-family: var(--rs-font-body);
+  font-size: 14px;
+  color: var(--rs-text-muted);
+  margin: 0 0 var(--rs-space-md);
+}
+
+// ─── Equipment grid ───────────────────────────────────────────────────────────
+
+.equipment-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: var(--rs-space-sm);
+  margin-bottom: var(--rs-space-sm);
+}
+
+ion-card {
+  border-radius: var(--rs-radius-md);
+  border: 1.5px solid var(--rs-border);
+  box-shadow: none;
+  margin: 0;
+  transition: border-color 0.15s ease, background 0.15s ease;
+  cursor: pointer;
+
+  &.selected {
+    border-color: var(--rs-accent);
+    background: var(--rs-accent-subtle);
+
+    ion-icon { color: var(--rs-accent) !important; }
+    ion-label { color: var(--rs-accent-text) !important; font-weight: 700; }
+  }
+
+  &:hover:not(.selected) {
+    border-color: var(--rs-text-muted);
+  }
+}
+
+.equipment-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--rs-space-xs);
+  padding: var(--rs-space-md) var(--rs-space-sm);
+  text-align: center;
+
+  ion-icon {
+    font-size: 1.75rem;
+    color: var(--rs-text-secondary);
+    transition: color 0.15s ease;
+  }
+
+  ion-label {
+    font-family: var(--rs-font-display);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--rs-text-secondary);
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    transition: color 0.15s ease;
+  }
+}
+
+// ─── Timing fields ────────────────────────────────────────────────────────────
+
+.timing-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: var(--rs-space-md);
+  margin-top: var(--rs-space-sm);
+}
+
+.timing-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rs-space-xs);
+}
+
+.timing-label {
+  font-family: var(--rs-font-display);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--rs-text-secondary);
+  letter-spacing: 0.01em;
+}
+
+.required {
+  color: var(--rs-like);
+}
+
+.timing-input-wrap {
+  display: flex;
+  align-items: center;
+  background: var(--rs-surface-2);
+  border: 1.5px solid var(--rs-border);
+  border-radius: var(--rs-radius-md);
+  overflow: hidden;
+  transition: border-color 0.15s ease;
+
+  &:focus-within {
+    border-color: var(--rs-accent);
+  }
+
+  ion-input {
+    flex: 1;
+    --padding-start: var(--rs-space-sm);
+    --padding-end: var(--rs-space-xs);
+    --background: transparent;
+    font-family: var(--rs-font-display);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--rs-text-primary);
+  }
+
+  .timing-unit {
+    font-family: var(--rs-font-display);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--rs-text-muted);
+    padding: 0 var(--rs-space-sm) 0 0;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+}

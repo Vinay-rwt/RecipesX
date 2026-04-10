@@ -1,43 +1,51 @@
 <div class="step-content ion-padding" [formGroup]="form">
 
-  <h3>Source Equipment</h3>
+  <p class="step-heading">Source equipment</p>
   <p class="step-hint">Which appliance does this recipe use?</p>
 
-  <ion-grid>
-    <ion-row>
-      <ion-col size="6" size-md="3" *ngFor="let item of equipmentTypes">
-        <ion-card
-          [class.selected]="isSelected(item.id)"
-          (click)="selectEquipment(item.id)"
-          button>
-          <ion-card-content class="equipment-card">
-            <ion-icon [name]="item.icon" size="large"></ion-icon>
-            <ion-label>{{ item.label }}</ion-label>
-          </ion-card-content>
-        </ion-card>
-      </ion-col>
-    </ion-row>
-  </ion-grid>
+  <div class="equipment-grid">
+    <ion-card
+      *ngFor="let item of equipmentTypes"
+      [class.selected]="isSelected(item.id)"
+      (click)="selectEquipment(item.id)"
+      button
+      [attr.aria-pressed]="isSelected(item.id)"
+      [attr.aria-label]="item.label">
+      <ion-card-content class="equipment-card">
+        <ion-icon [name]="item.icon" aria-hidden="true"></ion-icon>
+        <ion-label>{{ item.label }}</ion-label>
+      </ion-card-content>
+    </ion-card>
+  </div>
 
   <ion-note color="danger" *ngIf="form.get('sourceEquipment')?.invalid && form.get('sourceEquipment')?.touched" class="ion-padding-start">
     Please select your source equipment
   </ion-note>
 
-  <h3 class="ion-margin-top">Servings & Timing</h3>
+  <p class="step-heading" style="margin-top: var(--rs-space-xl)">Servings &amp; timing</p>
 
-  <ion-item>
-    <ion-label position="stacked">Base Servings <ion-text color="danger">*</ion-text></ion-label>
-    <ion-input formControlName="baseServings" type="number" min="1" max="100"></ion-input>
-  </ion-item>
-
-  <ion-item>
-    <ion-label position="stacked">Prep Time (minutes)</ion-label>
-    <ion-input formControlName="prepTime" type="number" min="0"></ion-input>
-  </ion-item>
-
-  <ion-item>
-    <ion-label position="stacked">Cook Time (minutes)</ion-label>
-    <ion-input formControlName="cookTime" type="number" min="0"></ion-input>
-  </ion-item>
+  <div class="timing-grid">
+    <div class="timing-field">
+      <label class="timing-label">Servings <span class="required" aria-hidden="true">*</span></label>
+      <div class="timing-input-wrap">
+        <ion-input formControlName="baseServings" type="number" min="1" max="100" inputmode="numeric"></ion-input>
+        <span class="timing-unit">people</span>
+      </div>
+    </div>
+    <div class="timing-field">
+      <label class="timing-label">Prep time</label>
+      <div class="timing-input-wrap">
+        <ion-input formControlName="prepTime" type="number" min="0" inputmode="numeric"></ion-input>
+        <span class="timing-unit">min</span>
+      </div>
+    </div>
+    <div class="timing-field">
+      <label class="timing-label">Cook time</label>
+      <div class="timing-input-wrap">
+        <ion-input formControlName="cookTime" type="number" min="0" inputmode="numeric"></ion-input>
+        <span class="timing-unit">min</span>
+      </div>
+    </div>
+  </div>
 
 </div>

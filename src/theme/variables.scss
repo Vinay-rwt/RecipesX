@@ -1,2 +1,110 @@
-// For information on how to create your own theme, please refer to:
-// https://ionicframework.com/docs/theming/
+// RecipeShare — Design System Tokens
+// Option 1: Terracotta & Warm Clay
+// Fonts: Bricolage Grotesque (display) + Literata (body)
+
+// ─── Google Fonts ──────────────────────────────────────────────────────────
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Literata:ital,opsz,wght@0,7..72,300;0,7..72,400;0,7..72,500;1,7..72,300;1,7..72,400&display=swap');
+
+// ─── Design Tokens ─────────────────────────────────────────────────────────
+:root {
+  // Typography
+  --rs-font-display: 'Bricolage Grotesque', system-ui, sans-serif;
+  --rs-font-body:    'Literata', Georgia, serif;
+
+  // Spacing (4pt scale)
+  --rs-space-xs:  4px;
+  --rs-space-sm:  8px;
+  --rs-space-md:  16px;
+  --rs-space-lg:  24px;
+  --rs-space-xl:  32px;
+  --rs-space-2xl: 48px;
+
+  // Border radius
+  --rs-radius-sm:   6px;
+  --rs-radius-md:   12px;
+  --rs-radius-lg:   18px;
+  --rs-radius-full: 999px;
+
+  // ─── Light mode palette ──────────────────────────────────────────────────
+  --rs-bg:         oklch(97% 0.008 60);
+  --rs-surface:    oklch(100% 0.004 60);
+  --rs-surface-2:  oklch(94% 0.012 55);
+  --rs-border:     oklch(88% 0.014 55);
+
+  --rs-text-primary:   oklch(22% 0.018 50);
+  --rs-text-secondary: oklch(48% 0.022 50);
+  --rs-text-muted:     oklch(64% 0.018 52);
+
+  // Accent — terracotta
+  --rs-accent:        oklch(55% 0.14 40);
+  --rs-accent-subtle: oklch(92% 0.04 40);
+  --rs-accent-text:   oklch(38% 0.10 38);
+  --rs-accent-glow:   oklch(55% 0.14 40 / 0.2);
+
+  // Conversion magic — warm amber
+  --rs-convert:       oklch(72% 0.16 65);
+  --rs-convert-bg:    oklch(96% 0.06 65);
+  --rs-convert-text:  oklch(38% 0.12 60);
+
+  // Social
+  --rs-like:  oklch(56% 0.18 20);
+  --rs-save:  oklch(50% 0.14 240);
+
+  // ─── Ionic variable overrides ────────────────────────────────────────────
+  --ion-font-family: var(--rs-font-body);
+  --ion-background-color: var(--rs-bg);
+  --ion-background-color-rgb: 248, 244, 239;
+  --ion-text-color: var(--rs-text-primary);
+  --ion-text-color-rgb: 42, 34, 26;
+  --ion-border-color: var(--rs-border);
+  --ion-item-background: var(--rs-surface);
+  --ion-toolbar-background: var(--rs-surface);
+  --ion-tab-bar-background: var(--rs-surface);
+  --ion-card-background: var(--rs-surface);
+
+  // Primary = terracotta accent
+  --ion-color-primary:          var(--rs-accent);
+  --ion-color-primary-rgb:      176, 95, 68;
+  --ion-color-primary-contrast:      #ffffff;
+  --ion-color-primary-contrast-rgb:  255, 255, 255;
+  --ion-color-primary-shade:    oklch(48% 0.13 40);
+  --ion-color-primary-tint:     var(--rs-accent-subtle);
+
+  // Medium = warm gray
+  --ion-color-medium:           var(--rs-text-muted);
+  --ion-color-medium-rgb:       150, 138, 128;
+  --ion-color-medium-contrast:       #ffffff;
+  --ion-color-medium-contrast-rgb:   255, 255, 255;
+  --ion-color-medium-shade:     oklch(56% 0.016 52);
+  --ion-color-medium-tint:      var(--rs-surface-2);
+}
+
+// ─── Dark mode ─────────────────────────────────────────────────────────────
+@media (prefers-color-scheme: dark) {
+  :root {
+    --rs-bg:         oklch(16% 0.012 50);
+    --rs-surface:    oklch(20% 0.014 50);
+    --rs-surface-2:  oklch(24% 0.016 50);
+    --rs-border:     oklch(30% 0.018 50);
+
+    --rs-text-primary:   oklch(93% 0.008 55);
+    --rs-text-secondary: oklch(70% 0.018 52);
+    --rs-text-muted:     oklch(52% 0.014 52);
+
+    --rs-accent-subtle: oklch(28% 0.07 40);
+    --rs-accent-text:   oklch(75% 0.12 42);
+    --rs-convert-bg:    oklch(24% 0.06 62);
+    --rs-convert-text:  oklch(80% 0.14 62);
+
+    --ion-background-color: var(--rs-bg);
+    --ion-background-color-rgb: 30, 24, 18;
+    --ion-text-color: var(--rs-text-primary);
+    --ion-text-color-rgb: 238, 232, 224;
+    --ion-border-color: var(--rs-border);
+    --ion-item-background: var(--rs-surface);
+    --ion-toolbar-background: var(--rs-surface);
+    --ion-tab-bar-background: var(--rs-surface);
+    --ion-card-background: var(--rs-surface);
+    --ion-color-primary-tint: var(--rs-accent-subtle);
+  }
+}

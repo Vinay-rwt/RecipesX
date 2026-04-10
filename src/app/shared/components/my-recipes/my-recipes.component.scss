@@ -9,6 +9,39 @@
     &::-webkit-scrollbar { display: none; }
   }
 
+  .recipe-card-wrap {
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .recipe-edit-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 30px;
+    height: 30px;
+    border-radius: var(--rs-radius-full);
+    background: oklch(from var(--rs-surface) l c h / 0.9);
+    border: 1px solid var(--rs-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--rs-text-secondary);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: background 0.15s ease, color 0.15s ease, transform 0.1s ease;
+    z-index: 2;
+
+    &:hover {
+      background: var(--rs-accent);
+      color: oklch(97% 0.006 55);
+      border-color: var(--rs-accent);
+    }
+
+    &:active { transform: scale(0.92); }
+  }
+
   .empty-state {
     text-align: center;
     padding: 1.5rem;

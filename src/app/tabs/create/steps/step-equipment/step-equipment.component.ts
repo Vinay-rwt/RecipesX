@@ -5,6 +5,7 @@ import { EQUIPMENT_TYPES, EquipmentType } from '../../../../core/models/equipmen
 @Component({
   selector: 'app-step-equipment',
   templateUrl: './step-equipment.component.html',
+  styleUrls: ['./step-equipment.component.scss'],
   standalone: false,
 })
 export class StepEquipmentComponent {
