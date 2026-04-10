@@ -76,10 +76,10 @@
   <!-- Recipe feed -->
   <div class="feed-list" *ngIf="!feedService.error() && feedService.recipes().length > 0">
     <app-recipe-card
-      *ngFor="let recipe of feedService.recipes(); let first = first"
+      *ngFor="let recipe of feedService.recipes()"
       [recipe]="recipe"
       [showSocialActions]="true"
-      [featured]="first"
+      [featured]="true"
       [isLiked]="likedRecipes().has(recipe.id!)"
       [isSaved]="savedRecipes().has(recipe.id!)"
       (likeToggled)="onToggleLike(recipe.id!)"
