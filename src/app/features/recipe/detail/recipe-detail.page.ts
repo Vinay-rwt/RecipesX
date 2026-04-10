@@ -1,12 +1,15 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Auth } from '@angular/fire/auth';
-import { ViewWillEnter } from '@ionic/angular';
+import { ActionSheetController, ToastController, ViewWillEnter } from '@ionic/angular';
 import { RecipeService } from '../../../core/services/recipe.service';
 import { EquipmentConversionService } from '../../../core/services/equipment-conversion.service';
 import { UserProfileService } from '../../../core/services/user-profile.service';
 import { SocialService } from '../../../core/services/social.service';
+import { ShareService } from '../../../core/services/share.service';
+import { RecipeCardGeneratorService } from '../../../core/services/recipe-card-generator.service';
 import { getEquipmentById, EQUIPMENT_TYPES } from '../../../core/models/equipment.model';
+import { Recipe } from '../../../core/models/recipe.model';
 
 @Component({
   selector: 'app-recipe-detail',
@@ -20,6 +23,10 @@ export class RecipeDetailPage implements ViewWillEnter {
   private recipeService = inject(RecipeService);
   private conversionService = inject(EquipmentConversionService);
   private socialService = inject(SocialService);
+  private shareService = inject(ShareService);
+  private cardGenerator = inject(RecipeCardGeneratorService);
+  private actionSheetCtrl = inject(ActionSheetController);
+  private toastCtrl = inject(ToastController);
   readonly profileService = inject(UserProfileService);
 
   readonly recipe = this.recipeService.currentRecipe;
@@ -132,4 +139,62 @@ export class RecipeDetailPage implements ViewWillEnter {
   }
 
   readonly allEquipmentTypes = EQUIPMENT_TYPES;
+
+  async onShare(): Promise<void> {
+    const recipe = this.recipe();
+    if (!recipe) return;
+
+    const sheet = await this.actionSheetCtrl.create({
+      header: 'Share Recipe',
+      buttons: [
+        {
+          text: 'Share as Image',
+          icon: 'image-outline',
+          handler: () => { this._shareAsImage(recipe); },
+        },
+        {
+          text: 'Share as Text',
+          icon: 'document-text-outline',
+          handler: () => { this.shareService.shareText(recipe); },
+        },
+        {
+          text: 'Copy Link',
+          icon: 'link-outline',
+          handler: () => { this._copyLink(recipe.id!); },
+        },
+        {
+          text: 'Cancel',
+          role: 'cancel',
+          icon: 'close-outline',
+        },
+      ],
+    });
+    await sheet.present();
+  }
+
+  private async _shareAsImage(recipe: Recipe): Promise<void> {
+    try {
+      const blob = await this.cardGenerator.generateCard(recipe);
+      await this.shareService.shareImage(recipe, blob);
+    } catch (err) {
+      console.error('Share image failed:', err);
+      const toast = await this.toastCtrl.create({
+        message: 'Could not generate image. Sharing as text instead.',
+        duration: 3000,
+        color: 'warning',
+      });
+      await toast.present();
+      await this.shareService.shareText(recipe);
+    }
+  }
+
+  private async _copyLink(recipeId: string): Promise<void> {
+    await this.shareService.copyLink(recipeId);
+    const toast = await this.toastCtrl.create({
+      message: 'Link copied to clipboard',
+      duration: 2000,
+      color: 'success',
+    });
+    await toast.present();
+  }
 }
