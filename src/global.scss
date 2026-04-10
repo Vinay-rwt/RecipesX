@@ -17,6 +17,9 @@
 /* Ionic Dark Mode — system-based */
 @import "@ionic/angular/css/palettes/dark.system.css";
 
+/* Responsive adaptation — tablet & desktop */
+@import "theme/responsive";
+
 /* ─── Global typography & base resets ──────────────────────────────────── */
 *, *::before, *::after {
   box-sizing: border-box;

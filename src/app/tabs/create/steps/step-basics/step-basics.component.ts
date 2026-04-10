@@ -32,6 +32,7 @@ export const FOOD_EMOJIS: { label: string; emojis: string[] }[] = [
 @Component({
   selector: 'app-step-basics',
   templateUrl: './step-basics.component.html',
+  styleUrls: ['./step-basics.component.scss'],
   standalone: false,
 })
 export class StepBasicsComponent {
