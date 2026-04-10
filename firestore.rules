@@ -30,6 +30,7 @@ service cloud.firestore {
         && resource.data.authorId == request.auth.uid;
       allow delete: if request.auth != null
         && resource.data.authorId == request.auth.uid;
+
     }
 
     // Conversion matrix: read-only for authenticated users
