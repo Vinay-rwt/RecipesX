@@ -184,6 +184,157 @@
       </div>
 
     </div>
+
+    <!-- ===== COMMENT SECTION ===== -->
+    <div class="comment-section ion-padding">
+      <h2 class="section-heading">Comments ({{ totalCommentCount() }})</h2>
+
+      <!-- Loading skeleton -->
+      <div *ngIf="commentsLoading()" class="comments-skeleton">
+        <div *ngFor="let i of [1,2,3]" class="comment-skeleton-item">
+          <ion-skeleton-text animated style="width: 35%; height: 0.8rem;"></ion-skeleton-text>
+          <ion-skeleton-text animated style="width: 100%; height: 0.9rem; margin-top: 6px;"></ion-skeleton-text>
+          <ion-skeleton-text animated style="width: 75%; height: 0.9rem; margin-top: 4px;"></ion-skeleton-text>
+        </div>
+      </div>
+
+      <!-- Error -->
+      <p *ngIf="commentError()" class="comment-error">{{ commentError() }}</p>
+
+      <!-- Post comment (authenticated) -->
+      <div class="comment-input-row" *ngIf="isLoggedIn; else signInPrompt">
+        <ion-textarea
+          [(ngModel)]="newCommentBody"
+          placeholder="Add a comment…"
+          [rows]="2"
+          class="comment-textarea"
+          aria-label="New comment">
+        </ion-textarea>
+        <ion-button
+          [disabled]="!newCommentBody.trim() || postingComment()"
+          (click)="postComment()"
+          size="small"
+          fill="solid"
+          color="primary">
+          {{ postingComment() ? 'Posting…' : 'Post' }}
+        </ion-button>
+      </div>
+
+      <ng-template #signInPrompt>
+        <p class="sign-in-prompt">
+          <ion-icon name="person-circle-outline" aria-hidden="true"></ion-icon>
+          <a [routerLink]="['/auth/login']">Sign in</a> to leave a comment.
+        </p>
+      </ng-template>
+
+      <!-- Comment list -->
+      <div *ngIf="!commentsLoading()" class="comment-list">
+
+        <div *ngFor="let comment of topLevelComments()" class="comment-thread">
+
+          <!-- Collapsed view -->
+          <div *ngIf="isCollapsed(comment.id)" class="comment-collapsed-row">
+            <button class="collapse-btn" (click)="toggleCollapse(comment.id)" aria-label="Expand comment">[+]</button>
+            <span class="collapsed-meta">{{ comment.authorName }} · {{ comment.score }} points · collapsed</span>
+          </div>
+
+          <!-- Expanded view -->
+          <ng-container *ngIf="!isCollapsed(comment.id)">
+            <div class="comment-header">
+              <button class="collapse-btn" (click)="toggleCollapse(comment.id)" aria-label="Collapse comment">[-]</button>
+              <span class="comment-author">{{ comment.authorName }}</span>
+              <span class="comment-score" [class.positive]="comment.score > 0" [class.negative]="comment.score < 0">
+                {{ comment.score }} points
+              </span>
+              <span class="comment-time">{{ timeAgo(comment.createdAt) }}</span>
+            </div>
+
+            <p class="comment-body">{{ comment.body }}</p>
+
+            <div class="comment-actions">
+              <button
+                class="vote-btn"
+                [class.active]="userVotes().get(comment.id) === 1"
+                (click)="onVote(comment.id, 1)"
+                aria-label="Upvote">
+                <ion-icon name="arrow-up-outline" aria-hidden="true"></ion-icon>
+              </button>
+              <button
+                class="vote-btn"
+                [class.active-down]="userVotes().get(comment.id) === -1"
+                (click)="onVote(comment.id, -1)"
+                aria-label="Downvote">
+                <ion-icon name="arrow-down-outline" aria-hidden="true"></ion-icon>
+              </button>
+              <button
+                *ngIf="isLoggedIn"
+                class="reply-btn"
+                (click)="setReplyingTo(replyingToId() === comment.id ? null : comment.id)"
+                aria-label="Reply to comment">
+                Reply
+              </button>
+            </div>
+
+            <!-- Inline reply input -->
+            <div *ngIf="replyingToId() === comment.id" class="reply-input-row">
+              <ion-textarea
+                [(ngModel)]="replyBody"
+                placeholder="Write a reply…"
+                [rows]="2"
+                aria-label="Reply text">
+              </ion-textarea>
+              <div class="reply-actions">
+                <ion-button fill="clear" size="small" (click)="setReplyingTo(null)">Cancel</ion-button>
+                <ion-button
+                  fill="solid" size="small" color="primary"
+                  [disabled]="!replyBody.trim()"
+                  (click)="postReply(comment.id)">
+                  Reply
+                </ion-button>
+              </div>
+            </div>
+
+            <!-- Replies -->
+            <div class="replies-list" *ngIf="repliesFor(comment.id).length > 0">
+              <div *ngFor="let reply of repliesFor(comment.id)" class="comment-item reply-item">
+                <div class="comment-header">
+                  <span class="comment-author">{{ reply.authorName }}</span>
+                  <span class="comment-score" [class.positive]="reply.score > 0" [class.negative]="reply.score < 0">
+                    {{ reply.score }} points
+                  </span>
+                  <span class="comment-time">{{ timeAgo(reply.createdAt) }}</span>
+                </div>
+                <p class="comment-body">{{ reply.body }}</p>
+                <div class="comment-actions">
+                  <button
+                    class="vote-btn"
+                    [class.active]="userVotes().get(reply.id) === 1"
+                    (click)="onVote(reply.id, 1)"
+                    aria-label="Upvote reply">
+                    <ion-icon name="arrow-up-outline" aria-hidden="true"></ion-icon>
+                  </button>
+                  <button
+                    class="vote-btn"
+                    [class.active-down]="userVotes().get(reply.id) === -1"
+                    (click)="onVote(reply.id, -1)"
+                    aria-label="Downvote reply">
+                    <ion-icon name="arrow-down-outline" aria-hidden="true"></ion-icon>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </ng-container>
+
+        </div>
+
+        <p *ngIf="topLevelComments().length === 0 && !commentsLoading()" class="no-comments">
+          No comments yet. Be the first!
+        </p>
+      </div>
+
+    </div>
+    <!-- ===== END COMMENT SECTION ===== -->
+
   </ng-container>
   <!-- Share FAB -->
   <ion-fab vertical="bottom" horizontal="end" slot="fixed">
