@@ -63,7 +63,6 @@ export class FeedService {
       const constraints: any[] = [
         where('status', '==', 'published'),
         orderBy('createdAt', 'desc'),
-        limit(this.PAGE_SIZE),
       ];
 
       if (filters.cuisineType) {
@@ -82,6 +81,7 @@ export class FeedService {
       if (this._lastDoc) {
         constraints.push(startAfter(this._lastDoc));
       }
+      constraints.push(limit(this.PAGE_SIZE));
 
       const q = query(recipesRef, ...constraints);
       const snapshot = await getDocs(q);
