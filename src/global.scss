@@ -111,6 +111,14 @@ ion-chip {
   border: 1px solid var(--rs-border);
 }
 
+// Form field labels (stacked)
+ion-item ion-label[position="stacked"] {
+  font-size: 14px !important;
+  font-weight: 600;
+  font-family: var(--rs-font-display);
+  color: var(--rs-text-secondary);
+}
+
 // Segments
 ion-segment {
   --background: var(--rs-surface-2);

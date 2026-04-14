@@ -109,6 +109,98 @@
   &:hover { background: oklch(22% 0.018 50 / 0.85); }
 }
 
+// ─── Difficulty pill selector ────────────────────────────────────────────────
+
+.difficulty-pills {
+  display: flex;
+  gap: 6px;
+  width: 100%;
+  padding-bottom: 10px;
+}
+
+.difficulty-pill {
+  height: 28px;
+  padding: 0 14px;
+  border-radius: var(--rs-radius-full);
+  border: 1.5px solid var(--rs-border);
+  background: var(--rs-surface-2);
+  color: var(--rs-text-muted);
+  font-family: var(--rs-font-display);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease, transform 0.1s ease;
+  white-space: nowrap;
+
+  &:hover {
+    border-color: var(--rs-accent);
+    color: var(--rs-text-primary);
+    transform: scale(1.04);
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+
+  &.selected {
+    border-color: transparent;
+    transform: scale(1);
+  }
+
+  &.pill-easy {
+    background: oklch(92% 0.06 145);
+    color: oklch(38% 0.12 145);
+    @media (prefers-color-scheme: dark) {
+      background: oklch(32% 0.09 145);
+      color: oklch(80% 0.1 145);
+    }
+  }
+
+  &.pill-medium {
+    background: oklch(93% 0.07 75);
+    color: oklch(42% 0.13 75);
+    @media (prefers-color-scheme: dark) {
+      background: oklch(32% 0.09 75);
+      color: oklch(82% 0.1 75);
+    }
+  }
+
+  &.pill-hard {
+    background: oklch(92% 0.06 25);
+    color: oklch(42% 0.14 25);
+    @media (prefers-color-scheme: dark) {
+      background: oklch(30% 0.1 25);
+      color: oklch(80% 0.1 25);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .difficulty-pill {
+    transition: none;
+  }
+}
+
+// ─── Tags field ──────────────────────────────────────────────────────────────
+
+.tags-field {
+  width: 100%;
+  padding-bottom: 8px;
+}
+
+.tags-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+  margin-bottom: 4px;
+}
+
+.tags-input-row {
+  display: flex;
+  align-items: center;
+}
+
 // ─── Emoji picker panel ──────────────────────────────────────────────────────
 
 .emoji-picker-panel {

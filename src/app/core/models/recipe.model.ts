@@ -54,7 +54,13 @@ export const INGREDIENT_UNITS = [
 export function generateSearchTokens(title: string, tags: string[], cuisineType: string): string[] {
   const tokens = new Set<string>();
   const addWords = (text: string) => {
-    text.toLowerCase().split(/\s+/).forEach(w => { if (w.length > 1) tokens.add(w); });
+    text.toLowerCase().split(/\s+/).forEach(word => {
+      if (!word) return;
+      // Store prefixes from 2 chars up: "butter" → "bu", "but", "butt", "butte", "butter"
+      for (let i = 2; i <= word.length; i++) {
+        tokens.add(word.slice(0, i));
+      }
+    });
   };
   addWords(title);
   tags.forEach(t => addWords(t));

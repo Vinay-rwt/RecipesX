@@ -72,7 +72,7 @@ export class FeedService {
         constraints.unshift(where('difficulty', '==', filters.difficulty));
       }
       if (filters.searchQuery) {
-        const tokens = filters.searchQuery.toLowerCase().split(/\s+/).filter(t => t.length > 1).slice(0, 10);
+        const tokens = filters.searchQuery.toLowerCase().split(/\s+/).filter(t => t.length >= 2).slice(0, 10);
         if (tokens.length) {
           constraints.unshift(where('searchTokens', 'array-contains-any', tokens));
         }

@@ -7,22 +7,15 @@
  * Connects to the Firestore emulator at localhost:8080.
  */
 
-import { initializeApp } from 'firebase/app';
-import {
-  getFirestore,
-  connectFirestoreEmulator,
-  doc,
-  setDoc,
-  collection,
-} from 'firebase/firestore';
+import { initializeApp } from 'firebase-admin/app';
+import { getFirestore } from 'firebase-admin/firestore';
 
-const app = initializeApp({
-  apiKey: 'demo-key',
-  projectId: 'demo-recipeshare',
-});
+// Point Admin SDK at the local emulator — no service account needed
+process.env['FIRESTORE_EMULATOR_HOST'] = 'localhost:8080';
 
-const db = getFirestore(app);
-connectFirestoreEmulator(db, 'localhost', 8080);
+initializeApp({ projectId: 'demo-recipeshare' });
+
+const db = getFirestore();
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -73,19 +66,22 @@ const SYSTEM_AUTHOR_ID = 'system_seed';
 function tokens(...parts: string[]): string[] {
   const set = new Set<string>();
   parts.forEach(p =>
-    p.toLowerCase().split(/\s+/).forEach(w => { if (w.length > 1) set.add(w); }),
+    p.toLowerCase().split(/\s+/).forEach(word => {
+      for (let i = 2; i <= word.length; i++) set.add(word.slice(0, i));
+    }),
   );
   return Array.from(set);
 }
 
-function makeId(): string {
-  return doc(collection(db, 'recipes')).id;
+function makeId(title: string): string {
+  // Stable slug from title so re-runs overwrite the same documents
+  return 'seed_' + title.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
 }
 
 function recipe(r: Omit<Recipe, 'id' | 'authorId' | 'photoURLs' | 'likeCount' | 'saveCount' | 'status' | 'createdAt' | 'updatedAt' | 'searchTokens'>): Recipe {
   return {
     ...r,
-    id: makeId(),
+    id: makeId(r.title),
     authorId: SYSTEM_AUTHOR_ID,
     photoURLs: [],
     likeCount: Math.floor(Math.random() * 120),
@@ -1454,8 +1450,7 @@ async function main(): Promise<void> {
   console.log(`Seeding ${RECIPES.length} recipes…`);
 
   for (const r of RECIPES) {
-    const ref = doc(db, 'recipes', r.id);
-    await setDoc(ref, r);
+    await db.collection('recipes').doc(r.id).set(r);
     console.log(`  ✓ ${r.title}`);
   }
 
