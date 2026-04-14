@@ -8,6 +8,7 @@ import { RecipeCardComponent } from './components/recipe-card/recipe-card.compon
 import { MyRecipesComponent } from './components/my-recipes/my-recipes.component';
 import { TemperaturePipe } from './pipes/temperature.pipe';
 import { MeasurementPipe } from './pipes/measurement.pipe';
+import { NutritionPanelComponent } from './components/nutrition-panel/nutrition-panel.component';
 
 @NgModule({
   imports: [CommonModule, RouterModule, IonicModule],
@@ -18,6 +19,7 @@ import { MeasurementPipe } from './pipes/measurement.pipe';
     MyRecipesComponent,
     TemperaturePipe,
     MeasurementPipe,
+    NutritionPanelComponent,
   ],
   exports: [
     EquipmentSelectorComponent,
@@ -26,6 +28,7 @@ import { MeasurementPipe } from './pipes/measurement.pipe';
     MyRecipesComponent,
     TemperaturePipe,
     MeasurementPipe,
+    NutritionPanelComponent,
   ],
 })
 export class SharedModule {}
