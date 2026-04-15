@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { Auth } from '@angular/fire/auth';
-import { InfiniteScrollCustomEvent, RefresherCustomEvent, ViewWillEnter } from '@ionic/angular';
+import { InfiniteScrollCustomEvent, RefresherCustomEvent, ToastController, ViewWillEnter } from '@ionic/angular';
 import { FeedService } from '../../core/services/feed.service';
 import { SocialService } from '../../core/services/social.service';
 import { ShareService } from '../../core/services/share.service';
@@ -17,6 +17,7 @@ export class FeedPage implements ViewWillEnter {
   private socialService = inject(SocialService);
   private shareService = inject(ShareService);
   private auth = inject(Auth);
+  private toastCtrl = inject(ToastController);
 
   likedRecipes = signal<Set<string>>(new Set());
   savedRecipes = signal<Set<string>>(new Set());
@@ -54,20 +55,41 @@ export class FeedPage implements ViewWillEnter {
 
   async onToggleLike(recipeId: string): Promise<void> {
     const uid = this.auth.currentUser?.uid;
-    if (!uid) return;
-    const liked = await this.socialService.toggleLike(uid, recipeId);
-    const newSet = new Set(this.likedRecipes());
-    if (liked) newSet.add(recipeId); else newSet.delete(recipeId);
-    this.likedRecipes.set(newSet);
+    if (!uid) {
+      this._showToast('Sign in to like recipes');
+      return;
+    }
+    try {
+      const liked = await this.socialService.toggleLike(uid, recipeId);
+      const newSet = new Set(this.likedRecipes());
+      if (liked) newSet.add(recipeId); else newSet.delete(recipeId);
+      this.likedRecipes.set(newSet);
+    } catch (err) {
+      console.error('toggleLike failed', err);
+      this._showToast('Could not update like — please try again');
+    }
   }
 
   async onToggleSave(recipeId: string): Promise<void> {
     const uid = this.auth.currentUser?.uid;
-    if (!uid) return;
-    const saved = await this.socialService.toggleSave(uid, recipeId);
-    const newSet = new Set(this.savedRecipes());
-    if (saved) newSet.add(recipeId); else newSet.delete(recipeId);
-    this.savedRecipes.set(newSet);
+    if (!uid) {
+      this._showToast('Sign in to save recipes');
+      return;
+    }
+    try {
+      const saved = await this.socialService.toggleSave(uid, recipeId);
+      const newSet = new Set(this.savedRecipes());
+      if (saved) newSet.add(recipeId); else newSet.delete(recipeId);
+      this.savedRecipes.set(newSet);
+    } catch (err) {
+      console.error('toggleSave failed', err);
+      this._showToast('Could not save recipe — please try again');
+    }
+  }
+
+  private async _showToast(message: string): Promise<void> {
+    const toast = await this.toastCtrl.create({ message, duration: 2500, position: 'bottom' });
+    await toast.present();
   }
 
   onSearch(): void {
