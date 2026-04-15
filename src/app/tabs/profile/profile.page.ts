@@ -1,10 +1,12 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { Auth } from '@angular/fire/auth';
 import { ViewWillEnter } from '@ionic/angular';
 import { AuthService } from '../../core/services/auth.service';
 import { UserProfileService } from '../../core/services/user-profile.service';
 import { OnboardingStateService } from '../../features/onboarding/services/onboarding-state.service';
 import { RecipeService } from '../../core/services/recipe.service';
+import { SocialService } from '../../core/services/social.service';
+import { Recipe } from '../../core/models/recipe.model';
 
 @Component({
   selector: 'app-profile',
@@ -16,8 +18,12 @@ export class ProfilePage implements ViewWillEnter {
   private auth = inject(Auth);
   private authService = inject(AuthService);
   private onboardingState = inject(OnboardingStateService);
+  private socialService = inject(SocialService);
   readonly profileService = inject(UserProfileService);
   readonly recipeService = inject(RecipeService);
+
+  savedRecipes = signal<Recipe[]>([]);
+  savedLoading = signal(false);
 
   ionViewWillEnter(): void {
     this.loadData();
@@ -28,6 +34,22 @@ export class ProfilePage implements ViewWillEnter {
     if (user) {
       this.profileService.loadProfile(user.uid);
       this.recipeService.loadMyRecipes(user.uid);
+      this._loadSavedRecipes(user.uid);
+    }
+  }
+
+  private async _loadSavedRecipes(uid: string): Promise<void> {
+    this.savedLoading.set(true);
+    try {
+      const savedIds = await this.socialService.getUserSaves(uid);
+      if (savedIds.size === 0) {
+        this.savedRecipes.set([]);
+        return;
+      }
+      const recipes = await this.recipeService.getRecipesByIds(Array.from(savedIds));
+      this.savedRecipes.set(recipes);
+    } finally {
+      this.savedLoading.set(false);
     }
   }
 

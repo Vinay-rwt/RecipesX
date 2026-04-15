@@ -66,7 +66,8 @@ export class FeedPage implements ViewWillEnter {
     try {
       const liked = await this.socialService.toggleLike(uid, recipeId);
       const newSet = new Set(this.likedRecipes());
-      if (liked) newSet.add(recipeId); else newSet.delete(recipeId);
+      if (liked) { newSet.add(recipeId); this.feedService.patchRecipeCount(recipeId, 'likeCount', 1); }
+      else        { newSet.delete(recipeId); this.feedService.patchRecipeCount(recipeId, 'likeCount', -1); }
       this.likedRecipes.set(newSet);
     } catch (err) {
       console.error('toggleLike failed', err);
@@ -88,6 +89,7 @@ export class FeedPage implements ViewWillEnter {
         const newSet = new Set(this.savedRecipes());
         newSet.delete(recipeId);
         this.savedRecipes.set(newSet);
+        this.feedService.patchRecipeCount(recipeId, 'saveCount', -1);
         this._showToast('Removed from saves');
       } catch {
         this._showToast('Could not update save — please try again');
@@ -173,6 +175,7 @@ export class FeedPage implements ViewWillEnter {
       const newSet = new Set(this.savedRecipes());
       newSet.add(recipeId);
       this.savedRecipes.set(newSet);
+      this.feedService.patchRecipeCount(recipeId, 'saveCount', 1);
 
       if (collectionId) {
         const coverPhotoURL = recipe.photoURLs?.[0];
