@@ -59,45 +59,55 @@ export class FeedPage implements ViewWillEnter {
 
   async onToggleLike(recipeId: string): Promise<void> {
     const uid = this.auth.currentUser?.uid;
-    if (!uid) {
-      this._showToast('Sign in to like recipes');
-      return;
-    }
+    if (!uid) { this._showToast('Sign in to like recipes'); return; }
     try {
       const liked = await this.socialService.toggleLike(uid, recipeId);
       const newSet = new Set(this.likedRecipes());
       if (liked) { newSet.add(recipeId); this.feedService.patchRecipeCount(recipeId, 'likeCount', 1); }
       else        { newSet.delete(recipeId); this.feedService.patchRecipeCount(recipeId, 'likeCount', -1); }
       this.likedRecipes.set(newSet);
-    } catch (err) {
-      console.error('toggleLike failed', err);
+    } catch {
       this._showToast('Could not update like — please try again');
     }
   }
 
   async onToggleSave(recipe: Recipe): Promise<void> {
     const uid = this.auth.currentUser?.uid;
-    if (!uid) {
-      this._showToast('Sign in to save recipes');
-      return;
-    }
+    if (!uid) { this._showToast('Sign in to save recipes'); return; }
+
     const recipeId = recipe.id!;
-    // Already saved → unsave directly
+
     if (this.savedRecipes().has(recipeId)) {
-      try {
-        await this.socialService.toggleSave(uid, recipeId);
-        const newSet = new Set(this.savedRecipes());
-        newSet.delete(recipeId);
-        this.savedRecipes.set(newSet);
-        this.feedService.patchRecipeCount(recipeId, 'saveCount', -1);
-        this._showToast('Removed from saves');
-      } catch {
-        this._showToast('Could not update save — please try again');
-      }
+      // Already saved — find where it lives and remove from exactly that place
+      await this._doUnsave(uid, recipeId);
       return;
     }
-    // Not saved → show collection picker
+
+    // Not yet saved — show collection picker
     await this._showSaveToCollectionSheet(uid, recipe);
+  }
+
+  private async _doUnsave(uid: string, recipeId: string): Promise<void> {
+    try {
+      const collectionId = this.collectionService.findCollectionForRecipe(recipeId);
+
+      if (collectionId) {
+        // Saved in a collection → remove from that collection only
+        await this.collectionService.removeRecipeFromCollection(uid, collectionId, recipeId);
+        await this.socialService.decrementSaveCount(recipeId);
+      } else {
+        // Saved without a collection → remove from uncategorized bucket
+        await this.socialService.unsaveUncategorized(uid, recipeId);
+      }
+
+      const newSet = new Set(this.savedRecipes());
+      newSet.delete(recipeId);
+      this.savedRecipes.set(newSet);
+      this.feedService.patchRecipeCount(recipeId, 'saveCount', -1);
+      this._showToast('Removed from saves');
+    } catch {
+      this._showToast('Could not update save — please try again');
+    }
   }
 
   private async _showSaveToCollectionSheet(uid: string, recipe: Recipe): Promise<void> {
@@ -106,9 +116,7 @@ export class FeedPage implements ViewWillEnter {
 
     const collectionButtons = cols.map(col => ({
       text: `${col.emoji} ${col.name}`,
-      handler: async () => {
-        await this._doSave(uid, recipe, col.id!);
-      },
+      handler: async () => { await this._doSave(uid, recipe, col.id!); },
     }));
 
     const sheet = await this.actionSheetCtrl.create({
@@ -136,19 +144,8 @@ export class FeedPage implements ViewWillEnter {
     const alert = await this.alertCtrl.create({
       header: 'New Collection',
       inputs: [
-        {
-          name: 'name',
-          type: 'text',
-          placeholder: 'e.g. Weeknight Dinners',
-          attributes: { maxlength: 40 },
-        },
-        {
-          name: 'emoji',
-          type: 'text',
-          placeholder: 'Emoji',
-          value: DEFAULT_EMOJIS[Math.floor(Math.random() * DEFAULT_EMOJIS.length)],
-          attributes: { maxlength: 4 },
-        },
+        { name: 'name', type: 'text', placeholder: 'e.g. Weeknight Dinners', attributes: { maxlength: 40 } },
+        { name: 'emoji', type: 'text', placeholder: 'Emoji', value: DEFAULT_EMOJIS[Math.floor(Math.random() * DEFAULT_EMOJIS.length)], attributes: { maxlength: 4 } },
       ],
       buttons: [
         { text: 'Cancel', role: 'cancel' },
@@ -157,8 +154,7 @@ export class FeedPage implements ViewWillEnter {
           handler: async (data): Promise<boolean> => {
             const name = data.name?.trim();
             if (!name) return false;
-            const emoji = data.emoji?.trim() || '📚';
-            const colId = await this.collectionService.createCollection(uid, name, emoji);
+            const colId = await this.collectionService.createCollection(uid, name, data.emoji?.trim() || '📚');
             await this._doSave(uid, recipe, colId);
             return true;
           },
@@ -171,20 +167,22 @@ export class FeedPage implements ViewWillEnter {
   private async _doSave(uid: string, recipe: Recipe, collectionId: string | null): Promise<void> {
     const recipeId = recipe.id!;
     try {
-      await this.socialService.toggleSave(uid, recipeId);
+      if (collectionId) {
+        // Save into a specific collection — no saves/ doc, just collection membership + saveCount
+        await this.collectionService.addRecipeToCollection(uid, collectionId, recipeId, recipe.photoURLs?.[0]);
+        await this.socialService.incrementSaveCount(recipeId);
+        const colName = this.collectionService.collections().find(c => c.id === collectionId)?.name;
+        this._showToast(colName ? `Saved to "${colName}"` : 'Saved');
+      } else {
+        // Save without collection — write to uncategorized saves/ bucket
+        await this.socialService.saveToUncategorized(uid, recipeId);
+        this._showToast('Saved');
+      }
+
       const newSet = new Set(this.savedRecipes());
       newSet.add(recipeId);
       this.savedRecipes.set(newSet);
       this.feedService.patchRecipeCount(recipeId, 'saveCount', 1);
-
-      if (collectionId) {
-        const coverPhotoURL = recipe.photoURLs?.[0];
-        await this.collectionService.addRecipeToCollection(uid, collectionId, recipeId, coverPhotoURL);
-        const colName = this.collectionService.collections().find(c => c.id === collectionId)?.name;
-        this._showToast(colName ? `Saved to "${colName}"` : 'Saved');
-      } else {
-        this._showToast('Saved');
-      }
     } catch {
       this._showToast('Could not save recipe — please try again');
     }
@@ -196,26 +194,17 @@ export class FeedPage implements ViewWillEnter {
   }
 
   onSearch(): void {
-    this.feedService.setFilters({
-      ...this.feedService.filters(),
-      searchQuery: this.searchQuery || undefined,
-    });
+    this.feedService.setFilters({ ...this.feedService.filters(), searchQuery: this.searchQuery || undefined });
   }
 
   onCuisineChange(value: string): void {
     this.selectedCuisine = value;
-    this.feedService.setFilters({
-      ...this.feedService.filters(),
-      cuisineType: value || undefined,
-    });
+    this.feedService.setFilters({ ...this.feedService.filters(), cuisineType: value || undefined });
   }
 
   onDifficultyChange(value: string): void {
     this.selectedDifficulty = value;
-    this.feedService.setFilters({
-      ...this.feedService.filters(),
-      difficulty: (value as any) || undefined,
-    });
+    this.feedService.setFilters({ ...this.feedService.filters(), difficulty: (value as any) || undefined });
   }
 
   clearFilters(): void {
@@ -232,11 +221,20 @@ export class FeedPage implements ViewWillEnter {
   private async _loadSocialState(): Promise<void> {
     const uid = this.auth.currentUser?.uid;
     if (!uid) return;
-    const [likes, saves] = await Promise.all([
+
+    const [likes, uncategorizedSaves, collections] = await Promise.all([
       this.socialService.getUserLikes(uid),
       this.socialService.getUserSaves(uid),
+      this.collectionService.loadCollections(uid),
     ]);
+
+    // savedRecipes = uncategorized saves ∪ all recipes in any collection
+    const collectionSaves = new Set(
+      this.collectionService.collections().flatMap(c => c.recipeIds)
+    );
+    const allSaved = new Set([...uncategorizedSaves, ...collectionSaves]);
+
     this.likedRecipes.set(likes);
-    this.savedRecipes.set(saves);
+    this.savedRecipes.set(allSaved);
   }
 }

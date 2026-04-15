@@ -6,6 +6,7 @@ import { UserProfileService } from '../../core/services/user-profile.service';
 import { OnboardingStateService } from '../../features/onboarding/services/onboarding-state.service';
 import { RecipeService } from '../../core/services/recipe.service';
 import { SocialService } from '../../core/services/social.service';
+import { CollectionService } from '../../core/services/collection.service';
 import { Recipe } from '../../core/models/recipe.model';
 
 @Component({
@@ -19,6 +20,7 @@ export class ProfilePage implements ViewWillEnter {
   private authService = inject(AuthService);
   private onboardingState = inject(OnboardingStateService);
   private socialService = inject(SocialService);
+  private collectionService = inject(CollectionService);
   readonly profileService = inject(UserProfileService);
   readonly recipeService = inject(RecipeService);
 
@@ -41,12 +43,21 @@ export class ProfilePage implements ViewWillEnter {
   private async _loadSavedRecipes(uid: string): Promise<void> {
     this.savedLoading.set(true);
     try {
-      const savedIds = await this.socialService.getUserSaves(uid);
-      if (savedIds.size === 0) {
+      // Uncategorized saves + all collection recipe IDs
+      const [uncategorizedIds] = await Promise.all([
+        this.socialService.getUserSaves(uid),
+        this.collectionService.loadCollections(uid),
+      ]);
+      const collectionIds = new Set(
+        this.collectionService.collections().flatMap(c => c.recipeIds)
+      );
+      const allIds = new Set([...uncategorizedIds, ...collectionIds]);
+
+      if (allIds.size === 0) {
         this.savedRecipes.set([]);
         return;
       }
-      const recipes = await this.recipeService.getRecipesByIds(Array.from(savedIds));
+      const recipes = await this.recipeService.getRecipesByIds(Array.from(allIds));
       this.savedRecipes.set(recipes);
     } finally {
       this.savedLoading.set(false);

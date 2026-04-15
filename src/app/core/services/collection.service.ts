@@ -2,14 +2,12 @@ import { Injectable, inject, signal } from '@angular/core';
 import {
   Firestore,
   collection,
-  collectionData,
   doc,
   addDoc,
   updateDoc,
   deleteDoc,
   arrayUnion,
   arrayRemove,
-  serverTimestamp,
   query,
   orderBy,
   getDocs,
@@ -35,10 +33,17 @@ export class CollectionService {
       const ref = collection(this.firestore, `users/${userId}/collections`);
       const q = query(ref, orderBy('updatedAt', 'desc'));
       const snap = await getDocs(q);
-      const cols: Collection[] = snap.docs.map(d => ({
-        id: d.id,
-        ...(d.data() as Omit<Collection, 'id'>),
-      }));
+      const cols: Collection[] = snap.docs.map(d => {
+        const data = d.data() as Omit<Collection, 'id'>;
+        const recipeIds: string[] = (data as any).recipeIds ?? [];
+        return {
+          id: d.id,
+          ...data,
+          recipeIds,
+          // Always derive count from the array — never trust the stored field
+          recipeCount: recipeIds.length,
+        };
+      });
       this._collections.set(cols);
     } catch (e: any) {
       this._error.set('Failed to load collections');
@@ -59,7 +64,6 @@ export class CollectionService {
       createdAt: now,
       updatedAt: now,
     });
-    // Optimistic update
     const newCol: Collection = {
       id: docRef.id,
       userId,
@@ -86,28 +90,32 @@ export class CollectionService {
     recipeId: string,
     coverPhotoURL?: string,
   ): Promise<void> {
-    const ref = doc(this.firestore, `users/${userId}/collections/${collectionId}`);
-    const updates: any = {
+    const existing = this._collections().find(c => c.id === collectionId);
+    if (!existing) return;
+
+    // Guard: already in collection
+    if (existing.recipeIds.includes(recipeId)) return;
+
+    const newIds = [...existing.recipeIds, recipeId];
+    const updates: Record<string, unknown> = {
       recipeIds: arrayUnion(recipeId),
+      recipeCount: newIds.length,           // ← written explicitly to Firestore
       updatedAt: new Date(),
     };
-    // Set cover photo from first recipe added
-    const existing = this._collections().find(c => c.id === collectionId);
-    if (existing && existing.recipeCount === 0 && coverPhotoURL) {
+    if (existing.recipeCount === 0 && coverPhotoURL) {
       updates['coverPhotoURL'] = coverPhotoURL;
     }
-    await updateDoc(ref, updates);
 
-    // Optimistic update
+    await updateDoc(doc(this.firestore, `users/${userId}/collections/${collectionId}`), updates);
+
+    // Optimistic local update
     this._collections.update(cols =>
       cols.map(c => {
         if (c.id !== collectionId) return c;
-        const alreadyIn = c.recipeIds.includes(recipeId);
-        if (alreadyIn) return c;
         return {
           ...c,
-          recipeIds: [...c.recipeIds, recipeId],
-          recipeCount: c.recipeCount + 1,
+          recipeIds: newIds,
+          recipeCount: newIds.length,
           coverPhotoURL: c.recipeCount === 0 && coverPhotoURL ? coverPhotoURL : c.coverPhotoURL,
           updatedAt: new Date(),
         };
@@ -120,23 +128,31 @@ export class CollectionService {
     collectionId: string,
     recipeId: string,
   ): Promise<void> {
-    const ref = doc(this.firestore, `users/${userId}/collections/${collectionId}`);
-    await updateDoc(ref, {
+    const existing = this._collections().find(c => c.id === collectionId);
+    const newIds = (existing?.recipeIds ?? []).filter(id => id !== recipeId);
+
+    await updateDoc(doc(this.firestore, `users/${userId}/collections/${collectionId}`), {
       recipeIds: arrayRemove(recipeId),
+      recipeCount: newIds.length,           // ← written explicitly to Firestore
       updatedAt: new Date(),
     });
+
     this._collections.update(cols =>
       cols.map(c => {
         if (c.id !== collectionId) return c;
-        const newIds = c.recipeIds.filter(id => id !== recipeId);
-        return {
-          ...c,
-          recipeIds: newIds,
-          recipeCount: Math.max(0, c.recipeCount - 1),
-          updatedAt: new Date(),
-        };
+        return { ...c, recipeIds: newIds, recipeCount: newIds.length, updatedAt: new Date() };
       })
     );
+  }
+
+  /** Returns the collection ID that contains this recipe, or null if none. */
+  findCollectionForRecipe(recipeId: string): string | null {
+    return this._collections().find(c => c.recipeIds.includes(recipeId))?.id ?? null;
+  }
+
+  /** True if the recipe is in any loaded collection. */
+  isInAnyCollection(recipeId: string): boolean {
+    return this._collections().some(c => c.recipeIds.includes(recipeId));
   }
 
   clear(): void {

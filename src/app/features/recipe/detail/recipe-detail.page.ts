@@ -116,12 +116,15 @@ export class RecipeDetailPage implements ViewWillEnter {
 
       const uid = this.auth.currentUser?.uid;
       if (uid && r.id) {
-        const [liked, saved] = await Promise.all([
+        // Load collections so we can check collection membership for isSaved
+        await this.collectionService.loadCollections(uid);
+        const [liked, uncategorizedSave] = await Promise.all([
           this.socialService.isLiked(uid, r.id),
-          this.socialService.isSaved(uid, r.id),
+          this.socialService.isUncategorizedSave(uid, r.id),
         ]);
+        const inCollection = this.collectionService.isInAnyCollection(r.id);
         this.isLiked.set(liked);
-        this.isSaved.set(saved);
+        this.isSaved.set(uncategorizedSave || inCollection);
       }
     }
 
@@ -263,9 +266,15 @@ export class RecipeDetailPage implements ViewWillEnter {
     const recipe = this.recipe();
     if (!uid || !recipe?.id) return;
 
-    // Already saved → unsave directly
     if (this.isSaved()) {
-      await this.socialService.toggleSave(uid, recipe.id);
+      // Find where it lives and remove from exactly that place
+      const collectionId = this.collectionService.findCollectionForRecipe(recipe.id);
+      if (collectionId) {
+        await this.collectionService.removeRecipeFromCollection(uid, collectionId, recipe.id);
+        await this.socialService.decrementSaveCount(recipe.id);
+      } else {
+        await this.socialService.unsaveUncategorized(uid, recipe.id);
+      }
       this.isSaved.set(false);
       const toast = await this.toastCtrl.create({ message: 'Removed from saves', duration: 2000, position: 'bottom' });
       await toast.present();
@@ -306,19 +315,8 @@ export class RecipeDetailPage implements ViewWillEnter {
     const alert = await this.alertCtrl.create({
       header: 'New Collection',
       inputs: [
-        {
-          name: 'name',
-          type: 'text',
-          placeholder: 'e.g. Weeknight Dinners',
-          attributes: { maxlength: 40 },
-        },
-        {
-          name: 'emoji',
-          type: 'text',
-          placeholder: 'Emoji',
-          value: DEFAULT_EMOJIS[Math.floor(Math.random() * DEFAULT_EMOJIS.length)],
-          attributes: { maxlength: 4 },
-        },
+        { name: 'name', type: 'text', placeholder: 'e.g. Weeknight Dinners', attributes: { maxlength: 40 } },
+        { name: 'emoji', type: 'text', placeholder: 'Emoji', value: DEFAULT_EMOJIS[Math.floor(Math.random() * DEFAULT_EMOJIS.length)], attributes: { maxlength: 4 } },
       ],
       buttons: [
         { text: 'Cancel', role: 'cancel' },
@@ -338,17 +336,20 @@ export class RecipeDetailPage implements ViewWillEnter {
   }
 
   private async _doSave(uid: string, recipe: Recipe, collectionId: string | null): Promise<void> {
-    await this.socialService.toggleSave(uid, recipe.id!);
-    this.isSaved.set(true);
     if (collectionId) {
+      // Collection save — no saves/ doc, just membership + saveCount
       await this.collectionService.addRecipeToCollection(uid, collectionId, recipe.id!, recipe.photoURLs?.[0]);
+      await this.socialService.incrementSaveCount(recipe.id!);
       const colName = this.collectionService.collections().find(c => c.id === collectionId)?.name;
       const toast = await this.toastCtrl.create({ message: colName ? `Saved to "${colName}"` : 'Saved', duration: 2000, position: 'bottom' });
       await toast.present();
     } else {
+      // Uncategorized save — write to saves/ bucket
+      await this.socialService.saveToUncategorized(uid, recipe.id!);
       const toast = await this.toastCtrl.create({ message: 'Saved', duration: 2000, position: 'bottom' });
       await toast.present();
     }
+    this.isSaved.set(true);
   }
 
   navigateToEdit(): void {

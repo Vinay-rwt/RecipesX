@@ -8,6 +8,8 @@ import {
 export class SocialService {
   private firestore = inject(Firestore);
 
+  // ── Likes ────────────────────────────────────────────────────────────────
+
   async toggleLike(userId: string, recipeId: string): Promise<boolean> {
     const likeRef = doc(this.firestore, `users/${userId}/likes/${recipeId}`);
     const recipeRef = doc(this.firestore, `recipes/${recipeId}`);
@@ -24,41 +26,46 @@ export class SocialService {
     }
   }
 
-  async toggleSave(userId: string, recipeId: string): Promise<boolean> {
-    const saveRef = doc(this.firestore, `users/${userId}/saves/${recipeId}`);
-    const recipeRef = doc(this.firestore, `recipes/${recipeId}`);
-    const exists = (await getDoc(saveRef)).exists();
-
-    if (exists) {
-      await deleteDoc(saveRef);
-      await updateDoc(recipeRef, { saveCount: increment(-1) });
-      return false;
-    } else {
-      await setDoc(saveRef, { createdAt: new Date() });
-      await updateDoc(recipeRef, { saveCount: increment(1) });
-      return true;
-    }
-  }
-
   async isLiked(userId: string, recipeId: string): Promise<boolean> {
-    const likeRef = doc(this.firestore, `users/${userId}/likes/${recipeId}`);
-    return (await getDoc(likeRef)).exists();
-  }
-
-  async isSaved(userId: string, recipeId: string): Promise<boolean> {
-    const saveRef = doc(this.firestore, `users/${userId}/saves/${recipeId}`);
-    return (await getDoc(saveRef)).exists();
+    return (await getDoc(doc(this.firestore, `users/${userId}/likes/${recipeId}`))).exists();
   }
 
   async getUserLikes(userId: string): Promise<Set<string>> {
-    const likesRef = collection(this.firestore, `users/${userId}/likes`);
-    const snapshot = await getDocs(likesRef);
-    return new Set(snapshot.docs.map(d => d.id));
+    const snap = await getDocs(collection(this.firestore, `users/${userId}/likes`));
+    return new Set(snap.docs.map(d => d.id));
   }
 
+  // ── Saves — uncategorized bucket (users/{uid}/saves/{recipeId}) ──────────
+  // Used only when the user saves without choosing a collection.
+
+  async saveToUncategorized(userId: string, recipeId: string): Promise<void> {
+    await setDoc(doc(this.firestore, `users/${userId}/saves/${recipeId}`), { createdAt: new Date() });
+    await updateDoc(doc(this.firestore, `recipes/${recipeId}`), { saveCount: increment(1) });
+  }
+
+  async unsaveUncategorized(userId: string, recipeId: string): Promise<void> {
+    await deleteDoc(doc(this.firestore, `users/${userId}/saves/${recipeId}`));
+    await updateDoc(doc(this.firestore, `recipes/${recipeId}`), { saveCount: increment(-1) });
+  }
+
+  /** Increment saveCount only — used when saving into a collection (no saves/ doc written). */
+  async incrementSaveCount(recipeId: string): Promise<void> {
+    await updateDoc(doc(this.firestore, `recipes/${recipeId}`), { saveCount: increment(1) });
+  }
+
+  /** Decrement saveCount only — used when removing from a collection. */
+  async decrementSaveCount(recipeId: string): Promise<void> {
+    await updateDoc(doc(this.firestore, `recipes/${recipeId}`), { saveCount: increment(-1) });
+  }
+
+  /** True if recipe exists in the flat saves/ subcollection (uncategorized). */
+  async isUncategorizedSave(userId: string, recipeId: string): Promise<boolean> {
+    return (await getDoc(doc(this.firestore, `users/${userId}/saves/${recipeId}`))).exists();
+  }
+
+  /** All recipe IDs in the uncategorized saves bucket. */
   async getUserSaves(userId: string): Promise<Set<string>> {
-    const savesRef = collection(this.firestore, `users/${userId}/saves`);
-    const snapshot = await getDocs(savesRef);
-    return new Set(snapshot.docs.map(d => d.id));
+    const snap = await getDocs(collection(this.firestore, `users/${userId}/saves`));
+    return new Set(snap.docs.map(d => d.id));
   }
 }
