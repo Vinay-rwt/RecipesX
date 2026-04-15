@@ -1,7 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Auth } from '@angular/fire/auth';
-import { ActionSheetController, ToastController, ViewWillEnter } from '@ionic/angular';
+import { ActionSheetController, AlertController, ToastController, ViewWillEnter } from '@ionic/angular';
 import { RecipeService } from '../../../core/services/recipe.service';
 import { EquipmentConversionService } from '../../../core/services/equipment-conversion.service';
 import { UserProfileService } from '../../../core/services/user-profile.service';
@@ -12,6 +12,7 @@ import { CommentService } from '../../../core/services/comment.service';
 import { Comment, VoteValue } from '../../../core/models/comment.model';
 import { getEquipmentById, EQUIPMENT_TYPES } from '../../../core/models/equipment.model';
 import { Recipe } from '../../../core/models/recipe.model';
+import { CollectionService } from '../../../core/services/collection.service';
 
 @Component({
   selector: 'app-recipe-detail',
@@ -29,8 +30,10 @@ export class RecipeDetailPage implements ViewWillEnter {
   private shareService = inject(ShareService);
   private cardGenerator = inject(RecipeCardGeneratorService);
   private actionSheetCtrl = inject(ActionSheetController);
+  private alertCtrl = inject(AlertController);
   private toastCtrl = inject(ToastController);
   private commentService = inject(CommentService);
+  readonly collectionService = inject(CollectionService);
   readonly profileService = inject(UserProfileService);
 
   readonly recipe = this.recipeService.currentRecipe;
@@ -257,10 +260,95 @@ export class RecipeDetailPage implements ViewWillEnter {
 
   async toggleSave(): Promise<void> {
     const uid = this.auth.currentUser?.uid;
-    const recipeId = this.recipe()?.id;
-    if (!uid || !recipeId) return;
-    const saved = await this.socialService.toggleSave(uid, recipeId);
-    this.isSaved.set(saved);
+    const recipe = this.recipe();
+    if (!uid || !recipe?.id) return;
+
+    // Already saved → unsave directly
+    if (this.isSaved()) {
+      await this.socialService.toggleSave(uid, recipe.id);
+      this.isSaved.set(false);
+      const toast = await this.toastCtrl.create({ message: 'Removed from saves', duration: 2000, position: 'bottom' });
+      await toast.present();
+      return;
+    }
+
+    // Not saved → show collection picker
+    await this.collectionService.loadCollections(uid);
+    const cols = this.collectionService.collections();
+
+    const collectionButtons = cols.map(col => ({
+      text: `${col.emoji} ${col.name}`,
+      handler: async () => { await this._doSave(uid, recipe, col.id!); },
+    }));
+
+    const sheet = await this.actionSheetCtrl.create({
+      header: 'Save to…',
+      buttons: [
+        ...collectionButtons,
+        {
+          text: '+ New collection',
+          icon: 'add-circle-outline',
+          handler: () => this._promptNewCollection(uid, recipe),
+        },
+        {
+          text: 'Save without collection',
+          icon: 'bookmark-outline',
+          handler: () => this._doSave(uid, recipe, null),
+        },
+        { text: 'Cancel', role: 'cancel' },
+      ],
+    });
+    await sheet.present();
+  }
+
+  private async _promptNewCollection(uid: string, recipe: Recipe): Promise<void> {
+    const DEFAULT_EMOJIS = ['📚', '🍝', '🥗', '🍜', '🍱', '🥘', '🍲', '🥩', '🫕', '🍛'];
+    const alert = await this.alertCtrl.create({
+      header: 'New Collection',
+      inputs: [
+        {
+          name: 'name',
+          type: 'text',
+          placeholder: 'e.g. Weeknight Dinners',
+          attributes: { maxlength: 40 },
+        },
+        {
+          name: 'emoji',
+          type: 'text',
+          placeholder: 'Emoji',
+          value: DEFAULT_EMOJIS[Math.floor(Math.random() * DEFAULT_EMOJIS.length)],
+          attributes: { maxlength: 4 },
+        },
+      ],
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        {
+          text: 'Create & Save',
+          handler: async (data): Promise<boolean> => {
+            const name = data.name?.trim();
+            if (!name) return false;
+            const colId = await this.collectionService.createCollection(uid, name, data.emoji?.trim() || '📚');
+            await this._doSave(uid, recipe, colId);
+            return true;
+          },
+        },
+      ],
+    });
+    await alert.present();
+  }
+
+  private async _doSave(uid: string, recipe: Recipe, collectionId: string | null): Promise<void> {
+    await this.socialService.toggleSave(uid, recipe.id!);
+    this.isSaved.set(true);
+    if (collectionId) {
+      await this.collectionService.addRecipeToCollection(uid, collectionId, recipe.id!, recipe.photoURLs?.[0]);
+      const colName = this.collectionService.collections().find(c => c.id === collectionId)?.name;
+      const toast = await this.toastCtrl.create({ message: colName ? `Saved to "${colName}"` : 'Saved', duration: 2000, position: 'bottom' });
+      await toast.present();
+    } else {
+      const toast = await this.toastCtrl.create({ message: 'Saved', duration: 2000, position: 'bottom' });
+      await toast.present();
+    }
   }
 
   navigateToEdit(): void {

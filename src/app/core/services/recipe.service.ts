@@ -106,6 +106,16 @@ export class RecipeService {
     );
   }
 
+  /** Fetch a set of recipes by their IDs (used by collection detail). Skips missing docs. */
+  async getRecipesByIds(ids: string[]): Promise<Recipe[]> {
+    if (!ids.length) return [];
+    const fetches = ids.map(id => getDoc(doc(this.firestore, `recipes/${id}`)));
+    const snaps = await Promise.all(fetches);
+    return snaps
+      .filter(s => s.exists())
+      .map(s => ({ ...(s.data() as Recipe), id: s.id }));
+  }
+
   clearCurrentRecipe(): void {
     this._currentRecipe.set(null);
   }
