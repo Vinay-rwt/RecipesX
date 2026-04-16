@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, effect, inject, signal } from '@angular/core';
 import { Auth } from '@angular/fire/auth';
 import { ViewWillEnter } from '@ionic/angular';
 import { AuthService } from '../../core/services/auth.service';
@@ -19,13 +19,23 @@ export class ProfilePage implements ViewWillEnter {
   private auth = inject(Auth);
   private authService = inject(AuthService);
   private onboardingState = inject(OnboardingStateService);
-  private socialService = inject(SocialService);
-  private collectionService = inject(CollectionService);
+  readonly socialService = inject(SocialService);
+  readonly collectionService = inject(CollectionService);
   readonly profileService = inject(UserProfileService);
   readonly recipeService = inject(RecipeService);
 
   savedRecipes = signal<Recipe[]>([]);
   savedLoading = signal(false);
+
+  constructor() {
+    // Re-derive savedRecipes whenever the uncategorized save set changes.
+    // collectionService.collections() is NOT included here — collection recipes
+    // live in their collection, not in the saved list.
+    effect(() => {
+      const ids = this.socialService.uncategorizedSaveIds();
+      this._fetchSavedRecipes(Array.from(ids));
+    });
+  }
 
   ionViewWillEnter(): void {
     this.loadData();
@@ -36,20 +46,20 @@ export class ProfilePage implements ViewWillEnter {
     if (user) {
       this.profileService.loadProfile(user.uid);
       this.recipeService.loadMyRecipes(user.uid);
-      this._loadSavedRecipes(user.uid);
+      // Seed the signal — effect() will fire once the signal updates
+      this.socialService.getUserSaves(user.uid);
+      this.collectionService.loadCollections(user.uid);
     }
   }
 
-  private async _loadSavedRecipes(uid: string): Promise<void> {
+  private async _fetchSavedRecipes(ids: string[]): Promise<void> {
+    if (ids.length === 0) {
+      this.savedRecipes.set([]);
+      return;
+    }
     this.savedLoading.set(true);
     try {
-      // Only uncategorized saves — recipes saved to a collection live in their collection, not here
-      const uncategorizedIds = await this.socialService.getUserSaves(uid);
-      if (uncategorizedIds.size === 0) {
-        this.savedRecipes.set([]);
-        return;
-      }
-      const recipes = await this.recipeService.getRecipesByIds(Array.from(uncategorizedIds));
+      const recipes = await this.recipeService.getRecipesByIds(ids);
       this.savedRecipes.set(recipes);
     } finally {
       this.savedLoading.set(false);
@@ -58,9 +68,7 @@ export class ProfilePage implements ViewWillEnter {
 
   async onEquipmentChange(equipment: string[]): Promise<void> {
     const user = this.auth.currentUser;
-    if (user) {
-      await this.profileService.updateEquipment(user.uid, equipment);
-    }
+    if (user) await this.profileService.updateEquipment(user.uid, equipment);
   }
 
   async onMeasurementChange(event: CustomEvent): Promise<void> {
