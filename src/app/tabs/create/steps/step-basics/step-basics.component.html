@@ -85,31 +85,57 @@
   <!-- Difficulty -->
   <ion-item>
     <ion-label position="stacked">Difficulty</ion-label>
-    <ion-segment formControlName="difficulty" class="ion-margin-top">
-      <ion-segment-button value="easy"><ion-label>Easy</ion-label></ion-segment-button>
-      <ion-segment-button value="medium"><ion-label>Medium</ion-label></ion-segment-button>
-      <ion-segment-button value="hard"><ion-label>Hard</ion-label></ion-segment-button>
-    </ion-segment>
+    <div class="difficulty-pills ion-margin-top" role="group" aria-label="Difficulty">
+      <button
+        type="button"
+        class="difficulty-pill"
+        [class.selected]="form.get('difficulty')?.value === 'easy'"
+        [class.pill-easy]="form.get('difficulty')?.value === 'easy'"
+        (click)="form.get('difficulty')?.setValue('easy')"
+        aria-pressed="{{ form.get('difficulty')?.value === 'easy' }}">
+        Easy
+      </button>
+      <button
+        type="button"
+        class="difficulty-pill"
+        [class.selected]="form.get('difficulty')?.value === 'medium'"
+        [class.pill-medium]="form.get('difficulty')?.value === 'medium'"
+        (click)="form.get('difficulty')?.setValue('medium')"
+        aria-pressed="{{ form.get('difficulty')?.value === 'medium' }}">
+        Medium
+      </button>
+      <button
+        type="button"
+        class="difficulty-pill"
+        [class.selected]="form.get('difficulty')?.value === 'hard'"
+        [class.pill-hard]="form.get('difficulty')?.value === 'hard'"
+        (click)="form.get('difficulty')?.setValue('hard')"
+        aria-pressed="{{ form.get('difficulty')?.value === 'hard' }}">
+        Hard
+      </button>
+    </div>
   </ion-item>
 
   <!-- Tags -->
-  <div class="tags-section ion-padding-top">
-    <ion-label>Tags</ion-label>
-    <div class="tags-chips">
-      <ion-chip *ngFor="let tag of tagsArray.controls; let i = index" color="primary" outline>
-        {{ tag.value }}
-        <ion-icon name="close-circle" (click)="removeTag(i)"></ion-icon>
-      </ion-chip>
+  <ion-item>
+    <ion-label position="stacked">Tags</ion-label>
+    <div class="tags-field">
+      <div class="tags-chips" *ngIf="tagsArray.controls.length">
+        <ion-chip *ngFor="let tag of tagsArray.controls; let i = index" color="primary" outline>
+          {{ tag.value }}
+          <ion-icon name="close-circle" (click)="removeTag(i)"></ion-icon>
+        </ion-chip>
+      </div>
+      <div class="tags-input-row">
+        <ion-input
+          [(ngModel)]="tagInput"
+          [ngModelOptions]="{ standalone: true }"
+          placeholder="Add a tag..."
+          (keyup.enter)="onAddTag()">
+        </ion-input>
+        <ion-button fill="clear" size="small" (click)="onAddTag()">Add</ion-button>
+      </div>
     </div>
-    <ion-item>
-      <ion-input
-        [(ngModel)]="tagInput"
-        [ngModelOptions]="{ standalone: true }"
-        placeholder="Add a tag..."
-        (keyup.enter)="onAddTag()">
-      </ion-input>
-      <ion-button slot="end" fill="clear" size="small" (click)="onAddTag()">Add</ion-button>
-    </ion-item>
-  </div>
+  </ion-item>
 
 </div>

@@ -21,7 +21,6 @@ export class FeedPage implements ViewWillEnter {
   likedRecipes = signal<Set<string>>(new Set());
   savedRecipes = signal<Set<string>>(new Set());
 
-  showFilters = false;
   searchQuery = '';
   selectedCuisine = '';
   selectedDifficulty = '';

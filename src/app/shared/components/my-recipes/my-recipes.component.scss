@@ -7,6 +7,20 @@
     -webkit-overflow-scrolling: touch;
 
     &::-webkit-scrollbar { display: none; }
+
+    app-recipe-card {
+      width: 200px;
+      flex-shrink: 0;
+
+      // Override the card's full-width default for the horizontal scroll context
+      ::ng-deep .recipe-card {
+        width: 200px;
+
+        .recipe-card-photo { height: 140px; }
+        .recipe-title { font-size: 0.95rem; }
+        .recipe-description { display: none; }
+      }
+    }
   }
 
   .recipe-card-wrap {

@@ -13,6 +13,7 @@ export class RecipeCardComponent {
   @Input() featured = false;
   @Input() isLiked = false;
   @Input() isSaved = false;
+  @Input() commentCount = 0;
   @Output() likeToggled = new EventEmitter<void>();
   @Output() saveToggled = new EventEmitter<void>();
   @Output() shareClicked = new EventEmitter<void>();
@@ -30,5 +31,9 @@ export class RecipeCardComponent {
   onShare(event: Event): void {
     event.stopPropagation();
     this.shareClicked.emit();
+  }
+
+  get difficultyColor(): string {
+    return ({ easy: 'success', medium: 'warning', hard: 'danger' } as Record<string, string>)[this.recipe?.difficulty] ?? 'medium';
   }
 }

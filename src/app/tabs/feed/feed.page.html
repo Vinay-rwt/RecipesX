@@ -1,19 +1,7 @@
-<ion-header [translucent]="true">
+<ion-header>
   <ion-toolbar>
     <div class="header-row">
       <div class="app-wordmark">recipe<span>share</span></div>
-      <div class="header-actions">
-        <button class="icon-btn"
-          (click)="showFilters = !showFilters"
-          [attr.aria-label]="showFilters ? 'Hide filters' : 'Show filters'"
-          [attr.aria-expanded]="showFilters">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="20" height="20" aria-hidden="true">
-            <line x1="4" y1="6" x2="20" y2="6"/>
-            <line x1="8" y1="12" x2="16" y2="12"/>
-            <line x1="11" y1="18" x2="13" y2="18"/>
-          </svg>
-        </button>
-      </div>
     </div>
     <ion-searchbar
       [(ngModel)]="searchQuery"
@@ -24,7 +12,7 @@
   </ion-toolbar>
 
   <!-- Filter chips — horizontal scroll row -->
-  <div class="filter-row" *ngIf="showFilters" role="group" aria-label="Filter recipes">
+  <div class="filter-row" role="group" aria-label="Filter recipes">
     <button class="filter-chip" [class.active]="!selectedCuisine && !selectedDifficulty" (click)="clearFilters()">All</button>
     <button class="filter-chip" *ngFor="let c of cuisineTypes"
       [class.active]="selectedCuisine === c"
@@ -36,7 +24,7 @@
   </div>
 </ion-header>
 
-<ion-content [fullscreen]="true">
+<ion-content>
   <ion-refresher slot="fixed" (ionRefresh)="onRefresh($event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
@@ -76,10 +64,10 @@
   <!-- Recipe feed -->
   <div class="feed-list" *ngIf="!feedService.error() && feedService.recipes().length > 0">
     <app-recipe-card
-      *ngFor="let recipe of feedService.recipes(); let first = first"
+      *ngFor="let recipe of feedService.recipes()"
       [recipe]="recipe"
       [showSocialActions]="true"
-      [featured]="first"
+      [featured]="true"
       [isLiked]="likedRecipes().has(recipe.id!)"
       [isSaved]="savedRecipes().has(recipe.id!)"
       (likeToggled)="onToggleLike(recipe.id!)"

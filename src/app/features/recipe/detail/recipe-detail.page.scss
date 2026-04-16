@@ -335,3 +335,199 @@
     margin: 0;
   }
 }
+
+// ===== COMMENT SECTION =====
+.comment-section {
+  padding-bottom: 5rem;
+
+  .comments-skeleton {
+    .comment-skeleton-item {
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--rs-border);
+    }
+  }
+
+  .comment-error {
+    color: var(--rs-like);
+    font-size: 0.875rem;
+    padding: 0.5rem 0;
+  }
+
+  .comment-input-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1.25rem;
+
+    ion-textarea {
+      --background: var(--rs-surface-2);
+      --border-radius: 8px;
+      --padding-start: 0.75rem;
+      font-family: var(--rs-font-body);
+      font-size: 0.9rem;
+    }
+
+    ion-button { align-self: flex-end; }
+  }
+
+  .sign-in-prompt {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.875rem;
+    color: var(--rs-text-muted);
+    margin-bottom: 1rem;
+
+    ion-icon { font-size: 1.1rem; }
+    a { color: var(--rs-accent); text-decoration: none; }
+  }
+
+  .comment-list {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .comment-thread {
+    border-bottom: 1px solid var(--rs-border);
+    padding: 0.75rem 0;
+  }
+
+  .comment-collapsed-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    .collapsed-meta {
+      font-family: var(--rs-font-display);
+      font-size: 0.82rem;
+      color: var(--rs-text-muted);
+      font-style: italic;
+    }
+  }
+
+  .comment-header {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: 0.35rem;
+
+    .comment-author {
+      font-family: var(--rs-font-display);
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: var(--rs-text-primary);
+    }
+
+    .comment-score {
+      font-family: var(--rs-font-display);
+      font-size: 0.8rem;
+      color: var(--rs-text-muted);
+
+      &.positive { color: var(--rs-save); }
+      &.negative { color: var(--rs-like); }
+    }
+
+    .comment-time {
+      font-size: 0.78rem;
+      color: var(--rs-text-muted);
+      margin-left: auto;
+    }
+  }
+
+  .comment-body {
+    font-family: var(--rs-font-body);
+    font-size: 0.9rem;
+    line-height: 1.55;
+    margin: 0 0 0.4rem;
+    color: var(--rs-text-primary);
+  }
+
+  .comment-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    .vote-btn, .reply-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 3px 5px;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 0.8rem;
+      color: var(--rs-text-muted);
+      border-radius: 4px;
+      transition: color 0.15s;
+
+      ion-icon { font-size: 1rem; }
+    }
+
+    .vote-btn.active { color: var(--rs-like); }
+    .vote-btn.active-down { color: var(--rs-save); }
+
+    .reply-btn {
+      font-family: var(--rs-font-display);
+      font-weight: 600;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+  }
+
+  .collapse-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: monospace;
+    font-size: 0.85rem;
+    color: var(--rs-text-muted);
+    padding: 0 3px;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+
+  .replies-list {
+    margin-top: 0.5rem;
+    margin-left: 1rem;
+    padding-left: 0.75rem;
+    border-left: 2px solid var(--rs-border);
+
+    .reply-item {
+      padding: 0.5rem 0;
+
+      &:not(:last-child) {
+        border-bottom: 1px solid var(--rs-border);
+      }
+    }
+  }
+
+  .reply-input-row {
+    margin: 0.5rem 0 0.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+
+    ion-textarea {
+      --background: var(--rs-surface-2);
+      --border-radius: 8px;
+      --padding-start: 0.75rem;
+      font-size: 0.875rem;
+    }
+
+    .reply-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.25rem;
+    }
+  }
+
+  .no-comments {
+    font-family: var(--rs-font-display);
+    font-size: 0.875rem;
+    color: var(--rs-text-muted);
+    text-align: center;
+    padding: 1.5rem 0;
+  }
+}

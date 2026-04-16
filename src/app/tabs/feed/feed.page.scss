@@ -17,27 +17,6 @@
   span { color: var(--rs-accent); }
 }
 
-.header-actions {
-  display: flex;
-  gap: var(--rs-space-xs);
-}
-
-.icon-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  width: 36px;
-  height: 36px;
-  border-radius: var(--rs-radius-full);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--rs-text-secondary);
-  transition: background 0.15s ease;
-
-  &:hover { background: var(--rs-surface-2); }
-  &:active { background: var(--rs-border); }
-}
 
 // ─── Filter chips ────────────────────────────────────────────────────────────
 

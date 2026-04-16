@@ -63,7 +63,6 @@ export class FeedService {
       const constraints: any[] = [
         where('status', '==', 'published'),
         orderBy('createdAt', 'desc'),
-        limit(this.PAGE_SIZE),
       ];
 
       if (filters.cuisineType) {
@@ -73,7 +72,7 @@ export class FeedService {
         constraints.unshift(where('difficulty', '==', filters.difficulty));
       }
       if (filters.searchQuery) {
-        const tokens = filters.searchQuery.toLowerCase().split(/\s+/).filter(t => t.length > 1).slice(0, 10);
+        const tokens = filters.searchQuery.toLowerCase().split(/\s+/).filter(t => t.length >= 2).slice(0, 10);
         if (tokens.length) {
           constraints.unshift(where('searchTokens', 'array-contains-any', tokens));
         }
@@ -82,6 +81,7 @@ export class FeedService {
       if (this._lastDoc) {
         constraints.push(startAfter(this._lastDoc));
       }
+      constraints.push(limit(this.PAGE_SIZE));
 
       const q = query(recipesRef, ...constraints);
       const snapshot = await getDocs(q);
