@@ -27,7 +27,13 @@ service cloud.firestore {
       allow create: if request.auth != null
         && request.resource.data.authorId == request.auth.uid;
       allow update: if request.auth != null
-        && resource.data.authorId == request.auth.uid;
+        && (
+          // Author can update any field
+          resource.data.authorId == request.auth.uid
+          // Any authenticated user can increment like/save counts
+          || request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['likeCount', 'saveCount'])
+        );
       allow delete: if request.auth != null
         && resource.data.authorId == request.auth.uid;
 

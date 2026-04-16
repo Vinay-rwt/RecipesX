@@ -5,6 +5,7 @@
 export const environment = {
   production: false,
   useEmulators: true,
+  usdaApiKey: 'KrXhfgk0A9HK9a93ocekOUPWDR6C3DfcFz1sBswO', // Replace with your key from https://fdc.nal.usda.gov/api-guide.html
   firebase: {
     apiKey: 'demo-key',
     authDomain: 'demo-recipeshare.firebaseapp.com',
