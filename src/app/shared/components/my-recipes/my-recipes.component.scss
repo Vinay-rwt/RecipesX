@@ -1,0 +1,72 @@
+.my-recipes-container {
+  .recipe-scroll {
+    display: flex;
+    gap: 0.75rem;
+    overflow-x: auto;
+    padding: 0.5rem 0;
+    -webkit-overflow-scrolling: touch;
+
+    &::-webkit-scrollbar { display: none; }
+
+    app-recipe-card {
+      width: 200px;
+      flex-shrink: 0;
+
+      // Override the card's full-width default for the horizontal scroll context
+      ::ng-deep .recipe-card {
+        width: 200px;
+
+        .recipe-card-photo { height: 140px; }
+        .recipe-title { font-size: 0.95rem; }
+        .recipe-description { display: none; }
+      }
+    }
+  }
+
+  .recipe-card-wrap {
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .recipe-edit-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 30px;
+    height: 30px;
+    border-radius: var(--rs-radius-full);
+    background: oklch(from var(--rs-surface) l c h / 0.9);
+    border: 1px solid var(--rs-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--rs-text-secondary);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: background 0.15s ease, color 0.15s ease, transform 0.1s ease;
+    z-index: 2;
+
+    &:hover {
+      background: var(--rs-accent);
+      color: oklch(97% 0.006 55);
+      border-color: var(--rs-accent);
+    }
+
+    &:active { transform: scale(0.92); }
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 1.5rem;
+    color: var(--ion-color-medium);
+
+    ion-icon {
+      font-size: 2.5rem;
+      display: block;
+      margin: 0 auto 0.5rem;
+    }
+
+    p { margin-bottom: 1rem; }
+  }
+}

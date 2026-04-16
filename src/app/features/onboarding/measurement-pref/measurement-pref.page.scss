@@ -1,0 +1,26 @@
+.page-content {
+  max-width: 500px;
+  margin: 0 auto;
+
+  h2 {
+    text-align: center;
+    margin-bottom: 0.25rem;
+  }
+
+  .subtitle {
+    text-align: center;
+    color: var(--ion-color-medium);
+    margin-bottom: 2rem;
+  }
+}
+
+.pref-section {
+  margin-bottom: 2rem;
+
+  .section-label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+  }
+}

@@ -1,0 +1,59 @@
+<div class="step-content ion-padding">
+
+  <div class="section-header">
+    <p class="step-heading">Ingredients</p>
+    <span class="ingredient-count" *ngIf="ingredientsArray.length > 0" aria-live="polite">
+      {{ ingredientsArray.length }} {{ ingredientsArray.length === 1 ? 'item' : 'items' }}
+    </span>
+  </div>
+
+  <!-- Empty state -->
+  <div *ngIf="ingredientsArray.length === 0" class="empty-hint">
+    <span class="empty-hint-icon" aria-hidden="true">🥄</span>
+    <p>Add your first ingredient below</p>
+  </div>
+
+  <ion-reorder-group [disabled]="false" (ionItemReorder)="onReorder($event)">
+    <ion-item-sliding *ngFor="let ctrl of ingredientsArray.controls; let i = index">
+      <ion-item [formGroup]="getGroup(i)" lines="full">
+        <ion-reorder slot="start" aria-label="Reorder ingredient"></ion-reorder>
+        <div class="ingredient-row">
+          <ion-input
+            formControlName="quantity"
+            type="number"
+            inputmode="decimal"
+            placeholder="Qty"
+            class="qty-input"
+            aria-label="Quantity">
+          </ion-input>
+          <ion-select formControlName="unit" placeholder="Unit" class="unit-select" aria-label="Unit">
+            <ion-select-option *ngFor="let u of units" [value]="u">{{ u || '—' }}</ion-select-option>
+          </ion-select>
+          <ion-input
+            formControlName="name"
+            placeholder="Ingredient name"
+            class="name-input"
+            aria-label="Ingredient name">
+          </ion-input>
+        </div>
+      </ion-item>
+      <ion-item-options side="end">
+        <ion-item-option color="danger" (click)="removeIngredient(i)" [attr.aria-label]="'Remove ingredient ' + (i + 1)">
+          <ion-icon slot="icon-only" name="trash-outline" aria-hidden="true"></ion-icon>
+        </ion-item-option>
+      </ion-item-options>
+    </ion-item-sliding>
+  </ion-reorder-group>
+
+  <p class="swipe-hint" *ngIf="ingredientsArray.length > 0" aria-hidden="true">
+    Swipe left to delete · Drag to reorder
+  </p>
+
+  <button class="add-row-btn" (click)="addIngredient()" type="button">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16" aria-hidden="true">
+      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+    </svg>
+    Add ingredient
+  </button>
+
+</div>

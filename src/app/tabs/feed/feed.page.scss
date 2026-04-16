@@ -1,0 +1,95 @@
+// ─── Header ─────────────────────────────────────────────────────────────────
+
+.header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--rs-space-sm) var(--rs-space-md) var(--rs-space-sm);
+}
+
+.app-wordmark {
+  font-family: var(--rs-font-display);
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--rs-text-primary);
+
+  span { color: var(--rs-accent); }
+}
+
+
+// ─── Filter chips ────────────────────────────────────────────────────────────
+
+.filter-row {
+  display: flex;
+  align-items: center;
+  gap: var(--rs-space-sm);
+  padding: var(--rs-space-sm) var(--rs-space-md);
+  overflow-x: auto;
+  scrollbar-width: none;
+  border-top: 1px solid var(--rs-border);
+
+  &::-webkit-scrollbar { display: none; }
+}
+
+.filter-chip {
+  flex-shrink: 0;
+  background: var(--rs-surface);
+  border: 1px solid var(--rs-border);
+  border-radius: var(--rs-radius-full);
+  padding: 5px var(--rs-space-md);
+  font-family: var(--rs-font-display);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--rs-text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+
+  &.active {
+    background: var(--rs-accent-subtle);
+    border-color: var(--rs-accent);
+    color: var(--rs-accent-text);
+    font-weight: 600;
+  }
+}
+
+.filter-divider {
+  width: 1px;
+  height: 20px;
+  background: var(--rs-border);
+  flex-shrink: 0;
+  margin: 0 var(--rs-space-xs);
+}
+
+// ─── Feed list ───────────────────────────────────────────────────────────────
+
+.feed-list {
+  display: flex;
+  flex-direction: column;
+}
+
+// ─── Skeleton ────────────────────────────────────────────────────────────────
+
+.skeleton-row {
+  display: flex;
+  gap: var(--rs-space-md);
+  padding: var(--rs-space-md);
+  border-bottom: 1px solid var(--rs-border);
+}
+
+.skeleton-thumb {
+  flex-shrink: 0;
+  width: 88px;
+  height: 88px;
+  border-radius: var(--rs-radius-md);
+}
+
+.skeleton-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  ion-skeleton-text { border-radius: var(--rs-radius-sm); }
+}

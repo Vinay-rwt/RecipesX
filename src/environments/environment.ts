@@ -3,7 +3,17 @@
 // The list of file replacements can be found in `angular.json`.
 
 export const environment = {
-  production: false
+  production: false,
+  useEmulators: true,
+  usdaApiKey: 'KrXhfgk0A9HK9a93ocekOUPWDR6C3DfcFz1sBswO', // Replace with your key from https://fdc.nal.usda.gov/api-guide.html
+  firebase: {
+    apiKey: 'demo-key',
+    authDomain: 'demo-recipeshare.firebaseapp.com',
+    projectId: 'demo-recipeshare',
+    storageBucket: 'demo-recipeshare.appspot.com',
+    messagingSenderId: '000000000000',
+    appId: '1:000000000000:web:0000000000000000',
+  }
 };
 
 /*

@@ -1,0 +1,348 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/feed"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ recipe()?.title || 'Recipe' }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button
+        *ngIf="isAuthor()"
+        (click)="navigateToEdit()"
+        aria-label="Edit recipe"
+        class="edit-recipe-btn">
+        <ion-icon slot="icon-only" name="create-outline" aria-hidden="true"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <!-- Loading -->
+  <div *ngIf="loading()" class="ion-padding">
+    <ion-skeleton-text animated style="height: 200px; border-radius: 0;"></ion-skeleton-text>
+    <ion-skeleton-text animated style="width: 60%; height: 1.5rem; margin-top: 1rem;"></ion-skeleton-text>
+    <ion-skeleton-text animated style="width: 40%; height: 1rem; margin-top: 0.5rem;"></ion-skeleton-text>
+  </div>
+
+  <!-- Not found / error -->
+  <div *ngIf="!loading() && !recipe()" class="ion-padding ion-text-center error-state">
+    <ion-icon name="alert-circle-outline" style="font-size: 3rem;" color="medium" aria-hidden="true"></ion-icon>
+    <h2>Recipe not found</h2>
+    <p color="medium">This recipe may have been removed or you may be offline.</p>
+    <ion-button fill="outline" (click)="ionViewWillEnter()" aria-label="Retry loading recipe">
+      <ion-icon slot="start" name="refresh-outline" aria-hidden="true"></ion-icon>
+      Retry
+    </ion-button>
+  </div>
+
+  <ng-container *ngIf="!loading() && recipe() as r">
+    <!-- Cover photo -->
+    <div class="cover-photo">
+      <img *ngIf="r.photoURLs?.length" [src]="r.photoURLs[0]" [alt]="r.title" />
+      <div *ngIf="!r.photoURLs?.length && r.coverEmoji" class="cover-placeholder cover-emoji-placeholder" aria-hidden="true">
+        {{ r.coverEmoji }}
+      </div>
+      <div *ngIf="!r.photoURLs?.length && !r.coverEmoji" class="cover-placeholder">
+        <ion-icon name="restaurant-outline"></ion-icon>
+      </div>
+    </div>
+
+    <!-- Social actions bar -->
+    <div class="social-bar ion-padding-horizontal">
+      <ion-button fill="clear" (click)="toggleLike()" [attr.aria-label]="(isLiked() ? 'Unlike' : 'Like') + ' recipe, ' + (r.likeCount || 0) + ' likes'">
+        <ion-icon slot="start" [name]="isLiked() ? 'heart' : 'heart-outline'" [color]="isLiked() ? 'danger' : 'medium'" aria-hidden="true"></ion-icon>
+        <span aria-hidden="true">{{ r.likeCount || 0 }}</span>
+      </ion-button>
+      <ion-button fill="clear" (click)="toggleSave()" [attr.aria-label]="(isSaved() ? 'Unsave' : 'Save') + ' recipe, ' + (r.saveCount || 0) + ' saves'">
+        <ion-icon slot="start" [name]="isSaved() ? 'bookmark' : 'bookmark-outline'" [color]="isSaved() ? 'primary' : 'medium'" aria-hidden="true"></ion-icon>
+        <span aria-hidden="true">{{ r.saveCount || 0 }}</span>
+      </ion-button>
+    </div>
+
+    <div class="recipe-body ion-padding">
+      <!-- Title & meta -->
+      <h1 class="recipe-title">{{ r.title }}</h1>
+
+      <div class="recipe-meta">
+        <ion-chip [color]="getDifficultyColor(r.difficulty)" outline>{{ r.difficulty | titlecase }}</ion-chip>
+        <ion-chip color="medium" outline>
+          <ion-icon name="globe-outline" slot="start"></ion-icon>
+          {{ r.cuisineType }}
+        </ion-chip>
+        <ion-chip color="medium" outline *ngIf="r.sourceEquipment">
+          <ion-icon name="hardware-chip-outline" slot="start"></ion-icon>
+          {{ getEquipmentLabel(r.sourceEquipment) }}
+        </ion-chip>
+      </div>
+
+      <div class="timing-row">
+        <div class="timing-item" *ngIf="r.prepTime">
+          <ion-icon name="timer-outline"></ion-icon>
+          <span>Prep: {{ r.prepTime }}m</span>
+        </div>
+        <div class="timing-item" *ngIf="r.cookTime">
+          <ion-icon name="flame-outline"></ion-icon>
+          <span>Cook: {{ r.cookTime }}m</span>
+        </div>
+      </div>
+
+      <p *ngIf="r.description" class="recipe-description">{{ r.description }}</p>
+
+      <div class="tags-row" *ngIf="r.tags?.length">
+        <ion-chip *ngFor="let tag of r.tags" outline size="small">{{ tag }}</ion-chip>
+      </div>
+
+      <!-- ===== CONVERSION CONTROLS ===== -->
+      <div class="conversion-section">
+
+        <!-- Equipment switcher -->
+        <ion-item lines="none" class="equipment-switcher">
+          <ion-icon name="swap-horizontal-outline" slot="start" color="primary"></ion-icon>
+          <ion-label>Viewing for</ion-label>
+          <ion-select
+            [value]="selectedEquipment()"
+            (ionChange)="onEquipmentChange($event.detail.value)"
+            interface="action-sheet">
+            <ion-select-option *ngFor="let opt of viewingOptions()" [value]="opt">
+              {{ getEquipmentLabel(opt) }}{{ opt === r.sourceEquipment ? ' (original)' : '' }}
+            </ion-select-option>
+          </ion-select>
+        </ion-item>
+
+        <!-- Conversion banner -->
+        <div class="conversion-banner" *ngIf="convertedData() as conv">
+          <ion-icon name="swap-horizontal-outline"></ion-icon>
+          <span>Converted for {{ getEquipmentLabel(conv.targetEquipment) }}</span>
+          <ion-badge [color]="getConfidenceColor(conv.overallConfidence)">
+            {{ conv.overallConfidence }} confidence
+          </ion-badge>
+        </div>
+
+        <!-- No conversion available -->
+        <div class="no-conversion-warning" *ngIf="selectedEquipment() && selectedEquipment() !== r.sourceEquipment && !convertedData()?.steps?.length">
+          <ion-icon name="warning-outline" color="warning"></ion-icon>
+          No conversion available for this equipment pair
+        </div>
+
+        <!-- Technique notes -->
+        <div class="technique-notes" *ngIf="convertedData()?.techniqueNotes?.length">
+          <p *ngFor="let note of convertedData()!.techniqueNotes">
+            <ion-icon name="information-circle-outline" color="primary"></ion-icon>
+            {{ note }}
+          </p>
+        </div>
+
+        <!-- Serving scaler -->
+        <ion-item lines="none" class="serving-scaler">
+          <ion-icon name="people-outline" slot="start"></ion-icon>
+          <ion-label>Servings</ion-label>
+          <div class="scaler-controls" slot="end">
+            <ion-button fill="clear" size="small" (click)="decrementServings()" [disabled]="selectedServings() <= 1" aria-label="Decrease servings">
+              <ion-icon slot="icon-only" name="remove-outline" aria-hidden="true"></ion-icon>
+            </ion-button>
+            <span class="serving-count" aria-live="polite" aria-label="{{ selectedServings() }} servings">{{ selectedServings() }}</span>
+            <ion-button fill="clear" size="small" (click)="incrementServings()" [disabled]="selectedServings() >= 100" aria-label="Increase servings">
+              <ion-icon slot="icon-only" name="add-outline" aria-hidden="true"></ion-icon>
+            </ion-button>
+          </div>
+        </ion-item>
+      </div>
+      <!-- ===== END CONVERSION CONTROLS ===== -->
+
+      <!-- Ingredients -->
+      <h2 class="section-heading">Ingredients</h2>
+      <ion-list lines="full">
+        <ion-item *ngFor="let ing of r.ingredients">
+          <ion-label>
+            <span class="ing-qty" *ngIf="ing.quantity">{{ getDisplayQty(ing.quantity) | measurement:ing.unit:profileService.measurementSystem() }}</span>
+            {{ ing.name }}
+          </ion-label>
+        </ion-item>
+      </ion-list>
+
+      <!-- Nutrition Panel -->
+      <app-nutrition-panel [recipe]="recipe()"></app-nutrition-panel>
+
+      <!-- Directions -->
+      <h2 class="section-heading">Directions</h2>
+      <div class="step-card" *ngFor="let step of displaySteps()">
+        <div class="step-header">
+          <ion-badge color="primary">Step {{ step.order }}</ion-badge>
+          <div class="step-details" *ngIf="hasOptionalDetails(step)">
+            <span *ngIf="step.temperature" class="detail-chip temp-chip">
+              <ion-icon name="thermometer-outline"></ion-icon>
+              {{ step.temperature | temperature:profileService.temperatureUnit() }}
+            </span>
+            <span *ngIf="step.duration" class="detail-chip">
+              <ion-icon name="time-outline"></ion-icon>
+              {{ step.duration }}m
+            </span>
+          </div>
+        </div>
+        <p class="step-instruction">{{ step.instruction }}</p>
+        <p class="technique-note" *ngIf="step.technique && convertedData()">
+          <ion-icon name="bulb-outline" color="warning"></ion-icon>
+          {{ step.technique }}
+        </p>
+      </div>
+
+    </div>
+
+    <!-- ===== COMMENT SECTION ===== -->
+    <div class="comment-section ion-padding">
+      <h2 class="section-heading">Comments ({{ totalCommentCount() }})</h2>
+
+      <!-- Loading skeleton -->
+      <div *ngIf="commentsLoading()" class="comments-skeleton">
+        <div *ngFor="let i of [1,2,3]" class="comment-skeleton-item">
+          <ion-skeleton-text animated style="width: 35%; height: 0.8rem;"></ion-skeleton-text>
+          <ion-skeleton-text animated style="width: 100%; height: 0.9rem; margin-top: 6px;"></ion-skeleton-text>
+          <ion-skeleton-text animated style="width: 75%; height: 0.9rem; margin-top: 4px;"></ion-skeleton-text>
+        </div>
+      </div>
+
+      <!-- Error -->
+      <p *ngIf="commentError()" class="comment-error">{{ commentError() }}</p>
+
+      <!-- Post comment (authenticated) -->
+      <div class="comment-input-row" *ngIf="isLoggedIn; else signInPrompt">
+        <ion-textarea
+          [(ngModel)]="newCommentBody"
+          placeholder="Add a comment…"
+          [rows]="2"
+          class="comment-textarea"
+          aria-label="New comment">
+        </ion-textarea>
+        <ion-button
+          [disabled]="!newCommentBody.trim() || postingComment()"
+          (click)="postComment()"
+          size="small"
+          fill="solid"
+          color="primary">
+          {{ postingComment() ? 'Posting…' : 'Post' }}
+        </ion-button>
+      </div>
+
+      <ng-template #signInPrompt>
+        <p class="sign-in-prompt">
+          <ion-icon name="person-circle-outline" aria-hidden="true"></ion-icon>
+          <a [routerLink]="['/auth/login']">Sign in</a> to leave a comment.
+        </p>
+      </ng-template>
+
+      <!-- Comment list -->
+      <div *ngIf="!commentsLoading()" class="comment-list">
+
+        <div *ngFor="let comment of topLevelComments()" class="comment-thread">
+
+          <!-- Collapsed view -->
+          <div *ngIf="isCollapsed(comment.id)" class="comment-collapsed-row">
+            <button class="collapse-btn" (click)="toggleCollapse(comment.id)" aria-label="Expand comment">[+]</button>
+            <span class="collapsed-meta">{{ comment.authorName }} · {{ comment.score }} points · collapsed</span>
+          </div>
+
+          <!-- Expanded view -->
+          <ng-container *ngIf="!isCollapsed(comment.id)">
+            <div class="comment-header">
+              <button class="collapse-btn" (click)="toggleCollapse(comment.id)" aria-label="Collapse comment">[-]</button>
+              <span class="comment-author">{{ comment.authorName }}</span>
+              <span class="comment-score" [class.positive]="comment.score > 0" [class.negative]="comment.score < 0">
+                {{ comment.score }} points
+              </span>
+              <span class="comment-time">{{ timeAgo(comment.createdAt) }}</span>
+            </div>
+
+            <p class="comment-body">{{ comment.body }}</p>
+
+            <div class="comment-actions">
+              <button
+                class="vote-btn"
+                [class.active]="userVotes().get(comment.id) === 1"
+                (click)="onVote(comment.id, 1)"
+                aria-label="Upvote">
+                <ion-icon name="arrow-up-outline" aria-hidden="true"></ion-icon>
+              </button>
+              <button
+                class="vote-btn"
+                [class.active-down]="userVotes().get(comment.id) === -1"
+                (click)="onVote(comment.id, -1)"
+                aria-label="Downvote">
+                <ion-icon name="arrow-down-outline" aria-hidden="true"></ion-icon>
+              </button>
+              <button
+                *ngIf="isLoggedIn"
+                class="reply-btn"
+                (click)="setReplyingTo(replyingToId() === comment.id ? null : comment.id)"
+                aria-label="Reply to comment">
+                Reply
+              </button>
+            </div>
+
+            <!-- Inline reply input -->
+            <div *ngIf="replyingToId() === comment.id" class="reply-input-row">
+              <ion-textarea
+                [(ngModel)]="replyBody"
+                placeholder="Write a reply…"
+                [rows]="2"
+                aria-label="Reply text">
+              </ion-textarea>
+              <div class="reply-actions">
+                <ion-button fill="clear" size="small" (click)="setReplyingTo(null)">Cancel</ion-button>
+                <ion-button
+                  fill="solid" size="small" color="primary"
+                  [disabled]="!replyBody.trim()"
+                  (click)="postReply(comment.id)">
+                  Reply
+                </ion-button>
+              </div>
+            </div>
+
+            <!-- Replies -->
+            <div class="replies-list" *ngIf="repliesFor(comment.id).length > 0">
+              <div *ngFor="let reply of repliesFor(comment.id)" class="comment-item reply-item">
+                <div class="comment-header">
+                  <span class="comment-author">{{ reply.authorName }}</span>
+                  <span class="comment-score" [class.positive]="reply.score > 0" [class.negative]="reply.score < 0">
+                    {{ reply.score }} points
+                  </span>
+                  <span class="comment-time">{{ timeAgo(reply.createdAt) }}</span>
+                </div>
+                <p class="comment-body">{{ reply.body }}</p>
+                <div class="comment-actions">
+                  <button
+                    class="vote-btn"
+                    [class.active]="userVotes().get(reply.id) === 1"
+                    (click)="onVote(reply.id, 1)"
+                    aria-label="Upvote reply">
+                    <ion-icon name="arrow-up-outline" aria-hidden="true"></ion-icon>
+                  </button>
+                  <button
+                    class="vote-btn"
+                    [class.active-down]="userVotes().get(reply.id) === -1"
+                    (click)="onVote(reply.id, -1)"
+                    aria-label="Downvote reply">
+                    <ion-icon name="arrow-down-outline" aria-hidden="true"></ion-icon>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </ng-container>
+
+        </div>
+
+        <p *ngIf="topLevelComments().length === 0 && !commentsLoading()" class="no-comments">
+          No comments yet. Be the first!
+        </p>
+      </div>
+
+    </div>
+    <!-- ===== END COMMENT SECTION ===== -->
+
+  </ng-container>
+  <!-- Share FAB -->
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+    <ion-fab-button (click)="onShare()" color="primary" *ngIf="recipe()" aria-label="Share this recipe">
+      <ion-icon name="share-outline" aria-hidden="true"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+</ion-content>

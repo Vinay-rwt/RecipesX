@@ -1,0 +1,324 @@
+// ─── Header chrome ────────────────────────────────────────────────────────────
+
+.cancel-btn {
+  --color: var(--rs-text-muted);
+  --padding-start: var(--rs-space-sm);
+  --padding-end: var(--rs-space-sm);
+}
+
+.create-title {
+  font-family: var(--rs-font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.draft-btn {
+  --color: var(--rs-accent);
+  --border-color: var(--rs-accent);
+  --border-radius: var(--rs-radius-full);
+  font-family: var(--rs-font-display);
+  font-size: 13px;
+  font-weight: 600;
+  height: 32px;
+  --padding-start: var(--rs-space-md);
+  --padding-end: var(--rs-space-md);
+}
+
+// ─── Progress bar ─────────────────────────────────────────────────────────────
+
+.step-progress {
+  height: 2px;
+  background: var(--rs-border);
+  overflow: hidden;
+}
+
+.step-progress-fill {
+  height: 100%;
+  background: var(--rs-accent);
+  transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+// ─── Step tabs ────────────────────────────────────────────────────────────────
+
+.step-tabs {
+  display: flex;
+  padding: 0 var(--rs-space-sm);
+  border-bottom: 1px solid var(--rs-border);
+  gap: var(--rs-space-xs);
+  overflow-x: auto;
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
+
+.step-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: var(--rs-space-sm) var(--rs-space-xs);
+  background: none;
+  border: none;
+  cursor: pointer;
+  min-width: 64px;
+  position: relative;
+  transition: color 0.15s ease;
+
+  // Active underline indicator
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: var(--rs-space-sm);
+    right: var(--rs-space-sm);
+    height: 2px;
+    border-radius: 2px 2px 0 0;
+    background: var(--rs-accent);
+    transform: scaleX(0);
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  &.active::after { transform: scaleX(1); }
+}
+
+.step-tab-number {
+  width: 22px;
+  height: 22px;
+  border-radius: var(--rs-radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--rs-font-display);
+  font-size: 11px;
+  font-weight: 700;
+  border: 1.5px solid var(--rs-border);
+  color: var(--rs-text-muted);
+  background: var(--rs-surface);
+  transition: all 0.15s ease;
+
+  .step-tab.active & {
+    border-color: var(--rs-accent);
+    color: var(--rs-accent);
+    background: var(--rs-accent-subtle);
+  }
+
+  .step-tab.complete & {
+    border-color: oklch(55% 0.15 145);
+    color: oklch(55% 0.15 145);
+    background: oklch(93% 0.05 145);
+  }
+}
+
+.step-tab-label {
+  font-family: var(--rs-font-display);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--rs-text-muted);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+
+  .step-tab.active & { color: var(--rs-accent); }
+  .step-tab.complete & { color: var(--rs-text-secondary); }
+}
+
+// ─── Footer ───────────────────────────────────────────────────────────────────
+
+.footer-toolbar {
+  --background: var(--rs-surface);
+  --border-color: var(--rs-border);
+  --padding-start: 0;
+  --padding-end: 0;
+}
+
+.footer-inner {
+  display: flex;
+  align-items: center;
+  padding: var(--rs-space-sm) var(--rs-space-md);
+  gap: var(--rs-space-sm);
+}
+
+.footer-step-count {
+  flex: 1;
+  text-align: center;
+  font-family: var(--rs-font-display);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--rs-text-muted);
+  letter-spacing: 0.04em;
+}
+
+.footer-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--rs-space-xs);
+  font-family: var(--rs-font-display);
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  border-radius: var(--rs-radius-full);
+  cursor: pointer;
+  padding: 10px var(--rs-space-md);
+  transition: opacity 0.15s ease, background 0.15s ease, transform 0.1s ease;
+  white-space: nowrap;
+
+  &:active { transform: scale(0.97); }
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    transform: none;
+  }
+}
+
+.footer-btn-back {
+  background: var(--rs-surface-2);
+  color: var(--rs-text-secondary);
+  &:hover:not(:disabled) { background: var(--rs-border); }
+}
+
+.footer-btn-next {
+  background: var(--rs-accent);
+  color: oklch(97% 0.006 55);
+  &:hover { background: var(--rs-accent-dim, oklch(48% 0.13 40)); }
+}
+
+.footer-btn-publish {
+  background: var(--rs-accent);
+  color: oklch(97% 0.006 55);
+  gap: var(--rs-space-sm);
+  padding: 10px var(--rs-space-lg);
+  &:hover { background: oklch(48% 0.13 40); }
+}
+
+// ─── Step content shared ──────────────────────────────────────────────────────
+
+ion-content {
+  --padding-bottom: 0;
+}
+
+// ─── Step 1 — tags ────────────────────────────────────────────────────────────
+
+app-step-basics {
+  .tags-section {
+    ion-label {
+      font-family: var(--rs-font-display);
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--rs-text-secondary);
+      letter-spacing: 0.02em;
+    }
+    .tags-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--rs-space-xs);
+      margin: var(--rs-space-sm) 0;
+    }
+  }
+}
+
+// ─── Step 2 — equipment ───────────────────────────────────────────────────────
+
+app-step-equipment {
+  ion-card {
+    border-radius: var(--rs-radius-md);
+    border: 1.5px solid var(--rs-border);
+    box-shadow: none;
+    margin: var(--rs-space-xs);
+    transition: border-color 0.15s ease, background 0.15s ease;
+
+    &.selected {
+      border-color: var(--rs-accent);
+      background: var(--rs-accent-subtle);
+
+      ion-icon { color: var(--rs-accent); }
+      ion-label { color: var(--rs-accent-text); font-weight: 700; }
+    }
+
+    &:hover:not(.selected) {
+      border-color: var(--rs-text-muted);
+    }
+
+    .equipment-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--rs-space-xs);
+      padding: var(--rs-space-md) var(--rs-space-sm);
+      text-align: center;
+
+      ion-icon { font-size: 1.8rem; color: var(--rs-text-secondary); }
+      ion-label {
+        font-family: var(--rs-font-display);
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--rs-text-secondary);
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+      }
+    }
+  }
+}
+
+// ─── Step 3 — ingredients ─────────────────────────────────────────────────────
+
+app-step-ingredients {
+  .ingredient-row {
+    display: flex;
+    gap: var(--rs-space-sm);
+    align-items: center;
+    width: 100%;
+    padding: var(--rs-space-xs) 0;
+
+    .qty-input  { flex: 0 0 64px; }
+    .unit-select { flex: 0 0 80px; }
+    .name-input { flex: 1; }
+  }
+
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+}
+
+// ─── Step 4 — directions ──────────────────────────────────────────────────────
+
+app-step-directions {
+  .step-item {
+    --inner-padding-end: 0;
+
+    .step-body {
+      width: 100%;
+      padding: var(--rs-space-sm) 0;
+
+      .step-number-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: var(--rs-space-sm);
+      }
+
+      .optional-fields {
+        background: var(--rs-surface-2);
+        border: 1px solid var(--rs-border);
+        border-radius: var(--rs-radius-md);
+        margin-top: var(--rs-space-sm);
+        padding: var(--rs-space-xs) 0;
+        overflow: hidden;
+      }
+    }
+  }
+
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+}

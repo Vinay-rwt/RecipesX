@@ -1,0 +1,48 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/onboarding/equipment"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Preferences</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div class="page-content">
+    <h2>How Do You Measure?</h2>
+    <p class="subtitle">Set your preferred units. You can change these anytime in your profile.</p>
+
+    <div class="pref-section">
+      <ion-label class="section-label">Measurement System</ion-label>
+      <ion-segment
+        [value]="onboardingState.measurementSystem()"
+        (ionChange)="onMeasurementChange($event)">
+        <ion-segment-button value="metric">
+          <ion-label>Metric (g, ml)</ion-label>
+        </ion-segment-button>
+        <ion-segment-button value="imperial">
+          <ion-label>Imperial (oz, cups)</ion-label>
+        </ion-segment-button>
+      </ion-segment>
+    </div>
+
+    <div class="pref-section">
+      <ion-label class="section-label">Temperature</ion-label>
+      <ion-segment
+        [value]="onboardingState.temperatureUnit()"
+        (ionChange)="onTemperatureChange($event)">
+        <ion-segment-button value="celsius">
+          <ion-label>Celsius</ion-label>
+        </ion-segment-button>
+        <ion-segment-button value="fahrenheit">
+          <ion-label>Fahrenheit</ion-label>
+        </ion-segment-button>
+      </ion-segment>
+    </div>
+
+    <ion-button expand="block" routerLink="/onboarding/complete" class="ion-margin-top">
+      Next
+      <ion-icon slot="end" name="arrow-forward-outline"></ion-icon>
+    </ion-button>
+  </div>
+</ion-content>

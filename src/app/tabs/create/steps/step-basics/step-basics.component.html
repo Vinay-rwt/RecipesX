@@ -1,0 +1,141 @@
+<div class="step-content ion-padding" [formGroup]="form">
+
+  <!-- Cover media area -->
+  <div class="cover-area">
+
+    <!-- Preview: real photo -->
+    <div *ngIf="photoPreview" class="cover-preview photo-preview-wrap">
+      <img [src]="photoPreview" alt="Cover photo" class="cover-preview-img" />
+      <button class="cover-clear-btn" (click)="capturePhoto.emit()" type="button" aria-label="Change photo">
+        Change
+      </button>
+    </div>
+
+    <!-- Preview: emoji -->
+    <div *ngIf="!photoPreview && selectedEmoji" class="cover-preview emoji-preview-wrap">
+      <span class="cover-emoji-display">{{ selectedEmoji }}</span>
+      <button class="cover-clear-btn" (click)="showEmojiPicker = true" type="button" aria-label="Change emoji">
+        Change
+      </button>
+    </div>
+
+    <!-- Empty state — two options -->
+    <div *ngIf="!photoPreview && !selectedEmoji" class="cover-empty">
+      <button class="cover-option-btn" (click)="capturePhoto.emit()" type="button">
+        <span class="cover-option-icon">📷</span>
+        <span class="cover-option-label">Upload photo</span>
+      </button>
+      <div class="cover-option-divider" aria-hidden="true">or</div>
+      <button class="cover-option-btn" (click)="showEmojiPicker = true" type="button">
+        <span class="cover-option-icon">🍽️</span>
+        <span class="cover-option-label">Pick an emoji</span>
+      </button>
+    </div>
+
+  </div>
+
+  <!-- Emoji picker panel -->
+  <div class="emoji-picker-panel" *ngIf="showEmojiPicker" role="dialog" aria-label="Pick a food emoji">
+    <div class="emoji-picker-header">
+      <span class="emoji-picker-title">Pick a food emoji</span>
+      <button class="emoji-picker-close" (click)="showEmojiPicker = false" type="button" aria-label="Close emoji picker">✕</button>
+    </div>
+    <div class="emoji-picker-body">
+      <div *ngFor="let group of foodEmojis" class="emoji-group">
+        <div class="emoji-group-label">{{ group.label }}</div>
+        <div class="emoji-grid">
+          <button
+            *ngFor="let emoji of group.emojis"
+            class="emoji-btn"
+            [class.selected]="selectedEmoji === emoji"
+            (click)="onPickEmoji(emoji)"
+            type="button"
+            [attr.aria-label]="emoji"
+            [attr.aria-pressed]="selectedEmoji === emoji">
+            {{ emoji }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Title -->
+  <ion-item>
+    <ion-label position="stacked">Recipe Title <ion-text color="danger">*</ion-text></ion-label>
+    <ion-input formControlName="title" placeholder="e.g. Crispy Air Fryer Chicken"></ion-input>
+  </ion-item>
+  <ion-note color="danger" *ngIf="form.get('title')?.invalid && form.get('title')?.touched" class="ion-padding-start">
+    Title is required (3–100 characters)
+  </ion-note>
+
+  <!-- Description -->
+  <ion-item>
+    <ion-label position="stacked">Description</ion-label>
+    <ion-textarea formControlName="description" placeholder="Briefly describe your recipe..." rows="3" auto-grow="true"></ion-textarea>
+  </ion-item>
+
+  <!-- Cuisine -->
+  <ion-item>
+    <ion-label position="stacked">Cuisine <ion-text color="danger">*</ion-text></ion-label>
+    <ion-select formControlName="cuisineType" placeholder="Select cuisine">
+      <ion-select-option *ngFor="let c of cuisineTypes" [value]="c">{{ c }}</ion-select-option>
+    </ion-select>
+  </ion-item>
+
+  <!-- Difficulty -->
+  <ion-item>
+    <ion-label position="stacked">Difficulty</ion-label>
+    <div class="difficulty-pills ion-margin-top" role="group" aria-label="Difficulty">
+      <button
+        type="button"
+        class="difficulty-pill"
+        [class.selected]="form.get('difficulty')?.value === 'easy'"
+        [class.pill-easy]="form.get('difficulty')?.value === 'easy'"
+        (click)="form.get('difficulty')?.setValue('easy')"
+        aria-pressed="{{ form.get('difficulty')?.value === 'easy' }}">
+        Easy
+      </button>
+      <button
+        type="button"
+        class="difficulty-pill"
+        [class.selected]="form.get('difficulty')?.value === 'medium'"
+        [class.pill-medium]="form.get('difficulty')?.value === 'medium'"
+        (click)="form.get('difficulty')?.setValue('medium')"
+        aria-pressed="{{ form.get('difficulty')?.value === 'medium' }}">
+        Medium
+      </button>
+      <button
+        type="button"
+        class="difficulty-pill"
+        [class.selected]="form.get('difficulty')?.value === 'hard'"
+        [class.pill-hard]="form.get('difficulty')?.value === 'hard'"
+        (click)="form.get('difficulty')?.setValue('hard')"
+        aria-pressed="{{ form.get('difficulty')?.value === 'hard' }}">
+        Hard
+      </button>
+    </div>
+  </ion-item>
+
+  <!-- Tags -->
+  <ion-item>
+    <ion-label position="stacked">Tags</ion-label>
+    <div class="tags-field">
+      <div class="tags-chips" *ngIf="tagsArray.controls.length">
+        <ion-chip *ngFor="let tag of tagsArray.controls; let i = index" color="primary" outline>
+          {{ tag.value }}
+          <ion-icon name="close-circle" (click)="removeTag(i)"></ion-icon>
+        </ion-chip>
+      </div>
+      <div class="tags-input-row">
+        <ion-input
+          [(ngModel)]="tagInput"
+          [ngModelOptions]="{ standalone: true }"
+          placeholder="Add a tag..."
+          (keyup.enter)="onAddTag()">
+        </ion-input>
+        <ion-button fill="clear" size="small" (click)="onAddTag()">Add</ion-button>
+      </div>
+    </div>
+  </ion-item>
+
+</div>

@@ -1,0 +1,91 @@
+.login-container {
+  max-width: 400px;
+  margin: var(--rs-space-xl) auto;
+
+  h2 {
+    font-family: var(--rs-font-display);
+    font-size: 1.8rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    text-align: center;
+    color: var(--rs-text-primary);
+    margin-bottom: var(--rs-space-xs);
+  }
+
+  .subtitle {
+    font-family: var(--rs-font-body);
+    text-align: center;
+    color: var(--rs-text-muted);
+    font-size: 15px;
+    margin-bottom: var(--rs-space-lg);
+  }
+}
+
+.validation-error {
+  font-family: var(--rs-font-display);
+  color: oklch(50% 0.18 20);
+  font-size: 12px;
+  font-weight: 500;
+  padding: var(--rs-space-xs) var(--rs-space-md);
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: var(--rs-space-md);
+  font-family: var(--rs-font-display);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--rs-text-muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--rs-border);
+  }
+}
+
+.google-btn {
+  --border-color: var(--rs-border);
+  --color: var(--rs-text-secondary);
+  font-family: var(--rs-font-display);
+  font-weight: 600;
+
+  ion-icon {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.error-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--rs-space-sm);
+  background: oklch(96% 0.04 20);
+  color: oklch(40% 0.14 20);
+  padding: var(--rs-space-md);
+  border-radius: var(--rs-radius-md);
+  margin-top: var(--rs-space-md);
+  font-family: var(--rs-font-display);
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid oklch(88% 0.06 20);
+
+  ion-icon {
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .error-banner {
+    background: oklch(22% 0.07 20);
+    color: oklch(80% 0.14 20);
+    border-color: oklch(30% 0.09 20);
+  }
+}

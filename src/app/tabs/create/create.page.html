@@ -1,0 +1,126 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button (click)="discard()" class="cancel-btn">
+        <ion-icon slot="icon-only" name="close-outline" aria-hidden="true"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+
+    <ion-title class="create-title">{{ formState.isEditMode() ? 'Edit Recipe' : 'New Recipe' }}</ion-title>
+
+    <ion-buttons slot="end">
+      <ion-button *ngIf="!formState.isEditMode()" (click)="saveDraft()" fill="outline" class="draft-btn">
+        Save draft
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+
+  <!-- Step progress bar -->
+  <div class="step-progress" role="progressbar"
+    [attr.aria-valuenow]="formState.currentStep() + 1"
+    [attr.aria-valuemin]="1"
+    [attr.aria-valuemax]="stepLabels.length"
+    [attr.aria-label]="'Step ' + (formState.currentStep() + 1) + ' of ' + stepLabels.length">
+    <div class="step-progress-fill"
+      [style.width.%]="((formState.currentStep() + 1) / stepLabels.length) * 100">
+    </div>
+  </div>
+
+  <!-- Step tabs -->
+  <div class="step-tabs" role="tablist">
+    <button
+      *ngFor="let label of stepLabels; let i = index"
+      class="step-tab"
+      [class.active]="formState.currentStep() === i"
+      [class.complete]="formState.isStepValid(i)"
+      [class.visited]="i < formState.currentStep()"
+      (click)="formState.currentStep.set(i)"
+      role="tab"
+      [attr.aria-selected]="formState.currentStep() === i"
+      [attr.aria-label]="label + (formState.isStepValid(i) ? ' — complete' : '')">
+      <span class="step-tab-number">
+        <svg *ngIf="formState.isStepValid(i)" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12" aria-hidden="true">
+          <polyline points="2 8 6 12 14 4"/>
+        </svg>
+        <span *ngIf="!formState.isStepValid(i)">{{ i + 1 }}</span>
+      </span>
+      <span class="step-tab-label">{{ label }}</span>
+    </button>
+  </div>
+</ion-header>
+
+<ion-content>
+  <div [ngSwitch]="formState.currentStep()">
+    <app-step-basics
+      *ngSwitchCase="0"
+      [form]="formState.form"
+      [photoPreview]="formState.coverPhotoPreview()"
+      [selectedEmoji]="formState.coverEmoji()"
+      (capturePhoto)="onCapturePhoto()"
+      (emojiSelected)="onSelectEmoji($event)">
+    </app-step-basics>
+
+    <app-step-equipment
+      *ngSwitchCase="1"
+      [form]="formState.form">
+    </app-step-equipment>
+
+    <app-step-ingredients
+      *ngSwitchCase="2"
+      [formState]="formState">
+    </app-step-ingredients>
+
+    <app-step-directions
+      *ngSwitchCase="3"
+      [formState]="formState">
+    </app-step-directions>
+  </div>
+</ion-content>
+
+<ion-footer>
+  <ion-toolbar class="footer-toolbar">
+    <div class="footer-inner">
+      <button
+        class="footer-btn footer-btn-back"
+        (click)="prevStep()"
+        [disabled]="formState.currentStep() === 0"
+        [attr.aria-label]="'Back to ' + stepLabels[formState.currentStep() - 1]">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" aria-hidden="true">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+        Back
+      </button>
+
+      <span class="footer-step-count" aria-hidden="true">
+        {{ formState.currentStep() + 1 }} / {{ stepLabels.length }}
+      </span>
+
+      <button
+        *ngIf="formState.currentStep() < stepLabels.length - 1"
+        class="footer-btn footer-btn-next"
+        (click)="nextStep()"
+        [attr.aria-label]="'Next: ' + stepLabels[formState.currentStep() + 1]">
+        Next
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" aria-hidden="true">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      </button>
+
+      <button
+        *ngIf="formState.currentStep() === stepLabels.length - 1"
+        class="footer-btn footer-btn-publish"
+        (click)="publish()"
+        [attr.aria-label]="formState.isEditMode() ? 'Save changes' : 'Publish recipe'">
+        <svg *ngIf="!formState.isEditMode()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" aria-hidden="true">
+          <polyline points="16 16 12 12 8 16"/>
+          <line x1="12" y1="12" x2="12" y2="21"/>
+          <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+        </svg>
+        <svg *ngIf="formState.isEditMode()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" aria-hidden="true">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        {{ formState.isEditMode() ? 'Save Changes' : 'Publish' }}
+      </button>
+    </div>
+  </ion-toolbar>
+</ion-footer>

@@ -1,0 +1,117 @@
+<!-- Featured (first item) — full-width photo + description -->
+<div *ngIf="featured" class="recipe-featured" [routerLink]="['/recipe', recipe.id]" role="article">
+  <div class="featured-photo">
+    <img *ngIf="recipe.photoURLs?.length" [src]="recipe.photoURLs[0]" [alt]="recipe.title" />
+    <div *ngIf="!recipe.photoURLs?.length && recipe.coverEmoji" class="photo-placeholder featured-photo-placeholder emoji-placeholder" aria-hidden="true">
+      {{ recipe.coverEmoji }}
+    </div>
+    <div *ngIf="!recipe.photoURLs?.length && !recipe.coverEmoji" class="photo-placeholder featured-photo-placeholder" aria-hidden="true">
+      <ion-icon name="restaurant-outline"></ion-icon>
+    </div>
+    <span class="featured-label">Trending</span>
+  </div>
+
+  <div class="featured-body">
+    <div class="recipe-author" aria-hidden="true">{{ recipe.cuisineType }} · just now</div>
+    <h2 class="featured-title">{{ recipe.title }}</h2>
+    <p class="featured-desc" *ngIf="recipe.description">{{ recipe.description }}</p>
+
+    <div class="meta-row">
+      <span class="rs-cuisine-tag">{{ recipe.cuisineType }}</span>
+      <span class="rs-meta-dot" aria-hidden="true"></span>
+      <span class="rs-meta-item" *ngIf="recipe.cookTime">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        {{ recipe.cookTime }}m
+      </span>
+      <span class="rs-meta-dot" aria-hidden="true" *ngIf="recipe.difficulty"></span>
+      <span class="rs-meta-item" *ngIf="recipe.difficulty">{{ recipe.difficulty | titlecase }}</span>
+    </div>
+
+    <div class="social-row" *ngIf="showSocialActions">
+      <button class="social-action" [class.liked]="isLiked" (click)="onLike($event)"
+        [attr.aria-label]="(isLiked ? 'Unlike' : 'Like') + ' — ' + (recipe.likeCount || 0) + ' likes'">
+        <svg viewBox="0 0 24 24" [attr.fill]="isLiked ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+        </svg>
+        <span aria-hidden="true">{{ recipe.likeCount || 0 }}</span>
+      </button>
+      <button class="social-action" [class.saved]="isSaved" (click)="onSave($event)"
+        [attr.aria-label]="(isSaved ? 'Unsave' : 'Save') + ' — ' + (recipe.saveCount || 0) + ' saves'">
+        <svg viewBox="0 0 24 24" [attr.fill]="isSaved ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+        </svg>
+        <span aria-hidden="true">{{ recipe.saveCount || 0 }}</span>
+      </button>
+      <button class="social-action" aria-label="{{ commentCount }} comments">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+        <span aria-hidden="true">{{ commentCount }}</span>
+      </button>
+      <div class="social-spacer"></div>
+      <button class="social-action" (click)="onShare($event)" aria-label="Share recipe">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Standard row item — thumbnail + text -->
+<div *ngIf="!featured" class="recipe-row" [routerLink]="['/recipe', recipe.id]" role="article">
+  <div class="recipe-thumb">
+    <img *ngIf="recipe.photoURLs?.length" [src]="recipe.photoURLs[0]" [alt]="recipe.title" />
+    <div *ngIf="!recipe.photoURLs?.length && recipe.coverEmoji" class="photo-placeholder emoji-placeholder" aria-hidden="true">
+      {{ recipe.coverEmoji }}
+    </div>
+    <div *ngIf="!recipe.photoURLs?.length && !recipe.coverEmoji" class="photo-placeholder" aria-hidden="true">
+      <ion-icon name="restaurant-outline"></ion-icon>
+    </div>
+  </div>
+
+  <div class="recipe-body">
+    <div class="recipe-author" aria-hidden="true">{{ recipe.cuisineType }} · just now</div>
+    <h3 class="recipe-title">{{ recipe.title }}</h3>
+
+    <div class="meta-row">
+      <span class="rs-cuisine-tag">{{ recipe.cuisineType }}</span>
+      <span class="rs-meta-dot" aria-hidden="true" *ngIf="recipe.cookTime"></span>
+      <span class="rs-meta-item" *ngIf="recipe.cookTime">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        {{ recipe.cookTime }}m
+      </span>
+    </div>
+
+    <div class="social-row" *ngIf="showSocialActions">
+      <button class="social-action" [class.liked]="isLiked" (click)="onLike($event)"
+        [attr.aria-label]="(isLiked ? 'Unlike' : 'Like') + ' — ' + (recipe.likeCount || 0) + ' likes'">
+        <svg viewBox="0 0 24 24" [attr.fill]="isLiked ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+        </svg>
+        <span aria-hidden="true">{{ recipe.likeCount || 0 }}</span>
+      </button>
+      <button class="social-action" [class.saved]="isSaved" (click)="onSave($event)"
+        [attr.aria-label]="(isSaved ? 'Unsave' : 'Save') + ' — ' + (recipe.saveCount || 0) + ' saves'">
+        <svg viewBox="0 0 24 24" [attr.fill]="isSaved ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+        </svg>
+        <span aria-hidden="true">{{ recipe.saveCount || 0 }}</span>
+      </button>
+      <button class="social-action" aria-label="{{ commentCount }} comments">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+        <span aria-hidden="true">{{ commentCount }}</span>
+      </button>
+      <div class="social-spacer"></div>
+      <button class="social-action" (click)="onShare($event)" aria-label="Share recipe">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>

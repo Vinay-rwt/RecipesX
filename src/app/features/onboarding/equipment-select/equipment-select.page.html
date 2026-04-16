@@ -1,0 +1,26 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-title>Select Your Equipment</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div class="page-content">
+    <h2>What's in Your Kitchen?</h2>
+    <p class="subtitle">Tap to select the equipment you have. We'll adapt recipes to your setup.</p>
+
+    <app-equipment-selector
+      [selectedEquipment]="onboardingState.selectedEquipment()"
+      (equipmentChange)="onEquipmentChange($event)">
+    </app-equipment-selector>
+
+    <ion-button
+      expand="block"
+      routerLink="/onboarding/measurements"
+      [disabled]="!canProceed"
+      class="ion-margin-top">
+      Next
+      <ion-icon slot="end" name="arrow-forward-outline"></ion-icon>
+    </ion-button>
+  </div>
+</ion-content>

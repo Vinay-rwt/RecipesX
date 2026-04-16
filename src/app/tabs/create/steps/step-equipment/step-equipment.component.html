@@ -1,0 +1,51 @@
+<div class="step-content ion-padding" [formGroup]="form">
+
+  <p class="step-heading">Source equipment</p>
+  <p class="step-hint">Which appliance does this recipe use?</p>
+
+  <div class="equipment-grid">
+    <ion-card
+      *ngFor="let item of equipmentTypes"
+      [class.selected]="isSelected(item.id)"
+      (click)="selectEquipment(item.id)"
+      button
+      [attr.aria-pressed]="isSelected(item.id)"
+      [attr.aria-label]="item.label">
+      <ion-card-content class="equipment-card">
+        <ion-icon [name]="item.icon" aria-hidden="true"></ion-icon>
+        <ion-label>{{ item.label }}</ion-label>
+      </ion-card-content>
+    </ion-card>
+  </div>
+
+  <ion-note color="danger" *ngIf="form.get('sourceEquipment')?.invalid && form.get('sourceEquipment')?.touched" class="ion-padding-start">
+    Please select your source equipment
+  </ion-note>
+
+  <p class="step-heading" style="margin-top: var(--rs-space-xl)">Servings &amp; timing</p>
+
+  <div class="timing-grid">
+    <div class="timing-field">
+      <label class="timing-label">Servings <span class="required" aria-hidden="true">*</span></label>
+      <div class="timing-input-wrap">
+        <ion-input formControlName="baseServings" type="number" min="1" max="100" inputmode="numeric"></ion-input>
+        <span class="timing-unit">people</span>
+      </div>
+    </div>
+    <div class="timing-field">
+      <label class="timing-label">Prep time</label>
+      <div class="timing-input-wrap">
+        <ion-input formControlName="prepTime" type="number" min="0" inputmode="numeric"></ion-input>
+        <span class="timing-unit">min</span>
+      </div>
+    </div>
+    <div class="timing-field">
+      <label class="timing-label">Cook time</label>
+      <div class="timing-input-wrap">
+        <ion-input formControlName="cookTime" type="number" min="0" inputmode="numeric"></ion-input>
+        <span class="timing-unit">min</span>
+      </div>
+    </div>
+  </div>
+
+</div>

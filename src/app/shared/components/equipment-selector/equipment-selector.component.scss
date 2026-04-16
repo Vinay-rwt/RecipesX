@@ -1,0 +1,35 @@
+ion-card {
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+  border: 2px solid transparent;
+  margin: 4px;
+
+  &.selected {
+    border-color: var(--ion-color-primary);
+    background: var(--ion-color-primary-tint);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+.equipment-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 0.5rem;
+  text-align: center;
+
+  ion-icon {
+    font-size: 2.5rem;
+    color: var(--ion-color-primary);
+    margin-bottom: 0.5rem;
+  }
+
+  ion-label {
+    font-size: 0.8rem;
+    font-weight: 500;
+  }
+}
