@@ -25,9 +25,12 @@ export class CollectionDetailPage implements ViewWillEnter {
   loading = signal(false);
 
   async ionViewWillEnter(): Promise<void> {
+    const uid = this.auth.currentUser?.uid;
     const collectionId = this.route.snapshot.paramMap.get('id');
-    if (!collectionId) return;
+    if (!collectionId || !uid) return;
 
+    // Always reload from Firestore so counts/lists are never stale on back-navigation
+    await this.collectionService.loadCollections(uid);
     const col = this.collectionService.collections().find(c => c.id === collectionId) ?? null;
     this.collection.set(col);
 
@@ -35,7 +38,6 @@ export class CollectionDetailPage implements ViewWillEnter {
       this.loading.set(true);
       try {
         const recipes = await this.recipeService.getRecipesByIds(col.recipeIds);
-        // Preserve collection order
         const ordered = col.recipeIds
           .map(id => recipes.find(r => r.id === id))
           .filter((r): r is Recipe => r !== undefined);

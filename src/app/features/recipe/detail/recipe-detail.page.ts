@@ -259,6 +259,7 @@ export class RecipeDetailPage implements ViewWillEnter {
     if (!uid || !recipeId) return;
     const liked = await this.socialService.toggleLike(uid, recipeId);
     this.isLiked.set(liked);
+    this.recipeService.patchCurrentRecipeCount('likeCount', liked ? 1 : -1);
   }
 
   async toggleSave(): Promise<void> {
@@ -276,6 +277,7 @@ export class RecipeDetailPage implements ViewWillEnter {
         await this.socialService.unsaveUncategorized(uid, recipe.id);
       }
       this.isSaved.set(false);
+      this.recipeService.patchCurrentRecipeCount('saveCount', -1);
       const toast = await this.toastCtrl.create({ message: 'Removed from saves', duration: 2000, position: 'bottom' });
       await toast.present();
       return;
@@ -350,6 +352,7 @@ export class RecipeDetailPage implements ViewWillEnter {
       await toast.present();
     }
     this.isSaved.set(true);
+    this.recipeService.patchCurrentRecipeCount('saveCount', 1);
   }
 
   navigateToEdit(): void {
