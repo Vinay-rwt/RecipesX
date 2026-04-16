@@ -43,21 +43,13 @@ export class ProfilePage implements ViewWillEnter {
   private async _loadSavedRecipes(uid: string): Promise<void> {
     this.savedLoading.set(true);
     try {
-      // Uncategorized saves + all collection recipe IDs
-      const [uncategorizedIds] = await Promise.all([
-        this.socialService.getUserSaves(uid),
-        this.collectionService.loadCollections(uid),
-      ]);
-      const collectionIds = new Set(
-        this.collectionService.collections().flatMap(c => c.recipeIds)
-      );
-      const allIds = new Set([...uncategorizedIds, ...collectionIds]);
-
-      if (allIds.size === 0) {
+      // Only uncategorized saves — recipes saved to a collection live in their collection, not here
+      const uncategorizedIds = await this.socialService.getUserSaves(uid);
+      if (uncategorizedIds.size === 0) {
         this.savedRecipes.set([]);
         return;
       }
-      const recipes = await this.recipeService.getRecipesByIds(Array.from(allIds));
+      const recipes = await this.recipeService.getRecipesByIds(Array.from(uncategorizedIds));
       this.savedRecipes.set(recipes);
     } finally {
       this.savedLoading.set(false);
