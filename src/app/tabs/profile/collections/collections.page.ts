@@ -22,7 +22,11 @@ export class CollectionsPage implements ViewWillEnter {
 
   ionViewWillEnter(): void {
     const uid = this.auth.currentUser?.uid;
-    if (uid) this.collectionService.loadCollections(uid);
+    // Only fetch from Firestore if the signal is empty (first load).
+    // On back-navigation the signal is already up-to-date from optimistic updates.
+    if (uid && this.collectionService.collections().length === 0) {
+      this.collectionService.loadCollections(uid);
+    }
   }
 
   async onCreateCollection(): Promise<void> {
