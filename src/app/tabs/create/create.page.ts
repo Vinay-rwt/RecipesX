@@ -129,7 +129,7 @@ export class CreatePage implements ViewWillEnter, ViewWillLeave {
     try {
       const formValue = this.formState.form.value;
       const draftId = this.formState.firestoreDraftId();
-      const recipeData = this.buildRecipeData(user.uid, formValue, [], 'draft', this.formState.coverEmoji() ?? undefined);
+      const recipeData = this.buildRecipeData(user.uid, user.displayName ?? 'Unknown cook', formValue, [], 'draft', this.formState.coverEmoji() ?? undefined);
 
       if (draftId) {
         await this.recipeService.updateRecipe(draftId, recipeData);
@@ -180,7 +180,7 @@ export class CreatePage implements ViewWillEnter, ViewWillLeave {
 
       // In edit mode, preserve existing photos unless user picked a new one
       const photoURLs = this.formState.existingPhotoURLs();
-      const recipeData = this.buildRecipeData(user.uid, formValue, photoURLs, 'published', this.formState.coverEmoji() ?? undefined);
+      const recipeData = this.buildRecipeData(user.uid, user.displayName ?? 'Unknown cook', formValue, photoURLs, 'published', this.formState.coverEmoji() ?? undefined);
 
       if (existingId) {
         await this.recipeService.updateRecipe(existingId, recipeData);
@@ -237,6 +237,7 @@ export class CreatePage implements ViewWillEnter, ViewWillLeave {
 
   private buildRecipeData(
     authorId: string,
+    authorName: string,
     formValue: Record<string, unknown>,
     photoURLs: string[],
     status: 'draft' | 'published',
@@ -244,6 +245,7 @@ export class CreatePage implements ViewWillEnter, ViewWillLeave {
   ): Omit<Recipe, 'id' | 'createdAt' | 'updatedAt' | 'likeCount' | 'saveCount'> {
     return {
       authorId,
+      authorName,
       title: (formValue['title'] as string) || '',
       description: (formValue['description'] as string) || '',
       photoURLs,

@@ -208,3 +208,25 @@
 }
 
 .social-spacer { flex: 1; }
+
+.author-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  padding: 2px 0 6px;
+  cursor: pointer;
+  color: var(--rs-text-muted);
+  font-size: 12px;
+  font-family: var(--rs-font-display);
+  font-weight: 500;
+
+  ion-icon {
+    font-size: 14px;
+  }
+
+  &:hover {
+    color: var(--rs-text-secondary);
+  }
+}
