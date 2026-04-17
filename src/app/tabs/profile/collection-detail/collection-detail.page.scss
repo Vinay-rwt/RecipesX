@@ -1,0 +1,60 @@
+.recipe-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.recipe-slide {
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.recipe-item {
+  --padding-start: 0;
+  --inner-padding-end: 12px;
+  --background: var(--ion-card-background, var(--ion-item-background));
+  border-radius: 12px;
+}
+
+.recipe-thumb {
+  width: 72px;
+  height: 72px;
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 8px;
+  flex-shrink: 0;
+  background: var(--ion-color-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .thumb-emoji {
+    font-size: 2rem;
+  }
+}
+
+.empty-state {
+  padding-top: 4rem;
+
+  .empty-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+  }
+
+  h3 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+
+  p {
+    color: var(--ion-color-medium);
+  }
+}

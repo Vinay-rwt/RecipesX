@@ -43,6 +43,15 @@ export class FeedService {
     await this._fetchPage();
   }
 
+  /** Optimistically patch a single recipe's likeCount or saveCount in the local list. */
+  patchRecipeCount(recipeId: string, field: 'likeCount' | 'saveCount', delta: 1 | -1): void {
+    this._recipes.update(list =>
+      list.map(r =>
+        r.id === recipeId ? { ...r, [field]: Math.max(0, (r[field] ?? 0) + delta) } : r
+      )
+    );
+  }
+
   setFilters(filters: FeedFilters): void {
     this._filters.set(filters);
     this.loadInitial();
