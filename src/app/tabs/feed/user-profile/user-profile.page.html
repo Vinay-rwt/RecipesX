@@ -34,14 +34,14 @@
 
       <!-- Stats row -->
       <div class="stats-row">
-        <div class="stat">
+        <button class="stat" [routerLink]="['/tabs/feed/user', p.uid, 'followers']" aria-label="View followers list">
           <span class="stat-value">{{ p.followersCount ?? 0 }}</span>
           <span class="stat-label">Followers</span>
-        </div>
-        <div class="stat">
+        </button>
+        <button class="stat" [routerLink]="['/tabs/feed/user', p.uid, 'following']" aria-label="View following list">
           <span class="stat-value">{{ p.followingCount ?? 0 }}</span>
           <span class="stat-label">Following</span>
-        </div>
+        </button>
         <div class="stat">
           <span class="stat-value">{{ recipes().length }}</span>
           <span class="stat-label">Recipes</span>

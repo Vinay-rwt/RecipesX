@@ -14,6 +14,11 @@ const routes: Routes = [
     loadChildren: () =>
       import('./collection-detail/collection-detail.module').then(m => m.CollectionDetailPageModule),
   },
+  {
+    path: 'follow-list/:uid/:type',
+    loadChildren: () =>
+      import('../feed/follow-list/follow-list.module').then(m => m.FollowListPageModule),
+  },
 ];
 
 @NgModule({

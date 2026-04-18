@@ -52,13 +52,16 @@ export class UserProfilePage implements ViewWillEnter {
     const currentUid = this.auth.currentUser?.uid;
     if (!currentUid) return;
     const wasFollowing = this.isFollowing();
+    const delta = wasFollowing ? -1 : 1;
     this.isFollowing.set(!wasFollowing);
+    this.profile.update(p => p ? { ...p, followersCount: (p.followersCount ?? 0) + delta } : p);
     try {
       await this.followService.toggleFollow(currentUid, this.targetUid());
       const name = this.profile()?.displayName ?? 'this cook';
       await this._showToast(wasFollowing ? `Unfollowed ${name}` : `Now following ${name}`);
     } catch {
       this.isFollowing.set(wasFollowing);
+      this.profile.update(p => p ? { ...p, followersCount: (p.followersCount ?? 0) - delta } : p);
       await this._showToast('Something went wrong. Please try again.');
     }
   }

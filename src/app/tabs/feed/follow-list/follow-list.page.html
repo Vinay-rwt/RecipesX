@@ -1,0 +1,50 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ title }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+
+  <!-- Loading -->
+  <div *ngIf="loading()" class="ion-padding">
+    <ion-item *ngFor="let i of [1,2,3,4,5]" lines="full">
+      <ion-avatar slot="start">
+        <ion-skeleton-text animated></ion-skeleton-text>
+      </ion-avatar>
+      <ion-label>
+        <ion-skeleton-text animated style="width: 50%;"></ion-skeleton-text>
+        <ion-skeleton-text animated style="width: 70%; margin-top: 6px;"></ion-skeleton-text>
+      </ion-label>
+    </ion-item>
+  </div>
+
+  <!-- Empty state -->
+  <div *ngIf="!loading() && users().length === 0" class="empty-state ion-text-center ion-padding">
+    <ion-icon name="people-outline" color="medium" style="font-size: 3rem;" aria-hidden="true"></ion-icon>
+    <p color="medium">No {{ title | lowercase }} yet.</p>
+  </div>
+
+  <!-- User list -->
+  <ion-list *ngIf="!loading() && users().length > 0" lines="full">
+    <ion-item
+      *ngFor="let user of users()"
+      button
+      detail
+      (click)="goToProfile(user)"
+      [attr.aria-label]="'View ' + user.displayName + '\'s profile'">
+      <ion-avatar slot="start">
+        <img *ngIf="user.photoURL" [src]="user.photoURL" [alt]="user.displayName" />
+        <ion-icon *ngIf="!user.photoURL" name="person-circle-outline" style="font-size: 2.5rem;" aria-hidden="true"></ion-icon>
+      </ion-avatar>
+      <ion-label>
+        <h3>{{ user.displayName }}</h3>
+        <p>{{ (user.followersCount ?? 0) }} followers</p>
+      </ion-label>
+    </ion-item>
+  </ion-list>
+
+</ion-content>

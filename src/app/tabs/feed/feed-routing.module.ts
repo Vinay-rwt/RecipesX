@@ -9,6 +9,11 @@ const routes: Routes = [
     loadChildren: () =>
       import('./user-profile/user-profile.module').then(m => m.UserProfilePageModule),
   },
+  {
+    path: 'user/:uid/:type',
+    loadChildren: () =>
+      import('./follow-list/follow-list.module').then(m => m.FollowListPageModule),
+  },
 ];
 
 @NgModule({
