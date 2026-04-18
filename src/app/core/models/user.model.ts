@@ -7,6 +7,8 @@ export interface UserProfile {
   measurementSystem: 'metric' | 'imperial';
   temperatureUnit: 'celsius' | 'fahrenheit';
   onboardingComplete: boolean;
+  followingCount: number;
+  followersCount: number;
   createdAt: Date;
   updatedAt: Date;
 }

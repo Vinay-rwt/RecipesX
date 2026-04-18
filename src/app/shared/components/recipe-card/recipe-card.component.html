@@ -8,11 +8,14 @@
     <div *ngIf="!recipe.photoURLs?.length && !recipe.coverEmoji" class="photo-placeholder featured-photo-placeholder" aria-hidden="true">
       <ion-icon name="restaurant-outline"></ion-icon>
     </div>
-    <span class="featured-label">Trending</span>
   </div>
 
   <div class="featured-body">
-    <div class="recipe-author" aria-hidden="true">{{ recipe.cuisineType }} · just now</div>
+    <button *ngIf="showAuthor" class="author-chip" (click)="goToAuthor($event)" aria-label="View {{ recipe.authorName ?? 'author' }}'s profile">
+      <ion-icon name="person-circle-outline" aria-hidden="true"></ion-icon>
+      <span>{{ recipe.authorName ?? 'Unknown cook' }}</span>
+    </button>
+    <div *ngIf="!showAuthor" class="recipe-author" aria-hidden="true">{{ recipe.cuisineType }} · just now</div>
     <h2 class="featured-title">{{ recipe.title }}</h2>
     <p class="featured-desc" *ngIf="recipe.description">{{ recipe.description }}</p>
 
@@ -72,7 +75,11 @@
   </div>
 
   <div class="recipe-body">
-    <div class="recipe-author" aria-hidden="true">{{ recipe.cuisineType }} · just now</div>
+    <button *ngIf="showAuthor" class="author-chip" (click)="goToAuthor($event)" aria-label="View {{ recipe.authorName ?? 'author' }}'s profile">
+      <ion-icon name="person-circle-outline" aria-hidden="true"></ion-icon>
+      <span>{{ recipe.authorName ?? 'Unknown cook' }}</span>
+    </button>
+    <div *ngIf="!showAuthor" class="recipe-author" aria-hidden="true">{{ recipe.cuisineType }} · just now</div>
     <h3 class="recipe-title">{{ recipe.title }}</h3>
 
     <div class="meta-row">
