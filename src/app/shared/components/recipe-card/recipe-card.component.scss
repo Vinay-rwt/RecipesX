@@ -38,22 +38,6 @@
   ion-icon { font-size: 48px; }
 }
 
-.featured-label {
-  position: absolute;
-  top: var(--rs-space-sm);
-  left: var(--rs-space-sm);
-  background: oklch(22% 0.018 50 / 0.72);
-  color: oklch(97% 0.006 55);
-  font-family: var(--rs-font-display);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  padding: 3px var(--rs-space-sm);
-  border-radius: var(--rs-radius-full);
-  backdrop-filter: blur(4px);
-}
-
 .featured-body {
   display: flex;
   flex-direction: column;

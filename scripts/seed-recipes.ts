@@ -38,6 +38,7 @@ interface RecipeStep {
 interface Recipe {
   id: string;
   authorId: string;
+  authorName: string;
   title: string;
   description: string;
   photoURLs: string[];
@@ -78,11 +79,12 @@ function makeId(title: string): string {
   return 'seed_' + title.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
 }
 
-function recipe(r: Omit<Recipe, 'id' | 'authorId' | 'photoURLs' | 'likeCount' | 'saveCount' | 'status' | 'createdAt' | 'updatedAt' | 'searchTokens'>): Recipe {
+function recipe(r: Omit<Recipe, 'id' | 'authorId' | 'authorName' | 'photoURLs' | 'likeCount' | 'saveCount' | 'status' | 'createdAt' | 'updatedAt' | 'searchTokens'>): Recipe {
   return {
     ...r,
     id: makeId(r.title),
     authorId: SYSTEM_AUTHOR_ID,
+    authorName: 'RecipeShare Kitchen',
     photoURLs: [],
     likeCount: Math.floor(Math.random() * 120),
     saveCount: Math.floor(Math.random() * 60),
@@ -1447,8 +1449,24 @@ const RECIPES: Recipe[] = [
 // ─── Seed ─────────────────────────────────────────────────────────────────────
 
 async function main(): Promise<void> {
-  console.log(`Seeding ${RECIPES.length} recipes…`);
+  // Upsert the system author user doc so the author profile page works for seeded recipes
+  await db.collection('users').doc(SYSTEM_AUTHOR_ID).set({
+    uid: SYSTEM_AUTHOR_ID,
+    displayName: 'RecipeShare Kitchen',
+    email: 'kitchen@recipeshare.app',
+    photoURL: null,
+    equipment: [],
+    measurementSystem: 'metric',
+    temperatureUnit: 'celsius',
+    onboardingComplete: true,
+    followingCount: 0,
+    followersCount: 0,
+    createdAt: new Date('2024-01-01'),
+    updatedAt: new Date(),
+  });
+  console.log('✓ System author user doc upserted');
 
+  console.log(`Seeding ${RECIPES.length} recipes…`);
   for (const r of RECIPES) {
     await db.collection('recipes').doc(r.id).set(r);
     console.log(`  ✓ ${r.title}`);
