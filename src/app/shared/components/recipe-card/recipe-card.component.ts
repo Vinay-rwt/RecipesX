@@ -1,4 +1,5 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { Recipe } from '../../../core/models/recipe.model';
 
 @Component({
@@ -8,8 +9,11 @@ import { Recipe } from '../../../core/models/recipe.model';
   standalone: false,
 })
 export class RecipeCardComponent {
+  private router = inject(Router);
+
   @Input() recipe!: Recipe;
   @Input() showSocialActions = false;
+  @Input() showAuthor = false;
   @Input() featured = false;
   @Input() isLiked = false;
   @Input() isSaved = false;
@@ -17,6 +21,11 @@ export class RecipeCardComponent {
   @Output() likeToggled = new EventEmitter<void>();
   @Output() saveToggled = new EventEmitter<void>();
   @Output() shareClicked = new EventEmitter<void>();
+
+  goToAuthor(event: Event): void {
+    event.stopPropagation();
+    this.router.navigate(['/tabs/feed/user', this.recipe.authorId]);
+  }
 
   onLike(event: Event): void {
     event.stopPropagation();

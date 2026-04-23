@@ -1,0 +1,86 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/feed"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ profile()?.displayName ?? '' }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+
+  <!-- Loading skeleton -->
+  <div *ngIf="loading()">
+    <div class="profile-header-skeleton">
+      <ion-skeleton-text animated style="width: 72px; height: 72px; border-radius: 50%;"></ion-skeleton-text>
+      <ion-skeleton-text animated style="width: 40%; height: 1.2rem; margin-top: 12px;"></ion-skeleton-text>
+      <ion-skeleton-text animated style="width: 60%; height: 0.9rem; margin-top: 6px;"></ion-skeleton-text>
+    </div>
+    <ion-skeleton-text animated style="width: 100%; height: 40px; border-radius: 8px; margin: 16px 0;"></ion-skeleton-text>
+    <ion-skeleton-text animated style="width: 100%; height: 80px; border-radius: 8px;"></ion-skeleton-text>
+    <ion-skeleton-text animated style="width: 100%; height: 80px; border-radius: 8px; margin-top: 8px;"></ion-skeleton-text>
+  </div>
+
+  <!-- Content -->
+  <div *ngIf="!loading() && profile() as p">
+
+    <!-- Profile header -->
+    <div class="profile-header">
+      <ion-avatar class="profile-avatar">
+        <img *ngIf="p.photoURL" [src]="p.photoURL" [alt]="p.displayName" />
+        <ion-icon *ngIf="!p.photoURL" name="person-circle-outline" aria-hidden="true"></ion-icon>
+      </ion-avatar>
+      <h2 class="profile-name">{{ p.displayName }}</h2>
+
+      <!-- Stats row -->
+      <div class="stats-row">
+        <button class="stat" [routerLink]="['/tabs/feed/user', p.uid, 'followers']" aria-label="View followers list">
+          <span class="stat-value">{{ p.followersCount ?? 0 }}</span>
+          <span class="stat-label">Followers</span>
+        </button>
+        <button class="stat" [routerLink]="['/tabs/feed/user', p.uid, 'following']" aria-label="View following list">
+          <span class="stat-value">{{ p.followingCount ?? 0 }}</span>
+          <span class="stat-label">Following</span>
+        </button>
+        <div class="stat">
+          <span class="stat-value">{{ recipes().length }}</span>
+          <span class="stat-label">Recipes</span>
+        </div>
+      </div>
+
+      <!-- Follow / Unfollow button — hidden on own profile -->
+      <ion-button
+        *ngIf="!isOwnProfile()"
+        [fill]="isFollowing() ? 'outline' : 'solid'"
+        class="follow-btn"
+        (click)="onToggleFollow()"
+        [attr.aria-label]="isFollowing() ? 'Unfollow ' + p.displayName : 'Follow ' + p.displayName">
+        {{ isFollowing() ? 'Following' : 'Follow' }}
+      </ion-button>
+    </div>
+
+    <!-- Recipes list -->
+    <h3 class="section-title" *ngIf="recipes().length > 0">Recipes</h3>
+
+    <app-recipe-card
+      *ngFor="let recipe of recipes()"
+      [recipe]="recipe"
+      [showSocialActions]="false"
+      [showAuthor]="false">
+    </app-recipe-card>
+
+    <!-- Empty state -->
+    <div *ngIf="recipes().length === 0" class="empty-state ion-text-center ion-padding">
+      <ion-icon name="restaurant-outline" color="medium" style="font-size: 3rem;" aria-hidden="true"></ion-icon>
+      <p color="medium">No recipes yet.</p>
+    </div>
+
+  </div>
+
+  <!-- Profile not found -->
+  <div *ngIf="!loading() && !profile()" class="empty-state ion-text-center ion-padding">
+    <ion-icon name="person-outline" color="medium" style="font-size: 3rem;" aria-hidden="true"></ion-icon>
+    <p color="medium">User not found.</p>
+  </div>
+
+</ion-content>

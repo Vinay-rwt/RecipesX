@@ -96,6 +96,8 @@ export class AuthService {
       measurementSystem: 'metric',
       temperatureUnit: 'celsius',
       onboardingComplete: false,
+      followingCount: 0,
+      followersCount: 0,
       createdAt: new Date(),
       updatedAt: new Date(),
     };

@@ -2,6 +2,8 @@ import { Component, inject, signal } from '@angular/core';
 import { Auth } from '@angular/fire/auth';
 import { ActionSheetController, AlertController, InfiniteScrollCustomEvent, RefresherCustomEvent, ToastController, ViewWillEnter } from '@ionic/angular';
 import { FeedService } from '../../core/services/feed.service';
+import { FollowingFeedService } from '../../core/services/following-feed.service';
+import { FollowService } from '../../core/services/follow.service';
 import { SocialService } from '../../core/services/social.service';
 import { ShareService } from '../../core/services/share.service';
 import { CollectionService } from '../../core/services/collection.service';
@@ -15,6 +17,8 @@ import { CUISINE_TYPES, Recipe } from '../../core/models/recipe.model';
 })
 export class FeedPage implements ViewWillEnter {
   readonly feedService = inject(FeedService);
+  readonly followingFeedService = inject(FollowingFeedService);
+  private followService = inject(FollowService);
   private socialService = inject(SocialService);
   private shareService = inject(ShareService);
   readonly collectionService = inject(CollectionService);
@@ -25,6 +29,7 @@ export class FeedPage implements ViewWillEnter {
 
   likedRecipes = signal<Set<string>>(new Set());
   savedRecipes = signal<Set<string>>(new Set());
+  activeTab = signal<'forYou' | 'following'>('forYou');
 
   searchQuery = '';
   selectedCuisine = '';
@@ -34,26 +39,55 @@ export class FeedPage implements ViewWillEnter {
   readonly difficulties = ['easy', 'medium', 'hard'];
 
   async ionViewWillEnter(): Promise<void> {
+    const uid = this.auth.currentUser?.uid;
+    if (uid) {
+      const followingSet = await this.followService.loadFollowing(uid);
+      this.followingFeedService.setFollowingIds([...followingSet]);
+    }
     await this.feedService.loadInitial();
     await this._loadSocialState();
   }
 
+  async switchTab(tab: 'forYou' | 'following'): Promise<void> {
+    this.activeTab.set(tab);
+    if (tab === 'following' && this.followingFeedService.recipes().length === 0) {
+      await this.followingFeedService.loadInitial();
+    }
+  }
+
   async loadMore(event: InfiniteScrollCustomEvent): Promise<void> {
-    await this.feedService.loadMore();
-    event.target.complete();
-    if (!this.feedService.hasMore()) {
-      event.target.disabled = true;
+    if (this.activeTab() === 'following') {
+      await this.followingFeedService.loadMore();
+      event.target.complete();
+      if (!this.followingFeedService.hasMore()) event.target.disabled = true;
+    } else {
+      await this.feedService.loadMore();
+      event.target.complete();
+      if (!this.feedService.hasMore()) event.target.disabled = true;
     }
   }
 
   async onRefresh(event: RefresherCustomEvent): Promise<void> {
-    await this.feedService.loadInitial();
+    const uid = this.auth.currentUser?.uid;
+    if (uid) {
+      const followingSet = await this.followService.loadFollowing(uid);
+      this.followingFeedService.setFollowingIds([...followingSet]);
+    }
+    if (this.activeTab() === 'following') {
+      await this.followingFeedService.loadInitial();
+    } else {
+      await this.feedService.loadInitial();
+    }
     await this._loadSocialState();
     event.target.complete();
   }
 
   async onRefreshManual(): Promise<void> {
-    await this.feedService.loadInitial();
+    if (this.activeTab() === 'following') {
+      await this.followingFeedService.loadInitial();
+    } else {
+      await this.feedService.loadInitial();
+    }
     await this._loadSocialState();
   }
 
@@ -63,8 +97,9 @@ export class FeedPage implements ViewWillEnter {
     try {
       const liked = await this.socialService.toggleLike(uid, recipeId);
       const newSet = new Set(this.likedRecipes());
-      if (liked) { newSet.add(recipeId); this.feedService.patchRecipeCount(recipeId, 'likeCount', 1); }
-      else        { newSet.delete(recipeId); this.feedService.patchRecipeCount(recipeId, 'likeCount', -1); }
+      const delta: 1 | -1 = liked ? 1 : -1;
+      if (liked) newSet.add(recipeId); else newSet.delete(recipeId);
+      this._activeService().patchRecipeCount(recipeId, 'likeCount', delta);
       this.likedRecipes.set(newSet);
     } catch {
       this._showToast('Could not update like — please try again');
@@ -103,7 +138,7 @@ export class FeedPage implements ViewWillEnter {
       const newSet = new Set(this.savedRecipes());
       newSet.delete(recipeId);
       this.savedRecipes.set(newSet);
-      this.feedService.patchRecipeCount(recipeId, 'saveCount', -1);
+      this._activeService().patchRecipeCount(recipeId, 'saveCount', -1);
       this._showToast('Removed from saves');
     } catch {
       this._showToast('Could not update save — please try again');
@@ -182,10 +217,14 @@ export class FeedPage implements ViewWillEnter {
       const newSet = new Set(this.savedRecipes());
       newSet.add(recipeId);
       this.savedRecipes.set(newSet);
-      this.feedService.patchRecipeCount(recipeId, 'saveCount', 1);
+      this._activeService().patchRecipeCount(recipeId, 'saveCount', 1);
     } catch {
       this._showToast('Could not save recipe — please try again');
     }
+  }
+
+  private _activeService(): FeedService | FollowingFeedService {
+    return this.activeTab() === 'following' ? this.followingFeedService : this.feedService;
   }
 
   private async _showToast(message: string): Promise<void> {

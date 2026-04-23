@@ -54,6 +54,22 @@
       </ion-card-header>
     </ion-card>
 
+    <!-- Stats row -->
+    <div class="stats-row">
+      <button class="stat" [routerLink]="['/tabs/profile/follow-list', profile.uid, 'following']" aria-label="View following list">
+        <span class="stat-value">{{ profile.followingCount ?? 0 }}</span>
+        <span class="stat-label">Following</span>
+      </button>
+      <button class="stat" [routerLink]="['/tabs/profile/follow-list', profile.uid, 'followers']" aria-label="View followers list">
+        <span class="stat-value">{{ profile.followersCount ?? 0 }}</span>
+        <span class="stat-label">Followers</span>
+      </button>
+      <div class="stat">
+        <span class="stat-value">{{ recipeService.myRecipes().length }}</span>
+        <span class="stat-label">Recipes</span>
+      </div>
+    </div>
+
     <!-- My Collections -->
     <h3 class="section-title">My Collections</h3>
     <ion-item button detail routerLink="/tabs/profile/collections" lines="full" class="collections-entry">
