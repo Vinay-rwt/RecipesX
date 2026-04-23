@@ -54,6 +54,47 @@
       </ion-card-header>
     </ion-card>
 
+    <!-- My Collections -->
+    <h3 class="section-title">My Collections</h3>
+    <ion-item button detail routerLink="/tabs/profile/collections" lines="full" class="collections-entry">
+      <ion-icon slot="start" name="albums-outline" color="primary" aria-hidden="true"></ion-icon>
+      <ion-label>Recipe Books</ion-label>
+    </ion-item>
+
+    <!-- Saved Recipes -->
+    <h3 class="section-title">Saved Recipes</h3>
+
+    <!-- Loading skeleton -->
+    <div *ngIf="savedLoading()" class="saved-skeleton">
+      <ion-skeleton-text animated style="width: 100%; height: 72px; border-radius: 12px; margin-bottom: 8px;"></ion-skeleton-text>
+      <ion-skeleton-text animated style="width: 100%; height: 72px; border-radius: 12px; margin-bottom: 8px;"></ion-skeleton-text>
+    </div>
+
+    <!-- Empty saved state -->
+    <p *ngIf="!savedLoading() && savedRecipes().length === 0" class="empty-section-hint">
+      Recipes you save from the feed will appear here.
+    </p>
+
+    <!-- Saved recipe list -->
+    <div *ngIf="!savedLoading() && savedRecipes().length > 0" class="saved-list">
+      <ion-item
+        *ngFor="let recipe of savedRecipes()"
+        [routerLink]="['/recipe', recipe.id]"
+        button
+        detail
+        lines="full"
+        class="saved-item">
+        <div slot="start" class="saved-thumb">
+          <img *ngIf="recipe.photoURLs?.length" [src]="recipe.photoURLs[0]" [alt]="recipe.title">
+          <div *ngIf="!recipe.photoURLs?.length" class="saved-thumb-emoji">{{ recipe.coverEmoji || '🍽️' }}</div>
+        </div>
+        <ion-label>
+          <h3>{{ recipe.title }}</h3>
+          <p>{{ recipe.cuisineType }} · {{ recipe.cookTime }}m</p>
+        </ion-label>
+      </ion-item>
+    </div>
+
     <!-- My Recipes -->
     <h3 class="section-title">My Recipes</h3>
     <app-my-recipes

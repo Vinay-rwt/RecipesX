@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import {
   Firestore, doc, getDoc, setDoc, deleteDoc,
   updateDoc, increment, collection, getDocs,
@@ -8,11 +8,16 @@ import {
 export class SocialService {
   private firestore = inject(Firestore);
 
+  // Reactive set of uncategorized-saved recipe IDs — stays live across navigation
+  private _uncategorizedSaveIds = signal<Set<string>>(new Set());
+  readonly uncategorizedSaveIds = this._uncategorizedSaveIds.asReadonly();
+
+  // ── Likes ────────────────────────────────────────────────────────────────
+
   async toggleLike(userId: string, recipeId: string): Promise<boolean> {
     const likeRef = doc(this.firestore, `users/${userId}/likes/${recipeId}`);
     const recipeRef = doc(this.firestore, `recipes/${recipeId}`);
     const exists = (await getDoc(likeRef)).exists();
-
     if (exists) {
       await deleteDoc(likeRef);
       await updateDoc(recipeRef, { likeCount: increment(-1) });
@@ -24,41 +29,48 @@ export class SocialService {
     }
   }
 
-  async toggleSave(userId: string, recipeId: string): Promise<boolean> {
-    const saveRef = doc(this.firestore, `users/${userId}/saves/${recipeId}`);
-    const recipeRef = doc(this.firestore, `recipes/${recipeId}`);
-    const exists = (await getDoc(saveRef)).exists();
-
-    if (exists) {
-      await deleteDoc(saveRef);
-      await updateDoc(recipeRef, { saveCount: increment(-1) });
-      return false;
-    } else {
-      await setDoc(saveRef, { createdAt: new Date() });
-      await updateDoc(recipeRef, { saveCount: increment(1) });
-      return true;
-    }
-  }
-
   async isLiked(userId: string, recipeId: string): Promise<boolean> {
-    const likeRef = doc(this.firestore, `users/${userId}/likes/${recipeId}`);
-    return (await getDoc(likeRef)).exists();
-  }
-
-  async isSaved(userId: string, recipeId: string): Promise<boolean> {
-    const saveRef = doc(this.firestore, `users/${userId}/saves/${recipeId}`);
-    return (await getDoc(saveRef)).exists();
+    return (await getDoc(doc(this.firestore, `users/${userId}/likes/${recipeId}`))).exists();
   }
 
   async getUserLikes(userId: string): Promise<Set<string>> {
-    const likesRef = collection(this.firestore, `users/${userId}/likes`);
-    const snapshot = await getDocs(likesRef);
-    return new Set(snapshot.docs.map(d => d.id));
+    const snap = await getDocs(collection(this.firestore, `users/${userId}/likes`));
+    return new Set(snap.docs.map(d => d.id));
   }
 
+  // ── Saves — uncategorized bucket ─────────────────────────────────────────
+
+  async saveToUncategorized(userId: string, recipeId: string): Promise<void> {
+    await setDoc(doc(this.firestore, `users/${userId}/saves/${recipeId}`), { createdAt: new Date() });
+    await updateDoc(doc(this.firestore, `recipes/${recipeId}`), { saveCount: increment(1) });
+    // Keep signal in sync
+    this._uncategorizedSaveIds.update(s => new Set([...s, recipeId]));
+  }
+
+  async unsaveUncategorized(userId: string, recipeId: string): Promise<void> {
+    await deleteDoc(doc(this.firestore, `users/${userId}/saves/${recipeId}`));
+    await updateDoc(doc(this.firestore, `recipes/${recipeId}`), { saveCount: increment(-1) });
+    // Keep signal in sync
+    this._uncategorizedSaveIds.update(s => { const n = new Set(s); n.delete(recipeId); return n; });
+  }
+
+  async incrementSaveCount(recipeId: string): Promise<void> {
+    await updateDoc(doc(this.firestore, `recipes/${recipeId}`), { saveCount: increment(1) });
+  }
+
+  async decrementSaveCount(recipeId: string): Promise<void> {
+    await updateDoc(doc(this.firestore, `recipes/${recipeId}`), { saveCount: increment(-1) });
+  }
+
+  async isUncategorizedSave(userId: string, recipeId: string): Promise<boolean> {
+    return (await getDoc(doc(this.firestore, `users/${userId}/saves/${recipeId}`))).exists();
+  }
+
+  /** Loads uncategorized saves from Firestore and seeds the reactive signal. */
   async getUserSaves(userId: string): Promise<Set<string>> {
-    const savesRef = collection(this.firestore, `users/${userId}/saves`);
-    const snapshot = await getDocs(savesRef);
-    return new Set(snapshot.docs.map(d => d.id));
+    const snap = await getDocs(collection(this.firestore, `users/${userId}/saves`));
+    const ids = new Set<string>(snap.docs.map(d => d.id));
+    this._uncategorizedSaveIds.set(ids);
+    return ids;
   }
 }

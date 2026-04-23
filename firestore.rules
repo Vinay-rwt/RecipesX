@@ -17,6 +17,11 @@ service cloud.firestore {
       match /saves/{recipeId} {
         allow read, write: if request.auth.uid == userId;
       }
+
+      // Collections: only the owning user
+      match /collections/{collectionId} {
+        allow read, write: if request.auth.uid == userId;
+      }
     }
 
     // Recipes: authenticated users can read published recipes or their own drafts
