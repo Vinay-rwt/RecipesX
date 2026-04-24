@@ -11,28 +11,49 @@
 
   <!-- Loading skeleton -->
   <div *ngIf="loading()">
-    <div class="profile-header-skeleton">
-      <ion-skeleton-text animated style="width: 72px; height: 72px; border-radius: 50%;"></ion-skeleton-text>
-      <ion-skeleton-text animated style="width: 40%; height: 1.2rem; margin-top: 12px;"></ion-skeleton-text>
-      <ion-skeleton-text animated style="width: 60%; height: 0.9rem; margin-top: 6px;"></ion-skeleton-text>
+    <div class="profile-hero">
+      <ion-skeleton-text animated style="width: 84px; height: 84px; border-radius: 50%; margin: 0 auto 12px;"></ion-skeleton-text>
+      <ion-skeleton-text animated style="width: 40%; height: 1.2rem; margin: 0 auto 8px;"></ion-skeleton-text>
+      <ion-skeleton-text animated style="width: 60%; height: 0.85rem; margin: 0 auto;"></ion-skeleton-text>
     </div>
     <ion-skeleton-text animated style="width: 100%; height: 40px; border-radius: 8px; margin: 16px 0;"></ion-skeleton-text>
     <ion-skeleton-text animated style="width: 100%; height: 80px; border-radius: 8px;"></ion-skeleton-text>
-    <ion-skeleton-text animated style="width: 100%; height: 80px; border-radius: 8px; margin-top: 8px;"></ion-skeleton-text>
   </div>
 
   <!-- Content -->
   <div *ngIf="!loading() && profile() as p">
 
-    <!-- Profile header -->
-    <div class="profile-header">
-      <ion-avatar class="profile-avatar">
-        <img *ngIf="p.photoURL" [src]="p.photoURL" [alt]="p.displayName" />
-        <ion-icon *ngIf="!p.photoURL" name="person-circle-outline" aria-hidden="true"></ion-icon>
-      </ion-avatar>
+    <!-- Profile hero -->
+    <div class="profile-hero">
+
+      <!-- Avatar -->
+      <div class="avatar-wrap">
+        <img *ngIf="p.photoURL" [src]="p.photoURL" [alt]="p.displayName" class="profile-avatar" />
+        <div *ngIf="!p.photoURL" class="profile-avatar avatar-placeholder" aria-hidden="true">
+          {{ (p.displayName || '?')[0].toUpperCase() }}
+        </div>
+      </div>
+
       <h2 class="profile-name">{{ p.displayName }}</h2>
 
-      <!-- Stats row -->
+      <div class="profile-level" *ngIf="p.cookingLevel">
+        {{ cookingLevelLabel(p.cookingLevel) }}
+      </div>
+
+      <p class="profile-bio" *ngIf="p.bio">{{ p.bio }}</p>
+
+      <div class="profile-meta">
+        <span *ngIf="p.location" class="meta-item">
+          <ion-icon name="location-outline" aria-hidden="true"></ion-icon>
+          {{ p.location }}
+        </span>
+        <a *ngIf="p.websiteUrl" [href]="p.websiteUrl" target="_blank" rel="noopener noreferrer" class="meta-item meta-link">
+          <ion-icon name="link-outline" aria-hidden="true"></ion-icon>
+          {{ p.websiteUrl | urlDisplay }}
+        </a>
+      </div>
+
+      <!-- Stats -->
       <div class="stats-row">
         <button class="stat" [routerLink]="['/tabs/feed/user', p.uid, 'followers']" aria-label="View followers list">
           <span class="stat-value">{{ p.followersCount ?? 0 }}</span>
@@ -42,13 +63,13 @@
           <span class="stat-value">{{ p.followingCount ?? 0 }}</span>
           <span class="stat-label">Following</span>
         </button>
-        <div class="stat">
+        <button class="stat" type="button" style="cursor: default;" aria-label="Recipe count">
           <span class="stat-value">{{ recipes().length }}</span>
           <span class="stat-label">Recipes</span>
-        </div>
+        </button>
       </div>
 
-      <!-- Follow / Unfollow button — hidden on own profile -->
+      <!-- Follow / Unfollow -->
       <ion-button
         *ngIf="!isOwnProfile()"
         [fill]="isFollowing() ? 'outline' : 'solid'"
@@ -59,7 +80,7 @@
       </ion-button>
     </div>
 
-    <!-- Recipes list -->
+    <!-- Recipes -->
     <h3 class="section-title" *ngIf="recipes().length > 0">Recipes</h3>
 
     <app-recipe-card
@@ -72,15 +93,15 @@
     <!-- Empty state -->
     <div *ngIf="recipes().length === 0" class="empty-state ion-text-center ion-padding">
       <ion-icon name="restaurant-outline" color="medium" style="font-size: 3rem;" aria-hidden="true"></ion-icon>
-      <p color="medium">No recipes yet.</p>
+      <p>No recipes yet.</p>
     </div>
 
   </div>
 
-  <!-- Profile not found -->
+  <!-- User not found -->
   <div *ngIf="!loading() && !profile()" class="empty-state ion-text-center ion-padding">
     <ion-icon name="person-outline" color="medium" style="font-size: 3rem;" aria-hidden="true"></ion-icon>
-    <p color="medium">User not found.</p>
+    <p>User not found.</p>
   </div>
 
 </ion-content>

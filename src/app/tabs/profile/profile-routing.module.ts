@@ -19,6 +19,11 @@ const routes: Routes = [
     loadChildren: () =>
       import('../feed/follow-list/follow-list.module').then(m => m.FollowListPageModule),
   },
+  {
+    path: 'edit',
+    loadChildren: () =>
+      import('./edit-profile/edit-profile.module').then(m => m.EditProfilePageModule),
+  },
 ];
 
 @NgModule({

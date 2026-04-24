@@ -52,4 +52,11 @@ export class PhotoService {
     const storageRef = ref(this.storage, fullPath);
     await deleteObject(storageRef);
   }
+
+  async uploadAvatarPhoto(uid: string, blob: Blob): Promise<string> {
+    const path = `avatars/${uid}/avatar_${Date.now()}.jpg`;
+    const storageRef = ref(this.storage, path);
+    await uploadBytes(storageRef, blob);
+    return getDownloadURL(storageRef);
+  }
 }
