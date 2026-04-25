@@ -861,3 +861,276 @@ For each major page, add three states: loading skeleton, error, and empty.
 - [ ] Skeleton screen shows during profile/feed load (runtime)
 - [ ] Error state + retry button shows on network failure (runtime)
 - [ ] VoiceOver/TalkBack reads meaningful labels for like/save/share/filter buttons (runtime)
+
+---
+
+## Phase 15: Pre-Release Security & Production Hardening — IN PROGRESS
+
+**Branch:** `feature/phase15-pre-release-security` (create from develop)
+
+### Goals
+Harden the app for real-world production use before publishing to app stores or sharing publicly. This phase covers: locking down security rules, wiring up real Firebase credentials, protecting secrets, auditing authentication flows, tightening Storage rules, removing dev artifacts, and validating the production build end-to-end.
+
+---
+
+### Step 1: Firebase Production Project Setup
+**What to do:**
+- Create a new Firebase project in the Firebase console (if not already done): `recipeshare-prod`
+- Enable providers in Firebase console:
+  - Authentication → Sign-in methods → Email/Password ✓
+  - Authentication → Sign-in methods → Google ✓
+- Register the web app in Firebase console → copy the real `firebaseConfig`
+- Register the Android app: package name from `android/app/build.gradle` (`applicationId`)
+- Register the iOS app: bundle ID from Xcode (`ios/App/App.xcodeproj`)
+- Download `google-services.json` → place in `android/app/`
+- Download `GoogleService-Info.plist` → place in `ios/App/App/`
+
+**Modify** `src/environments/environment.prod.ts`
+- Replace all `YOUR_*` placeholders with real Firebase config values
+- Keep `useEmulators: false`
+- Keep `usdaApiKey` (already real)
+
+**Key concern:** Never commit `environment.prod.ts` with real API keys to a public repo. See Step 2.
+
+---
+
+### Step 2: Secret Management — Protect API Keys
+**Problem:** `environment.prod.ts` contains the Firebase API key and USDA key. If the repo is public, these are exposed.
+
+**What to do:**
+- Add `src/environments/environment.prod.ts` to `.gitignore` (use `environment.prod.ts.example` as a template with placeholders committed instead)
+- For CI/CD (GitHub Actions): store Firebase config as repository secrets, inject via a build step that writes `environment.prod.ts` at build time
+- Restrict Firebase API key in Google Cloud Console: HTTP referrers → add your domain(s) + `localhost` for dev
+- Restrict USDA FDC API key at `fdc.nal.usda.gov` if key management is available
+- Add Firebase App Check (optional but recommended): prevents API abuse from unauthorized clients
+
+**Create** `src/environments/environment.prod.ts.example`
+- Same structure as `environment.prod.ts` but with `'YOUR_*'` placeholders (safe to commit)
+
+**Modify** `.gitignore`
+- Add `src/environments/environment.prod.ts`
+
+---
+
+### Step 3: Firestore Security Rules Audit & Hardening
+**Current state:** Rules are functionally correct but have one open door: `conversionMatrix` allows `write: if true` (left for seed script dev convenience).
+
+**What to fix:**
+
+**Modify** `firestore.rules`
+
+1. **Lock conversionMatrix writes** — remove `allow write: if true`, replace with admin-only pattern:
+   ```
+   match /conversionMatrix/{entry} {
+     allow read: if request.auth != null;
+     allow write: if false;  // only writable via Firebase Admin SDK (server-side)
+   }
+   ```
+
+2. **Add field validation on recipe create/update** — prevent clients from writing arbitrary fields:
+   ```
+   // On create: enforce required fields and types
+   allow create: if request.auth != null
+     && request.resource.data.authorId == request.auth.uid
+     && request.resource.data.title is string
+     && request.resource.data.title.size() > 0
+     && request.resource.data.title.size() <= 200
+     && request.resource.data.status in ['draft', 'published'];
+   ```
+
+3. **Harden like/save counter update rule** — currently any authenticated user can bump `likeCount`/`saveCount` but only when those are the *only* changed fields. Verify the existing `affectedKeys().hasOnly(...)` rule is airtight (it is — just confirm it survives adversarial testing).
+
+4. **Add size limits on user profile writes** — bio, displayName, location should have max-length guards:
+   ```
+   allow update: if request.auth.uid == userId
+     && (!('bio' in request.resource.data) || request.resource.data.bio.size() <= 500)
+     && (!('displayName' in request.resource.data) || request.resource.data.displayName.size() <= 100)
+     && (!('websiteUrl' in request.resource.data) || request.resource.data.websiteUrl.size() <= 200);
+   ```
+
+5. **Add comment body size enforcement** — already in rules (`<= 2000`). Verify still present after any rule edits.
+
+6. **Block rate-limiting via rules** (best-effort): Firestore rules don't have native rate limiting, but ensure no collection is world-writable.
+
+**Run** Firebase Rules Simulator (Firebase console → Firestore → Rules → Rules Playground) to test:
+- Unauthenticated user cannot read any document
+- User A cannot read User B's draft recipe
+- User A cannot update User B's recipe (non-counter fields)
+- User A cannot write to conversionMatrix
+
+---
+
+### Step 4: Storage Security Rules Hardening
+**Current state:** recipe photos allow `write: if request.auth != null` with no size limit. Avatars are locked to owner.
+
+**Modify** `storage.rules`
+
+1. **Add file size limits** — prevent uploading massive files:
+   ```
+   match /recipes/{recipeId}/photos/{photo} {
+     allow read: if true;
+     allow write: if request.auth != null
+       && request.resource.size < 10 * 1024 * 1024  // 10 MB max
+       && request.resource.contentType.matches('image/.*');
+     allow delete: if request.auth != null;
+   }
+   match /avatars/{uid}/{fileName} {
+     allow read: if true;
+     allow write: if request.auth != null
+       && request.auth.uid == uid
+       && request.resource.size < 5 * 1024 * 1024   // 5 MB max
+       && request.resource.contentType.matches('image/.*');
+     allow delete: if request.auth != null && request.auth.uid == uid;
+   }
+   ```
+
+2. **Lock down delete** — currently recipe photo delete allows any authenticated user. Restrict to recipe author (requires storing authorId in metadata or path — use path convention: `recipes/{authorId}_{recipeId}/photos/{photo}` or check via Firestore in rules if needed). For now, restrict delete to authenticated users only (acceptable for v1).
+
+---
+
+### Step 5: Authentication Hardening
+**What to audit:**
+
+1. **Email enumeration** — Firebase Auth by default returns different errors for "user not found" vs "wrong password". Angular code should normalize these into a single "Invalid credentials" message to prevent account enumeration.
+
+**Modify** `src/app/features/auth/login/login.page.ts`
+- Catch `auth/user-not-found` and `auth/wrong-password` → show same generic message: "Invalid email or password."
+- Same for `auth/invalid-credential` (Firebase v10+ unified error code)
+
+**Modify** `src/app/features/auth/register/register.page.ts`
+- Catch `auth/email-already-in-use` → show: "An account with this email already exists."
+- Validate password strength client-side (min 8 chars, shown in UI)
+
+2. **Token refresh** — AngularFire handles this automatically via the `Auth` observable. No action needed.
+
+3. **Sign-out cleanup** — verify that on logout, all cached user state (signals in services) is reset.
+
+**Audit** `src/app/core/services/auth.service.ts` — `logout()` method:
+- Calls `signOut(this.auth)` ✓
+- Navigates to `/auth/login` ✓
+- Verify: `UserProfileService` and other services reset their signals on next `ionViewWillEnter` (they reload from Firestore on enter — acceptable)
+
+4. **onboardingGuard + authGuard ordering** — verify guards cannot be bypassed by direct URL navigation. Already in place from Phase 1 — just confirm.
+
+---
+
+### Step 6: Remove Development Artifacts
+**What to clean up:**
+
+1. **`conversionMatrix` open write rule** — addressed in Step 3.
+
+2. **Console.log statements** — audit all service and component files, remove `console.log` / `console.error` debug calls not needed in production:
+   ```bash
+   grep -rn "console\.log" src/
+   ```
+   Keep: `console.error` for unexpected errors (acceptable). Remove: `console.log` debug traces.
+
+3. **`useEmulators: true` in dev environment** — intentional and correct. Verify `environment.prod.ts` has `useEmulators: false`.
+
+4. **Duplicate android asset directories** (`android/app/src/main/res/mipmap-hdpi/ic_launcher 2.png` etc.) — these are macOS copy artifacts. Safe to delete:
+   ```bash
+   find android/ -name "* 2.*" -type f
+   find android/ -name "* 2" -type d
+   ```
+
+5. **`graphify-out/`** — development artifact. Add to `.gitignore`.
+
+6. **Unused imports / dead code** — run `ng build` with `--source-map` and check for warnings. Run TypeScript compiler in strict mode to surface unused variables.
+
+---
+
+### Step 7: Production Build Validation
+**What to do:**
+
+1. **Angular production build:**
+   ```bash
+   ng build --configuration production
+   ```
+   - Must pass with zero errors
+   - Check bundle sizes (warn if any chunk > 1 MB)
+   - Verify `environment.prod.ts` values are baked in (not emulator URLs)
+
+2. **Capacitor sync for production:**
+   ```bash
+   npx cap sync
+   ```
+   - Updates native projects with latest web build
+
+3. **iOS build (Xcode):**
+   ```bash
+   npx cap open ios
+   ```
+   - Build in Xcode with Release scheme
+   - Run on physical device or simulator
+   - Verify: Google Sign-In, camera, Firebase Storage uploads work
+
+4. **Android build (Android Studio):**
+   ```bash
+   npx cap open android
+   ```
+   - Build → Generate Signed APK/AAB
+   - Test on device/emulator
+
+5. **Firebase deploy (hosting + rules):**
+   ```bash
+   firebase deploy --only firestore:rules,storage
+   firebase deploy --only hosting   # if web hosting is set up
+   ```
+
+---
+
+### Step 8: App Store Pre-Flight Checklist
+**iOS (App Store Connect):**
+- [ ] Bundle ID matches Firebase iOS app registration
+- [ ] `GoogleService-Info.plist` present in Xcode project
+- [ ] Privacy usage strings in `Info.plist`: NSCameraUsageDescription, NSPhotoLibraryUsageDescription
+- [ ] App icons: all required sizes present (1024×1024 for App Store Connect)
+- [ ] Launch screen configured
+- [ ] App version + build number set in Xcode
+- [ ] Sign with distribution certificate
+
+**Android (Google Play Console):**
+- [ ] `google-services.json` present in `android/app/`
+- [ ] `applicationId` matches Firebase Android app registration
+- [ ] `versionName` + `versionCode` set in `android/app/build.gradle`
+- [ ] Signed with release keystore (not debug key)
+- [ ] ProGuard/R8 rules configured if needed
+- [ ] Camera + storage permissions declared in `AndroidManifest.xml`
+
+**Both platforms:**
+- [ ] Deep links / universal links configured (for share URLs — deferred to post-launch)
+- [ ] Privacy Policy URL ready (required by both stores)
+- [ ] App description, screenshots, and metadata ready in store listings
+
+---
+
+### File Summary
+
+**Modified files:**
+- `src/environments/environment.prod.ts` — real Firebase config, `useEmulators: false`
+- `firestore.rules` — lock conversionMatrix, field validation, size guards
+- `storage.rules` — file size + MIME type limits
+- `src/app/features/auth/login/login.page.ts` — normalized error messages
+- `src/app/features/auth/register/register.page.ts` — normalized error messages, password strength
+- `.gitignore` — add `environment.prod.ts`, `graphify-out/`
+
+**New files:**
+- `src/environments/environment.prod.ts.example` — safe placeholder template
+
+**Deleted:**
+- Duplicate android assets (`* 2.*` files)
+- Debug `console.log` calls across src/
+
+---
+
+### Verification Checklist
+- [ ] `ng build --configuration production` passes — zero errors, no emulator URLs in output
+- [ ] `firestore.rules` deployed — Rules Playground passes all adversarial test cases
+- [ ] `storage.rules` deployed — oversized file upload rejected, wrong MIME type rejected
+- [ ] Login shows "Invalid email or password" for both bad-user and bad-password cases
+- [ ] `conversionMatrix` cannot be written to by any client (only Admin SDK)
+- [ ] No `console.log` debug output in production build
+- [ ] Duplicate android `* 2.*` files removed
+- [ ] `environment.prod.ts` not tracked in git
+- [ ] iOS production build runs on device with real Firebase
+- [ ] Android production build runs on device with real Firebase
