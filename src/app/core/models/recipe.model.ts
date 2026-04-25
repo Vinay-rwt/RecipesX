@@ -20,6 +20,7 @@ export interface RecipeStep {
 export interface Recipe {
   id?: string;
   authorId: string;
+  authorName: string;
   title: string;
   description: string;
   photoURLs: string[];

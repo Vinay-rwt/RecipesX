@@ -11,8 +11,14 @@
     </ion-searchbar>
   </ion-toolbar>
 
-  <!-- Filter chips — horizontal scroll row -->
-  <div class="filter-row" role="group" aria-label="Filter recipes">
+  <!-- Tab toggle -->
+  <ion-segment [value]="activeTab()" (ionChange)="switchTab($any($event).detail.value)" class="feed-segment">
+    <ion-segment-button value="forYou">For You</ion-segment-button>
+    <ion-segment-button value="following">Following</ion-segment-button>
+  </ion-segment>
+
+  <!-- Filter chips — only shown on For You tab -->
+  <div class="filter-row" role="group" aria-label="Filter recipes" *ngIf="activeTab() === 'forYou'">
     <button class="filter-chip" [class.active]="!selectedCuisine && !selectedDifficulty" (click)="clearFilters()">All</button>
     <button class="filter-chip" *ngFor="let c of cuisineTypes"
       [class.active]="selectedCuisine === c"
@@ -29,54 +35,115 @@
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
 
-  <!-- Loading skeleton -->
-  <div *ngIf="feedService.loading() && feedService.recipes().length === 0" class="feed-list">
-    <div *ngFor="let i of [1,2,3]" class="skeleton-row">
-      <ion-skeleton-text animated class="skeleton-thumb"></ion-skeleton-text>
-      <div class="skeleton-body">
-        <ion-skeleton-text animated style="width: 30%; height: 0.7rem;"></ion-skeleton-text>
-        <ion-skeleton-text animated style="width: 85%; height: 1rem; margin-top: 5px;"></ion-skeleton-text>
-        <ion-skeleton-text animated style="width: 60%; height: 1rem; margin-top: 3px;"></ion-skeleton-text>
-        <ion-skeleton-text animated style="width: 50%; height: 0.7rem; margin-top: 8px;"></ion-skeleton-text>
+  <!-- ── FOR YOU TAB ─────────────────────────────────────────────────── -->
+  <ng-container *ngIf="activeTab() === 'forYou'">
+
+    <!-- Loading skeleton -->
+    <div *ngIf="feedService.loading() && feedService.recipes().length === 0" class="feed-list">
+      <div *ngFor="let i of [1,2,3]" class="skeleton-row">
+        <ion-skeleton-text animated class="skeleton-thumb"></ion-skeleton-text>
+        <div class="skeleton-body">
+          <ion-skeleton-text animated style="width: 30%; height: 0.7rem;"></ion-skeleton-text>
+          <ion-skeleton-text animated style="width: 85%; height: 1rem; margin-top: 5px;"></ion-skeleton-text>
+          <ion-skeleton-text animated style="width: 60%; height: 1rem; margin-top: 3px;"></ion-skeleton-text>
+          <ion-skeleton-text animated style="width: 50%; height: 0.7rem; margin-top: 8px;"></ion-skeleton-text>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- Error state -->
-  <div *ngIf="!feedService.loading() && feedService.error()" class="rs-error-state">
-    <ion-icon name="cloud-offline-outline" aria-hidden="true"></ion-icon>
-    <h3>Couldn't load recipes</h3>
-    <p>{{ feedService.error() }}</p>
-    <ion-button fill="outline" (click)="onRefreshManual()" aria-label="Retry loading feed">
-      <ion-icon slot="start" name="refresh-outline" aria-hidden="true"></ion-icon>
-      Try again
-    </ion-button>
-  </div>
+    <!-- Error state -->
+    <div *ngIf="!feedService.loading() && feedService.error()" class="rs-error-state">
+      <ion-icon name="cloud-offline-outline" aria-hidden="true"></ion-icon>
+      <h3>Couldn't load recipes</h3>
+      <p>{{ feedService.error() }}</p>
+      <ion-button fill="outline" (click)="onRefreshManual()" aria-label="Retry loading feed">
+        <ion-icon slot="start" name="refresh-outline" aria-hidden="true"></ion-icon>
+        Try again
+      </ion-button>
+    </div>
 
-  <!-- Empty state -->
-  <div *ngIf="!feedService.loading() && !feedService.error() && feedService.recipes().length === 0" class="rs-empty-state">
-    <ion-icon name="restaurant-outline" aria-hidden="true"></ion-icon>
-    <h3>No recipes here yet</h3>
-    <p>Try adjusting your filters or be the first to share a recipe!</p>
-    <ion-button fill="clear" (click)="clearFilters()">Clear filters</ion-button>
-  </div>
+    <!-- Empty state -->
+    <div *ngIf="!feedService.loading() && !feedService.error() && feedService.recipes().length === 0" class="rs-empty-state">
+      <ion-icon name="restaurant-outline" aria-hidden="true"></ion-icon>
+      <h3>No recipes here yet</h3>
+      <p>Try adjusting your filters or be the first to share a recipe!</p>
+      <ion-button fill="clear" (click)="clearFilters()">Clear filters</ion-button>
+    </div>
 
-  <!-- Recipe feed -->
-  <div class="feed-list" *ngIf="!feedService.error() && feedService.recipes().length > 0">
-    <app-recipe-card
-      *ngFor="let recipe of feedService.recipes()"
-      [recipe]="recipe"
-      [showSocialActions]="true"
-      [featured]="true"
-      [isLiked]="likedRecipes().has(recipe.id!)"
-      [isSaved]="savedRecipes().has(recipe.id!)"
-      (likeToggled)="onToggleLike(recipe.id!)"
-      (saveToggled)="onToggleSave(recipe.id!)"
-      (shareClicked)="onShare(recipe)">
-    </app-recipe-card>
-  </div>
+    <!-- Recipe feed -->
+    <div class="feed-list" *ngIf="!feedService.error() && feedService.recipes().length > 0">
+      <app-recipe-card
+        *ngFor="let recipe of feedService.recipes()"
+        [recipe]="recipe"
+        [showSocialActions]="true"
+        [showAuthor]="true"
+        [featured]="true"
+        [isLiked]="likedRecipes().has(recipe.id!)"
+        [isSaved]="savedRecipes().has(recipe.id!)"
+        (likeToggled)="onToggleLike(recipe.id!)"
+        (saveToggled)="onToggleSave(recipe)"
+        (shareClicked)="onShare(recipe)">
+      </app-recipe-card>
+    </div>
 
-  <ion-infinite-scroll (ionInfinite)="loadMore($event)" [disabled]="!feedService.hasMore()">
-    <ion-infinite-scroll-content loadingText="Loading more recipes…"></ion-infinite-scroll-content>
-  </ion-infinite-scroll>
+    <ion-infinite-scroll (ionInfinite)="loadMore($event)" [disabled]="!feedService.hasMore()">
+      <ion-infinite-scroll-content loadingText="Loading more recipes…"></ion-infinite-scroll-content>
+    </ion-infinite-scroll>
+
+  </ng-container>
+
+  <!-- ── FOLLOWING TAB ───────────────────────────────────────────────── -->
+  <ng-container *ngIf="activeTab() === 'following'">
+
+    <!-- Loading skeleton -->
+    <div *ngIf="followingFeedService.loading() && followingFeedService.recipes().length === 0" class="feed-list">
+      <div *ngFor="let i of [1,2,3]" class="skeleton-row">
+        <ion-skeleton-text animated class="skeleton-thumb"></ion-skeleton-text>
+        <div class="skeleton-body">
+          <ion-skeleton-text animated style="width: 30%; height: 0.7rem;"></ion-skeleton-text>
+          <ion-skeleton-text animated style="width: 85%; height: 1rem; margin-top: 5px;"></ion-skeleton-text>
+          <ion-skeleton-text animated style="width: 60%; height: 1rem; margin-top: 3px;"></ion-skeleton-text>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error state -->
+    <div *ngIf="!followingFeedService.loading() && followingFeedService.error()" class="rs-error-state">
+      <ion-icon name="cloud-offline-outline" aria-hidden="true"></ion-icon>
+      <h3>Couldn't load recipes</h3>
+      <p>{{ followingFeedService.error() }}</p>
+      <ion-button fill="outline" (click)="onRefreshManual()" aria-label="Retry">
+        <ion-icon slot="start" name="refresh-outline" aria-hidden="true"></ion-icon>
+        Try again
+      </ion-button>
+    </div>
+
+    <!-- Empty state — no one followed yet -->
+    <div *ngIf="!followingFeedService.loading() && !followingFeedService.error() && followingFeedService.recipes().length === 0" class="rs-empty-state">
+      <ion-icon name="people-outline" aria-hidden="true"></ion-icon>
+      <h3>No recipes yet</h3>
+      <p>Follow some cooks to see their recipes here.</p>
+    </div>
+
+    <!-- Following feed -->
+    <div class="feed-list" *ngIf="!followingFeedService.error() && followingFeedService.recipes().length > 0">
+      <app-recipe-card
+        *ngFor="let recipe of followingFeedService.recipes()"
+        [recipe]="recipe"
+        [showSocialActions]="true"
+        [showAuthor]="true"
+        [featured]="true"
+        [isLiked]="likedRecipes().has(recipe.id!)"
+        [isSaved]="savedRecipes().has(recipe.id!)"
+        (likeToggled)="onToggleLike(recipe.id!)"
+        (saveToggled)="onToggleSave(recipe)"
+        (shareClicked)="onShare(recipe)">
+      </app-recipe-card>
+    </div>
+
+    <ion-infinite-scroll (ionInfinite)="loadMore($event)" [disabled]="!followingFeedService.hasMore()">
+      <ion-infinite-scroll-content loadingText="Loading more recipes…"></ion-infinite-scroll-content>
+    </ion-infinite-scroll>
+
+  </ng-container>
 </ion-content>

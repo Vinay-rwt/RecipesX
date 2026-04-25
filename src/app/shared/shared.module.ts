@@ -8,6 +8,7 @@ import { RecipeCardComponent } from './components/recipe-card/recipe-card.compon
 import { MyRecipesComponent } from './components/my-recipes/my-recipes.component';
 import { TemperaturePipe } from './pipes/temperature.pipe';
 import { MeasurementPipe } from './pipes/measurement.pipe';
+import { UrlDisplayPipe } from './pipes/url-display.pipe';
 import { NutritionPanelComponent } from './components/nutrition-panel/nutrition-panel.component';
 
 @NgModule({
@@ -19,6 +20,7 @@ import { NutritionPanelComponent } from './components/nutrition-panel/nutrition-
     MyRecipesComponent,
     TemperaturePipe,
     MeasurementPipe,
+    UrlDisplayPipe,
     NutritionPanelComponent,
   ],
   exports: [
@@ -28,6 +30,7 @@ import { NutritionPanelComponent } from './components/nutrition-panel/nutrition-
     MyRecipesComponent,
     TemperaturePipe,
     MeasurementPipe,
+    UrlDisplayPipe,
     NutritionPanelComponent,
   ],
 })

@@ -1,6 +1,11 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
     <ion-title>Profile</ion-title>
+    <ion-buttons slot="end">
+      <ion-button routerLink="/tabs/profile/edit" aria-label="Edit profile">
+        <ion-icon slot="icon-only" name="create-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
@@ -13,46 +18,101 @@
 
   <!-- Loading skeleton -->
   <div *ngIf="profileService.loading()">
-    <ion-card>
-      <ion-card-header>
-        <ion-item lines="none">
-          <ion-skeleton-text animated style="width: 48px; height: 48px; border-radius: 50%;" slot="start"></ion-skeleton-text>
-          <ion-label>
-            <ion-skeleton-text animated style="width: 50%; height: 1rem;"></ion-skeleton-text>
-            <ion-skeleton-text animated style="width: 70%; height: 0.8rem; margin-top: 6px;"></ion-skeleton-text>
-          </ion-label>
-        </ion-item>
-      </ion-card-header>
-    </ion-card>
-    <ion-skeleton-text animated style="width: 40%; height: 1.2rem; margin: 1rem 0 0.5rem;"></ion-skeleton-text>
-    <ion-skeleton-text animated style="width: 100%; height: 80px; border-radius: 8px;"></ion-skeleton-text>
+    <div class="profile-hero-skeleton">
+      <ion-skeleton-text animated style="width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 12px;"></ion-skeleton-text>
+      <ion-skeleton-text animated style="width: 40%; height: 1.2rem; margin: 0 auto 8px;"></ion-skeleton-text>
+      <ion-skeleton-text animated style="width: 60%; height: 0.85rem; margin: 0 auto;"></ion-skeleton-text>
+    </div>
   </div>
 
   <!-- Error state -->
   <div *ngIf="!profileService.loading() && profileService.error()" class="error-state ion-text-center ion-padding">
     <ion-icon name="cloud-offline-outline" color="medium" style="font-size: 3rem;"></ion-icon>
-    <p color="medium">{{ profileService.error() }}</p>
-    <ion-button fill="outline" (click)="loadData()" aria-label="Retry loading profile">
-      <ion-icon slot="start" name="refresh-outline" aria-hidden="true"></ion-icon>
-      Retry
-    </ion-button>
+    <p>{{ profileService.error() }}</p>
+    <ion-button fill="outline" (click)="loadData()">Retry</ion-button>
   </div>
 
   <div class="profile-content" *ngIf="!profileService.loading() && !profileService.error() && profileService.userProfile() as profile">
-    <!-- User Info -->
-    <ion-card>
-      <ion-card-header>
-        <ion-item lines="none">
-          <ion-avatar slot="start">
-            <ion-icon name="person-circle-outline" style="font-size: 3rem;"></ion-icon>
-          </ion-avatar>
-          <ion-label>
-            <h2>{{ profile.displayName }}</h2>
-            <p>{{ profile.email }}</p>
-          </ion-label>
-        </ion-item>
-      </ion-card-header>
-    </ion-card>
+
+    <!-- Profile hero -->
+    <div class="profile-hero">
+      <div class="avatar-wrap">
+        <img *ngIf="profile.photoURL" [src]="profile.photoURL" [alt]="profile.displayName" class="profile-avatar" />
+        <div *ngIf="!profile.photoURL" class="profile-avatar avatar-placeholder" aria-hidden="true">
+          {{ (profile.displayName || '?')[0].toUpperCase() }}
+        </div>
+      </div>
+
+      <h2 class="profile-name">{{ profile.displayName }}</h2>
+
+      <div class="profile-level" *ngIf="profile.cookingLevel">
+        {{ cookingLevelLabel(profile.cookingLevel) }}
+      </div>
+
+      <p class="profile-bio" *ngIf="profile.bio">{{ profile.bio }}</p>
+
+      <div class="profile-meta">
+        <span *ngIf="profile.location" class="meta-item">
+          <ion-icon name="location-outline" aria-hidden="true"></ion-icon>
+          {{ profile.location }}
+        </span>
+        <a *ngIf="profile.websiteUrl" [href]="profile.websiteUrl" target="_blank" rel="noopener noreferrer" class="meta-item meta-link">
+          <ion-icon name="link-outline" aria-hidden="true"></ion-icon>
+          {{ profile.websiteUrl | urlDisplay }}
+        </a>
+      </div>
+
+      <!-- Stats row -->
+      <div class="stats-row">
+        <button class="stat" [routerLink]="['/tabs/profile/follow-list', profile.uid, 'following']" aria-label="View following list">
+          <span class="stat-value">{{ profile.followingCount ?? 0 }}</span>
+          <span class="stat-label">Following</span>
+        </button>
+        <button class="stat" [routerLink]="['/tabs/profile/follow-list', profile.uid, 'followers']" aria-label="View followers list">
+          <span class="stat-value">{{ profile.followersCount ?? 0 }}</span>
+          <span class="stat-label">Followers</span>
+        </button>
+        <button class="stat" type="button" style="cursor: default;" aria-label="Recipe count">
+          <span class="stat-value">{{ recipeService.myRecipes().length }}</span>
+          <span class="stat-label">Recipes</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- My Collections -->
+    <h3 class="section-title">My Collections</h3>
+    <ion-item button detail routerLink="/tabs/profile/collections" lines="full" class="collections-entry">
+      <ion-icon slot="start" name="albums-outline" color="primary" aria-hidden="true"></ion-icon>
+      <ion-label>Recipe Books</ion-label>
+    </ion-item>
+
+    <!-- Saved Recipes -->
+    <h3 class="section-title">Saved Recipes</h3>
+
+    <div *ngIf="savedLoading()" class="saved-skeleton">
+      <ion-skeleton-text animated style="width: 100%; height: 72px; border-radius: 12px; margin-bottom: 8px;"></ion-skeleton-text>
+      <ion-skeleton-text animated style="width: 100%; height: 72px; border-radius: 12px; margin-bottom: 8px;"></ion-skeleton-text>
+    </div>
+
+    <p *ngIf="!savedLoading() && savedRecipes().length === 0" class="empty-section-hint">
+      Recipes you save from the feed will appear here.
+    </p>
+
+    <div *ngIf="!savedLoading() && savedRecipes().length > 0" class="saved-list">
+      <ion-item
+        *ngFor="let recipe of savedRecipes()"
+        [routerLink]="['/recipe', recipe.id]"
+        button detail lines="full" class="saved-item">
+        <div slot="start" class="saved-thumb">
+          <img *ngIf="recipe.photoURLs?.length" [src]="recipe.photoURLs[0]" [alt]="recipe.title">
+          <div *ngIf="!recipe.photoURLs?.length" class="saved-thumb-emoji">{{ recipe.coverEmoji || '🍽️' }}</div>
+        </div>
+        <ion-label>
+          <h3>{{ recipe.title }}</h3>
+          <p>{{ recipe.cuisineType }} · {{ recipe.cookTime }}m</p>
+        </ion-label>
+      </ion-item>
+    </div>
 
     <!-- My Recipes -->
     <h3 class="section-title">My Recipes</h3>
@@ -73,36 +133,25 @@
     <ion-list>
       <ion-item>
         <ion-label position="stacked">Measurement System</ion-label>
-        <ion-segment
-          [value]="profile.measurementSystem"
-          (ionChange)="onMeasurementChange($event)">
-          <ion-segment-button value="metric">
-            <ion-label>Metric</ion-label>
-          </ion-segment-button>
-          <ion-segment-button value="imperial">
-            <ion-label>Imperial</ion-label>
-          </ion-segment-button>
+        <ion-segment [value]="profile.measurementSystem" (ionChange)="onMeasurementChange($event)">
+          <ion-segment-button value="metric"><ion-label>Metric</ion-label></ion-segment-button>
+          <ion-segment-button value="imperial"><ion-label>Imperial</ion-label></ion-segment-button>
         </ion-segment>
       </ion-item>
       <ion-item>
         <ion-label position="stacked">Temperature</ion-label>
-        <ion-segment
-          [value]="profile.temperatureUnit"
-          (ionChange)="onTemperatureChange($event)">
-          <ion-segment-button value="celsius">
-            <ion-label>Celsius</ion-label>
-          </ion-segment-button>
-          <ion-segment-button value="fahrenheit">
-            <ion-label>Fahrenheit</ion-label>
-          </ion-segment-button>
+        <ion-segment [value]="profile.temperatureUnit" (ionChange)="onTemperatureChange($event)">
+          <ion-segment-button value="celsius"><ion-label>Celsius</ion-label></ion-segment-button>
+          <ion-segment-button value="fahrenheit"><ion-label>Fahrenheit</ion-label></ion-segment-button>
         </ion-segment>
       </ion-item>
     </ion-list>
-  </div>
 
-  <!-- Logout -->
-  <ion-button expand="block" color="danger" fill="outline" (click)="onLogout()" class="ion-margin-top">
-    <ion-icon slot="start" name="log-out-outline"></ion-icon>
-    Sign Out
-  </ion-button>
+    <!-- Sign Out -->
+    <ion-button expand="block" color="danger" fill="outline" (click)="onLogout()" class="ion-margin-top signout-btn">
+      <ion-icon slot="start" name="log-out-outline"></ion-icon>
+      Sign Out
+    </ion-button>
+
+  </div>
 </ion-content>

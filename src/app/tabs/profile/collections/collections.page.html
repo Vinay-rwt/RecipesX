@@ -1,0 +1,77 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/profile"></ion-back-button>
+    </ion-buttons>
+    <ion-title>My Collections</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="onCreateCollection()" aria-label="New collection">
+        <ion-icon slot="icon-only" name="add-outline" aria-hidden="true"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+
+  <!-- Loading -->
+  <div *ngIf="collectionService.loading()" class="ion-padding">
+    <ion-card *ngFor="let s of [1,2,3]">
+      <ion-card-content>
+        <ion-skeleton-text animated style="width: 40%; height: 1.2rem; margin-bottom: 8px;"></ion-skeleton-text>
+        <ion-skeleton-text animated style="width: 25%; height: 0.9rem;"></ion-skeleton-text>
+      </ion-card-content>
+    </ion-card>
+  </div>
+
+  <!-- Empty state -->
+  <div
+    *ngIf="!collectionService.loading() && collectionService.collections().length === 0"
+    class="empty-state ion-text-center ion-padding">
+    <div class="empty-icon">📚</div>
+    <h3>No collections yet</h3>
+    <p>Organise your saved recipes into collections like "Weeknight Dinners" or "Summer BBQ".</p>
+    <ion-button (click)="onCreateCollection()">
+      <ion-icon slot="start" name="add-outline" aria-hidden="true"></ion-icon>
+      Create First Collection
+    </ion-button>
+  </div>
+
+  <!-- Collection list -->
+  <div *ngIf="!collectionService.loading() && collectionService.collections().length > 0" class="collections-list ion-padding">
+    <ion-card
+      *ngFor="let col of collectionService.collections()"
+      class="collection-card"
+      (click)="openCollection(col)"
+      button>
+
+      <!-- Cover photo or emoji placeholder -->
+      <div class="collection-cover">
+        <img
+          *ngIf="col.coverPhotoURL"
+          [src]="col.coverPhotoURL"
+          [alt]="col.name"
+          class="cover-img">
+        <div *ngIf="!col.coverPhotoURL" class="cover-emoji">{{ col.emoji }}</div>
+      </div>
+
+      <ion-card-content class="collection-info">
+        <div class="collection-meta">
+          <div>
+            <h3 class="collection-name">{{ col.name }}</h3>
+            <p class="collection-count">{{ col.recipeCount }} {{ col.recipeCount === 1 ? 'recipe' : 'recipes' }}</p>
+          </div>
+          <ion-button
+            fill="clear"
+            color="medium"
+            size="small"
+            (click)="onDeleteCollection(col, $event)"
+            aria-label="Delete {{ col.name }}">
+            <ion-icon slot="icon-only" name="trash-outline" aria-hidden="true"></ion-icon>
+          </ion-button>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </div>
+
+</ion-content>

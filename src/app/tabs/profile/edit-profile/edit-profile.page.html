@@ -1,0 +1,109 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button (click)="onCancel()" aria-label="Cancel">Cancel</ion-button>
+    </ion-buttons>
+    <ion-title>Edit Profile</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="onSave()" [disabled]="form.invalid || saving" strong aria-label="Save profile">
+        <ion-spinner *ngIf="saving" name="crescent" aria-hidden="true"></ion-spinner>
+        <span *ngIf="!saving">Save</span>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+
+  <!-- Avatar picker -->
+  <div class="avatar-section">
+    <button type="button" class="avatar-tap" (click)="onAvatarTap()" [disabled]="uploadingAvatar()" aria-label="Change profile photo">
+      <img *ngIf="displayPhotoURL" [src]="displayPhotoURL" alt="Profile photo" class="edit-avatar" />
+      <div *ngIf="!displayPhotoURL" class="edit-avatar avatar-initials" aria-hidden="true">
+        {{ displayName[0].toUpperCase() }}
+      </div>
+      <div class="avatar-overlay">
+        <ion-spinner *ngIf="uploadingAvatar()" name="crescent" color="light"></ion-spinner>
+        <ion-icon *ngIf="!uploadingAvatar()" name="camera-outline" color="light"></ion-icon>
+      </div>
+    </button>
+    <p class="avatar-hint">Tap to change photo</p>
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="onSave()">
+
+    <!-- Display Name -->
+    <div class="field-group">
+      <label class="field-label">Display Name <span class="required">*</span></label>
+      <ion-input
+        formControlName="displayName"
+        placeholder="Your name"
+        class="rs-input"
+        aria-label="Display name">
+      </ion-input>
+      <p class="field-error" *ngIf="form.get('displayName')?.invalid && form.get('displayName')?.touched">
+        Name is required (max 50 characters).
+      </p>
+    </div>
+
+    <!-- Bio -->
+    <div class="field-group">
+      <label class="field-label">Bio</label>
+      <ion-textarea
+        formControlName="bio"
+        placeholder="A short intro about yourself and your cooking..."
+        class="rs-input"
+        [rows]="3"
+        aria-label="Bio">
+      </ion-textarea>
+      <p class="char-count">{{ bioLength }} / 160</p>
+      <p class="field-error" *ngIf="form.get('bio')?.hasError('maxlength')">
+        Bio must be 160 characters or less.
+      </p>
+    </div>
+
+    <!-- Location -->
+    <div class="field-group">
+      <label class="field-label">Location</label>
+      <ion-input
+        formControlName="location"
+        placeholder="e.g. Mumbai, India"
+        class="rs-input"
+        aria-label="Location">
+      </ion-input>
+    </div>
+
+    <!-- Cooking Level -->
+    <div class="field-group">
+      <label class="field-label">Cooking Level</label>
+      <div class="level-grid">
+        <button
+          type="button"
+          *ngFor="let level of cookingLevels"
+          class="level-btn"
+          [class.selected]="form.get('cookingLevel')?.value === level.value"
+          (click)="form.get('cookingLevel')?.setValue(level.value)"
+          [attr.aria-pressed]="form.get('cookingLevel')?.value === level.value">
+          {{ level.label }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Website -->
+    <div class="field-group">
+      <label class="field-label">Website / Instagram</label>
+      <ion-input
+        formControlName="websiteUrl"
+        placeholder="https://..."
+        type="url"
+        class="rs-input"
+        aria-label="Website or Instagram URL">
+      </ion-input>
+      <p class="field-error" *ngIf="form.get('websiteUrl')?.hasError('pattern')">
+        Please enter a valid URL starting with http:// or https://
+      </p>
+    </div>
+
+  </form>
+
+</ion-content>
