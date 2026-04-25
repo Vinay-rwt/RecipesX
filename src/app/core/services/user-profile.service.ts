@@ -5,7 +5,16 @@ import {
   getDoc,
   updateDoc,
 } from '@angular/fire/firestore';
-import { UserProfile } from '../models/user.model';
+import { CookingLevel, UserProfile } from '../models/user.model';
+
+export interface ProfileUpdate {
+  displayName?: string;
+  photoURL?: string | null;
+  bio?: string | null;
+  location?: string | null;
+  cookingLevel?: CookingLevel | null;
+  websiteUrl?: string | null;
+}
 
 @Injectable({ providedIn: 'root' })
 export class UserProfileService {
@@ -73,6 +82,13 @@ export class UserProfileService {
     };
     await updateDoc(userRef, updates);
     this._userProfile.update(p => p ? { ...p, ...updates } : null);
+  }
+
+  async updateProfile(uid: string, fields: ProfileUpdate): Promise<void> {
+    const userRef = doc(this.firestore, `users/${uid}`);
+    const updatedAt = new Date();
+    await updateDoc(userRef, { ...fields, updatedAt });
+    this._userProfile.update(p => p ? { ...p, ...fields, updatedAt } : null);
   }
 
   clear(): void {

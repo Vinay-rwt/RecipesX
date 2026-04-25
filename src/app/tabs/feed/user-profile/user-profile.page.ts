@@ -7,7 +7,7 @@ import {
 import { ToastController, ViewWillEnter } from '@ionic/angular';
 import { FollowService } from '../../../core/services/follow.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { UserProfile } from '../../../core/models/user.model';
+import { CookingLevel, UserProfile } from '../../../core/models/user.model';
 import { Recipe } from '../../../core/models/recipe.model';
 
 @Component({
@@ -84,6 +84,16 @@ export class UserProfilePage implements ViewWillEnter {
       createdAt: d.data()['createdAt']?.toDate?.() ?? new Date(),
       updatedAt: d.data()['updatedAt']?.toDate?.() ?? new Date(),
     } as Recipe)));
+  }
+
+  cookingLevelLabel(level: CookingLevel | null | undefined): string {
+    const map: Record<CookingLevel, string> = {
+      beginner: 'Beginner',
+      home_cook: 'Home Cook',
+      advanced: 'Advanced',
+      professional: 'Professional',
+    };
+    return level ? map[level] : '';
   }
 
   private async _showToast(message: string): Promise<void> {

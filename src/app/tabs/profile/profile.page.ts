@@ -8,6 +8,7 @@ import { RecipeService } from '../../core/services/recipe.service';
 import { SocialService } from '../../core/services/social.service';
 import { CollectionService } from '../../core/services/collection.service';
 import { Recipe } from '../../core/models/recipe.model';
+import { CookingLevel } from '../../core/models/user.model';
 
 @Component({
   selector: 'app-profile',
@@ -85,6 +86,16 @@ export class ProfilePage implements ViewWillEnter {
     if (user && profile) {
       await this.profileService.updatePreferences(user.uid, profile.measurementSystem, event.detail.value);
     }
+  }
+
+  cookingLevelLabel(level: CookingLevel | null): string {
+    const map: Record<CookingLevel, string> = {
+      beginner: 'Beginner',
+      home_cook: 'Home Cook',
+      advanced: 'Advanced',
+      professional: 'Professional',
+    };
+    return level ? map[level] : '';
   }
 
   async onLogout(): Promise<void> {
