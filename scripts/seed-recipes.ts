@@ -5,10 +5,28 @@
  *   npm run seed:recipes
  *
  * Connects to the Firestore emulator at localhost:8080.
+ *
+ * !!! DO NOT RUN AGAINST PRODUCTION !!!
+ * This script targets the demo-recipeshare project on the local emulator only.
+ * The env-guard below aborts if it detects a production environment.
  */
 
 import { initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
+
+// Refuse to run if the caller has overridden the env to point at prod or has
+// service-account credentials configured (which would route writes to prod).
+if (process.env['GOOGLE_APPLICATION_CREDENTIALS']) {
+  throw new Error(
+    'Refusing to seed: GOOGLE_APPLICATION_CREDENTIALS is set, which would route writes to a real Firebase project. ' +
+    'Unset it and run only against the local emulator.'
+  );
+}
+if (process.env['FIRESTORE_EMULATOR_HOST'] && process.env['FIRESTORE_EMULATOR_HOST'] !== 'localhost:8080') {
+  throw new Error(
+    `Refusing to seed: FIRESTORE_EMULATOR_HOST is "${process.env['FIRESTORE_EMULATOR_HOST']}", expected "localhost:8080".`
+  );
+}
 
 // Point Admin SDK at the local emulator — no service account needed
 process.env['FIRESTORE_EMULATOR_HOST'] = 'localhost:8080';

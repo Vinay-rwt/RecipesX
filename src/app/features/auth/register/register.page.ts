@@ -15,9 +15,10 @@ export class RegisterPage {
   private router = inject(Router);
 
   registerForm = this.fb.nonNullable.group({
-    displayName: ['', [Validators.required, Validators.minLength(2)]],
+    // Validators.pattern(/\S/) rejects whitespace-only input that Validators.required permits.
+    displayName: ['', [Validators.required, Validators.minLength(2), Validators.pattern(/\S/)]],
     email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required, Validators.minLength(6)]],
+    password: ['', [Validators.required, Validators.minLength(8)]],
     confirmPassword: ['', [Validators.required]],
   }, { validators: [RegisterPage.passwordsMatch] });
 
@@ -39,7 +40,7 @@ export class RegisterPage {
     const { displayName, email, password } = this.registerForm.getRawValue();
 
     try {
-      await this.authService.register(email, password, displayName);
+      await this.authService.register(email, password.trim() ? password : '', displayName.trim());
       this.router.navigate(['/onboarding/equipment']);
     } catch (err: unknown) {
       this.errorMessage = this.mapFirebaseError(err);
@@ -54,7 +55,7 @@ export class RegisterPage {
       case 'auth/email-already-in-use':
         return 'An account with this email already exists.';
       case 'auth/weak-password':
-        return 'Password should be at least 6 characters.';
+        return 'Password should be at least 8 characters.';
       case 'auth/invalid-email':
         return 'Invalid email format.';
       default:

@@ -95,4 +95,8 @@ export class UserProfileService {
     this._userProfile.set(null);
     this._error.set(null);
   }
+
+  clearOnLogout(): void {
+    this.clear();
+  }
 }

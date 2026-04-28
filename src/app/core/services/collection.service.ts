@@ -8,11 +8,14 @@ import {
   deleteDoc,
   arrayUnion,
   arrayRemove,
+  increment,
   query,
   orderBy,
   getDocs,
+  serverTimestamp,
 } from '@angular/fire/firestore';
 import { Collection } from '../models/collection.model';
+import { mapCollectionDoc } from '../utils/firestore-mapper';
 
 @Injectable({ providedIn: 'root' })
 export class CollectionService {
@@ -33,19 +36,8 @@ export class CollectionService {
       const ref = collection(this.firestore, `users/${userId}/collections`);
       const q = query(ref, orderBy('updatedAt', 'desc'));
       const snap = await getDocs(q);
-      const cols: Collection[] = snap.docs.map(d => {
-        const data = d.data() as Omit<Collection, 'id'>;
-        const recipeIds: string[] = (data as any).recipeIds ?? [];
-        return {
-          id: d.id,
-          ...data,
-          recipeIds,
-          // Always derive count from the array — never trust the stored field
-          recipeCount: recipeIds.length,
-        };
-      });
-      this._collections.set(cols);
-    } catch (e: any) {
+      this._collections.set(snap.docs.map(mapCollectionDoc));
+    } catch {
       this._error.set('Failed to load collections');
     } finally {
       this._loading.set(false);
@@ -99,8 +91,8 @@ export class CollectionService {
     const newIds = [...existing.recipeIds, recipeId];
     const updates: Record<string, unknown> = {
       recipeIds: arrayUnion(recipeId),
-      recipeCount: newIds.length,           // ← written explicitly to Firestore
-      updatedAt: new Date(),
+      recipeCount: increment(1),
+      updatedAt: serverTimestamp(),
     };
     if (existing.recipeCount === 0 && coverPhotoURL) {
       updates['coverPhotoURL'] = coverPhotoURL;
@@ -129,12 +121,16 @@ export class CollectionService {
     recipeId: string,
   ): Promise<void> {
     const existing = this._collections().find(c => c.id === collectionId);
-    const newIds = (existing?.recipeIds ?? []).filter(id => id !== recipeId);
+    if (!existing) return;
+    // Guard: not in collection — avoid spurious decrement
+    if (!existing.recipeIds.includes(recipeId)) return;
+
+    const newIds = existing.recipeIds.filter(id => id !== recipeId);
 
     await updateDoc(doc(this.firestore, `users/${userId}/collections/${collectionId}`), {
       recipeIds: arrayRemove(recipeId),
-      recipeCount: newIds.length,           // ← written explicitly to Firestore
-      updatedAt: new Date(),
+      recipeCount: increment(-1),
+      updatedAt: serverTimestamp(),
     });
 
     this._collections.update(cols =>
@@ -158,5 +154,9 @@ export class CollectionService {
   clear(): void {
     this._collections.set([]);
     this._error.set(null);
+  }
+
+  clearOnLogout(): void {
+    this.clear();
   }
 }

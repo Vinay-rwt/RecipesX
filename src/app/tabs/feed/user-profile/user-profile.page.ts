@@ -31,9 +31,14 @@ export class UserProfilePage implements ViewWillEnter {
   isFollowing = signal(false);
   loading = signal(true);
   isOwnProfile = signal(false);
+  pending = signal(false);
 
   async ionViewWillEnter(): Promise<void> {
-    const uid = this.route.snapshot.paramMap.get('uid')!;
+    const uid = this.route.snapshot.paramMap.get('uid');
+    if (!uid) {
+      this.loading.set(false);
+      return;
+    }
     this.targetUid.set(uid);
     const currentUid = this.auth.currentUser?.uid;
     this.isOwnProfile.set(uid === currentUid);
@@ -50,7 +55,8 @@ export class UserProfilePage implements ViewWillEnter {
 
   async onToggleFollow(): Promise<void> {
     const currentUid = this.auth.currentUser?.uid;
-    if (!currentUid) return;
+    if (!currentUid || this.pending()) return;
+    this.pending.set(true);
     const wasFollowing = this.isFollowing();
     const delta = wasFollowing ? -1 : 1;
     this.isFollowing.set(!wasFollowing);
@@ -63,6 +69,8 @@ export class UserProfilePage implements ViewWillEnter {
       this.isFollowing.set(wasFollowing);
       this.profile.update(p => p ? { ...p, followersCount: (p.followersCount ?? 0) - delta } : p);
       await this._showToast('Something went wrong. Please try again.');
+    } finally {
+      this.pending.set(false);
     }
   }
 

@@ -36,7 +36,8 @@ export class EditProfilePage implements OnInit {
     const p = this.profileService.userProfile();
     this.pendingPhotoURL.set(p?.photoURL ?? null);
     this.form = this.fb.group({
-      displayName: [p?.displayName ?? '', [Validators.required, Validators.maxLength(50)]],
+      // Validators.pattern(/\S/) rejects whitespace-only input that Validators.required permits.
+      displayName: [p?.displayName ?? '', [Validators.required, Validators.maxLength(50), Validators.pattern(/\S/)]],
       bio: [p?.bio ?? '', Validators.maxLength(160)],
       location: [p?.location ?? '', Validators.maxLength(60)],
       cookingLevel: [p?.cookingLevel ?? null],
@@ -78,10 +79,21 @@ export class EditProfilePage implements OnInit {
     const uid = this.auth.currentUser?.uid;
     if (!uid) return;
 
+    // Re-validate after trim — a value like "   " passes Validators.required but
+    // is empty after trim. Pattern(/\S/) above prevents it, but this also normalizes
+    // the persisted value.
+    const trimmedName = this.form.value.displayName.trim();
+    if (!trimmedName) {
+      const ctrl = this.form.get('displayName');
+      ctrl?.setValue(trimmedName);
+      ctrl?.updateValueAndValidity();
+      return;
+    }
+
     this.saving = true;
     try {
       await this.profileService.updateProfile(uid, {
-        displayName: this.form.value.displayName.trim(),
+        displayName: trimmedName,
         photoURL: this.pendingPhotoURL(),
         bio: this.form.value.bio?.trim() || null,
         location: this.form.value.location?.trim() || null,
@@ -89,6 +101,8 @@ export class EditProfilePage implements OnInit {
         websiteUrl: this.form.value.websiteUrl?.trim() || null,
       });
       this.navCtrl.back();
+    } catch {
+      await this._showToast('Failed to save profile. Please try again.');
     } finally {
       this.saving = false;
     }

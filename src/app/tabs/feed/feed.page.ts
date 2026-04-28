@@ -233,15 +233,20 @@ export class FeedPage implements ViewWillEnter {
   }
 
   onSearch(): void {
+    // Search and filter controls only apply to the For You feed.
+    // The Following feed is the followed-users-only stream and ignores text/cuisine/difficulty filters.
+    if (this.activeTab() !== 'forYou') return;
     this.feedService.setFilters({ ...this.feedService.filters(), searchQuery: this.searchQuery || undefined });
   }
 
   onCuisineChange(value: string): void {
+    if (this.activeTab() !== 'forYou') return;
     this.selectedCuisine = value;
     this.feedService.setFilters({ ...this.feedService.filters(), cuisineType: value || undefined });
   }
 
   onDifficultyChange(value: string): void {
+    if (this.activeTab() !== 'forYou') return;
     this.selectedDifficulty = value;
     this.feedService.setFilters({ ...this.feedService.filters(), difficulty: (value as any) || undefined });
   }
