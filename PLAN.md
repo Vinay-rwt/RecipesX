@@ -861,3 +861,275 @@ For each major page, add three states: loading skeleton, error, and empty.
 - [ ] Skeleton screen shows during profile/feed load (runtime)
 - [ ] Error state + retry button shows on network failure (runtime)
 - [ ] VoiceOver/TalkBack reads meaningful labels for like/save/share/filter buttons (runtime)
+
+---
+
+## Phase 16: Animations & Motion — NOT STARTED
+
+**Branch:** `feature/phase16-animations` (create from develop)
+
+### Goals
+Add purposeful motion that makes the app feel alive without being distracting. The brand is warm and scrollable — animations should reinforce spatial context (where things come from/go to), reward interactions (like, save), and smooth out navigation transitions. All animations must respect `prefers-reduced-motion`.
+
+**Stack note:** Angular 20's `@angular/animations` package is already available via `BrowserModule`. Ionic also exposes its own CSS animation utilities. We will use Angular animations for component-level motion and CSS transitions for micro-interactions.
+
+---
+
+### Step 1: Page Transition Animations
+
+Give navigation a spatial feel — pages slide in from the right on forward navigation and slide back out on back navigation, matching the mental model of a stack.
+
+**What to do:**
+
+**Modify** `src/app/app-routing.module.ts` (or create a shared `route-animations.ts`):
+- Define a `routeAnimations` trigger using Angular's `@angular/animations`:
+  ```typescript
+  export const routeAnimations = trigger('routeAnimations', [
+    transition('* => forward', [
+      query(':enter', [style({ transform: 'translateX(100%)', opacity: 0 }), animate('280ms ease-out', style({ transform: 'translateX(0)', opacity: 1 }))], { optional: true }),
+      query(':leave', [animate('280ms ease-out', style({ transform: 'translateX(-30%)', opacity: 0 }))], { optional: true }),
+    ]),
+    transition('* => back', [
+      query(':enter', [style({ transform: 'translateX(-30%)', opacity: 0 }), animate('280ms ease-out', style({ transform: 'translateX(0)', opacity: 1 }))], { optional: true }),
+      query(':leave', [animate('280ms ease-out', style({ transform: 'translateX(100%)', opacity: 0 }))], { optional: true }),
+    ]),
+  ]);
+  ```
+- Attach `[@routeAnimations]="getRouteAnimationData(outlet)"` to the `<ion-router-outlet>` in `app.component.html`
+- `getRouteAnimationData()` reads `outlet.activatedRouteData['animation']` (set per-route in the route config)
+
+**Modify** `src/app/app-routing.module.ts`:
+- Add `data: { animation: 'forward' }` to forward-going routes (feed → recipe detail, profile → edit)
+- Tab switches should NOT use slide transitions — they stay in place
+
+**Respect reduced motion:**
+```scss
+@media (prefers-reduced-motion: reduce) {
+  [routerAnimation] { animation: none !important; }
+}
+```
+
+---
+
+### Step 2: Like Button Heart Animation
+
+The like button should give a satisfying pop when tapped — scale up briefly then settle, with a color burst.
+
+**What to do:**
+
+**Modify** `src/app/shared/components/recipe-card/recipe-card.component.html` and `.scss`:
+- Add a CSS class `liked` toggled by the `[class.liked]="isLiked"` binding already present
+- Animate with a keyframe:
+  ```scss
+  .like-btn.liked ion-icon {
+    animation: heartPop 0.35s ease-out forwards;
+  }
+  @keyframes heartPop {
+    0%   { transform: scale(1); }
+    40%  { transform: scale(1.4); }
+    70%  { transform: scale(0.9); }
+    100% { transform: scale(1); }
+  }
+  ```
+- Add a short `transition: color 150ms ease` so the color change (outlined → filled red) doesn't snap
+
+**Modify** `src/app/features/recipe/detail/recipe-detail.page.html` and `.scss`:
+- Apply the same `heartPop` animation on the detail page's like button
+
+**Reduced motion fallback:** skip the keyframe animation, keep just the color transition.
+
+---
+
+### Step 3: Save Bookmark Animation
+
+Mirror the like animation for the bookmark/save button — a brief vertical bounce on tap.
+
+**What to do:**
+
+**Modify** recipe card and detail page bookmark button:
+```scss
+.save-btn.saved ion-icon {
+  animation: bookmarkBounce 0.3s ease-out forwards;
+}
+@keyframes bookmarkBounce {
+  0%   { transform: translateY(0) scale(1); }
+  35%  { transform: translateY(-4px) scale(1.15); }
+  70%  { transform: translateY(2px) scale(0.95); }
+  100% { transform: translateY(0) scale(1); }
+}
+```
+- Add `transition: color 150ms ease` for the color change
+
+---
+
+### Step 4: Feed Card Entrance Animation (Staggered)
+
+Cards should appear as if sliding up from just below their natural position when the feed first loads, staggered slightly per card.
+
+**What to do:**
+
+**Modify** `src/app/shared/components/recipe-card/recipe-card.component.ts`:
+- Add a `@HostBinding('@cardEntrance')` that fires when the component is created:
+  ```typescript
+  @HostBinding('@cardEntrance') readonly cardEntrance = true;
+  ```
+
+**Create** animation in `recipe-card.component.ts`:
+```typescript
+animations: [
+  trigger('cardEntrance', [
+    transition(':enter', [
+      style({ opacity: 0, transform: 'translateY(24px)' }),
+      animate('320ms cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+        style({ opacity: 1, transform: 'translateY(0)' })),
+    ]),
+  ]),
+]
+```
+
+**Stagger in `feed.page.html`** — wrap the `*ngFor` with an `[@.disabled]="isLoading()"` + use `query` + `stagger` in a parent trigger on the list container:
+```typescript
+trigger('feedList', [
+  transition('* => *', [
+    query(':enter', [
+      style({ opacity: 0, transform: 'translateY(20px)' }),
+      stagger(60, [animate('300ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))]),
+    ], { optional: true }),
+  ]),
+])
+```
+
+**Reduced motion:** disable the stagger, use a simple `opacity: 0 → 1` fade instead.
+
+---
+
+### Step 5: Skeleton → Content Fade
+
+Replace the abrupt skeleton-to-content swap on profile and recipe detail pages with a smooth cross-fade.
+
+**What to do:**
+
+**Modify** `src/app/tabs/profile/profile.page.html`:
+- Wrap the skeleton block and the content block each in a `[@fadeSwap]` trigger:
+  ```html
+  <div *ngIf="loading()" @fadeSwap><!-- skeleton --></div>
+  <div *ngIf="!loading()" @fadeSwap><!-- content --></div>
+  ```
+
+**Modify** `src/app/features/recipe/detail/recipe-detail.page.html`:
+- Same treatment on the recipe-detail skeleton/content pair
+
+**Define** `fadeSwap` animation (shared in a `core/animations/` file):
+```typescript
+export const fadeSwap = trigger('fadeSwap', [
+  transition(':enter', [
+    style({ opacity: 0 }),
+    animate('200ms 50ms ease-out', style({ opacity: 1 })),
+  ]),
+  transition(':leave', [
+    animate('150ms ease-in', style({ opacity: 0 })),
+  ]),
+]);
+```
+
+---
+
+### Step 6: Tab Bar Icon Bounce on Tap
+
+Give the active tab icon a subtle scale bounce so tapping feels registered even before the page transitions.
+
+**What to do:**
+
+**Modify** `src/app/tabs/tabs.page.html`:
+- Add a `(click)` handler per tab button that sets an `activatingTab` signal
+- Add `[class.tab-bouncing]="activatingTab() === 'feed'"` (etc.) to each `ion-tab-button`
+
+**Modify** `src/app/tabs/tabs.page.scss`:
+```scss
+ion-tab-button.tab-bouncing ion-icon {
+  animation: tabBounce 0.25s ease-out;
+}
+@keyframes tabBounce {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+```
+- Clear `activatingTab` after 250ms in the click handler
+
+---
+
+### Step 7: Pull-to-Refresh Custom Animation
+
+Give the pull-to-refresh indicator the brand's terracotta color instead of the default Ionic grey.
+
+**What to do:**
+
+**Modify** feed and profile page scss:
+```scss
+ion-refresher {
+  --color: var(--ion-color-primary); // terracotta
+}
+ion-refresher-content {
+  --refreshing-spinner: crescent;
+}
+```
+
+This is purely a CSS theme change — no Angular animations required — but it makes the brand feel cohesive.
+
+---
+
+### Step 8: Reduced Motion Audit
+
+**What to do:**
+
+- Add a global `prefers-reduced-motion` block to `src/global.scss`:
+  ```scss
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+  ```
+- Review every animation added in this phase and confirm it degrades gracefully (content is visible, interactions still work, just without motion)
+
+---
+
+### Files to create / modify
+
+| File | Change |
+|---|---|
+| `src/app/core/animations/route-animations.ts` | NEW — shared `routeAnimations` trigger |
+| `src/app/core/animations/fade-swap.animation.ts` | NEW — `fadeSwap` trigger |
+| `src/app/app.component.html` | Add `[@routeAnimations]` binding |
+| `src/app/app.component.ts` | Import `BrowserAnimationsModule`, `getRouteAnimationData()` helper |
+| `src/app/app.module.ts` | Add `BrowserAnimationsModule` |
+| `src/app/shared/components/recipe-card/recipe-card.component.ts` | `cardEntrance` host binding + animation |
+| `src/app/shared/components/recipe-card/recipe-card.component.scss` | `heartPop`, `bookmarkBounce` keyframes |
+| `src/app/features/recipe/detail/recipe-detail.page.html` | `fadeSwap` on skeleton/content, `heartPop`/`bookmarkBounce` on buttons |
+| `src/app/features/recipe/detail/recipe-detail.page.scss` | Animation styles |
+| `src/app/tabs/feed/feed.page.html` | `feedList` stagger trigger |
+| `src/app/tabs/feed/feed.page.ts` | `feedList` animation import |
+| `src/app/tabs/profile/profile.page.html` | `fadeSwap` on skeleton/content |
+| `src/app/tabs/tabs.page.html` | Tab bounce click handler |
+| `src/app/tabs/tabs.page.ts` | `activatingTab` signal + clearance timer |
+| `src/app/tabs/tabs.page.scss` | `tabBounce` keyframe |
+| `src/global.scss` | `prefers-reduced-motion` global override |
+
+---
+
+### Verification checklist
+
+- [ ] `ng build` passes — zero errors
+- [ ] Forward navigation (feed → recipe detail): page slides in from right
+- [ ] Back navigation: page slides back to right, previous page slides in from left
+- [ ] Like button: heart pops on tap (scale up/down), color transitions smoothly
+- [ ] Save button: bookmark bounces on tap
+- [ ] Feed load: cards entrance-animate with stagger
+- [ ] Profile page: skeleton fades out, content fades in
+- [ ] Recipe detail: same skeleton→content fade
+- [ ] Tab bar: active tab icon bounces on tap
+- [ ] Pull-to-refresh: spinner uses brand terracotta color
+- [ ] `prefers-reduced-motion: reduce` in DevTools → all animations disabled, content visible and functional
