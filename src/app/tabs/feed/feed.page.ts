@@ -228,7 +228,7 @@ export class FeedPage implements ViewWillEnter {
   }
 
   private async _showToast(message: string): Promise<void> {
-    const toast = await this.toastCtrl.create({ message, duration: 2500, position: 'bottom' });
+    const toast = await this.toastCtrl.create({ message, duration: 2500, position: 'bottom', positionAnchor: 'main-tab-bar' });
     await toast.present();
   }
 

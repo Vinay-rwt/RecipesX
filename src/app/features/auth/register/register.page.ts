@@ -43,6 +43,7 @@ export class RegisterPage {
       await this.authService.register(email, password.trim() ? password : '', displayName.trim());
       this.router.navigate(['/onboarding/equipment']);
     } catch (err: unknown) {
+      console.error('[register] error:', err);
       this.errorMessage = this.mapFirebaseError(err);
     } finally {
       this.isLoading = false;

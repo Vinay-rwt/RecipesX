@@ -278,7 +278,7 @@ export class RecipeDetailPage implements ViewWillEnter {
       }
       this.isSaved.set(false);
       this.recipeService.patchCurrentRecipeCount('saveCount', -1);
-      const toast = await this.toastCtrl.create({ message: 'Removed from saves', duration: 2000, position: 'bottom' });
+      const toast = await this.toastCtrl.create({ message: 'Removed from saves', duration: 2000, position: 'bottom', positionAnchor: 'main-tab-bar' });
       await toast.present();
       return;
     }
@@ -343,12 +343,12 @@ export class RecipeDetailPage implements ViewWillEnter {
       await this.collectionService.addRecipeToCollection(uid, collectionId, recipe.id!, recipe.photoURLs?.[0]);
       await this.socialService.incrementSaveCount(recipe.id!);
       const colName = this.collectionService.collections().find(c => c.id === collectionId)?.name;
-      const toast = await this.toastCtrl.create({ message: colName ? `Saved to "${colName}"` : 'Saved', duration: 2000, position: 'bottom' });
+      const toast = await this.toastCtrl.create({ message: colName ? `Saved to "${colName}"` : 'Saved', duration: 2000, position: 'bottom', positionAnchor: 'main-tab-bar' });
       await toast.present();
     } else {
       // Uncategorized save — write to saves/ bucket
       await this.socialService.saveToUncategorized(uid, recipe.id!);
-      const toast = await this.toastCtrl.create({ message: 'Saved', duration: 2000, position: 'bottom' });
+      const toast = await this.toastCtrl.create({ message: 'Saved', duration: 2000, position: 'bottom', positionAnchor: 'main-tab-bar' });
       await toast.present();
     }
     this.isSaved.set(true);

@@ -38,6 +38,7 @@ export class LoginPage {
       await this.authService.login(email, password);
       this.router.navigate(['/tabs/feed']);
     } catch (err: unknown) {
+      console.error('[login] error:', err);
       this.errorMessage = this.mapFirebaseError(err);
     } finally {
       this.isLoading = false;

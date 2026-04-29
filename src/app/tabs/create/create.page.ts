@@ -265,7 +265,7 @@ export class CreatePage implements ViewWillEnter, ViewWillLeave {
   }
 
   private async showToast(message: string, color = 'medium'): Promise<void> {
-    const toast = await this.toastCtrl.create({ message, duration: 2000, color, position: 'bottom' });
+    const toast = await this.toastCtrl.create({ message, duration: 2000, color, position: 'bottom', positionAnchor: 'main-tab-bar' });
     await toast.present();
   }
 }
