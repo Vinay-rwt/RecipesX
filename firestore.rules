@@ -3,22 +3,58 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Users: any authenticated user can read profiles, only owner can write
+    // ─── Helpers ────────────────────────────────────────────────────────────
+    // Returns true if the request only changes the listed counter field by ±1.
+    function onlyCounterDelta(field) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly([field])
+        && (request.resource.data[field] == resource.data[field] + 1
+            || request.resource.data[field] == resource.data[field] - 1);
+    }
+
+    // Users: any authenticated user can read profiles. Owner can write any
+    // field (subject to size guards). Non-owner can ONLY shift the target's
+    // followersCount by ±1, and only as part of the same transaction that
+    // creates/deletes the corresponding /followers/{auth.uid} document — this
+    // ties the counter delta to a real follow action and prevents loop abuse.
     match /users/{userId} {
       allow read: if request.auth != null;
+
       allow create: if request.auth.uid == userId;
+
       allow update: if request.auth != null
         && (
-          // Owner can update any field
-          request.auth.uid == userId
-          // Non-owner may only touch followersCount (±1) and updatedAt
+          (request.auth.uid == userId
+            && (!('bio' in request.resource.data)
+                || request.resource.data.bio == null
+                || request.resource.data.bio.size() <= 500)
+            && (!('displayName' in request.resource.data)
+                || request.resource.data.displayName.size() > 0
+                && request.resource.data.displayName.size() <= 100)
+            && (!('websiteUrl' in request.resource.data)
+                || request.resource.data.websiteUrl == null
+                || request.resource.data.websiteUrl.size() <= 200)
+            && (!('location' in request.resource.data)
+                || request.resource.data.location == null
+                || request.resource.data.location.size() <= 100))
+
+          // Non-owner: only followersCount + updatedAt, ±1, and tied to an
+          // actual followers/{auth.uid} doc lifecycle in the same transaction.
           || (
             request.resource.data.diff(resource.data).affectedKeys()
               .hasOnly(['followersCount', 'updatedAt'])
-            && (request.resource.data.followersCount == resource.data.followersCount + 1
-                || request.resource.data.followersCount == resource.data.followersCount - 1)
+            && (
+              // Following: counter goes up by 1 AND the followers/{auth.uid}
+              // doc must exist after the transaction.
+              (request.resource.data.followersCount == resource.data.followersCount + 1
+                && existsAfter(/databases/$(database)/documents/users/$(userId)/followers/$(request.auth.uid)))
+              // Unfollowing: counter goes down by 1 AND the followers/{auth.uid}
+              // doc must NOT exist after the transaction.
+              || (request.resource.data.followersCount == resource.data.followersCount - 1
+                && !existsAfter(/databases/$(database)/documents/users/$(userId)/followers/$(request.auth.uid)))
+            )
           )
         );
+
       allow delete: if request.auth.uid == userId;
 
       // Likes subcollection: only the owning user
@@ -36,17 +72,24 @@ service cloud.firestore {
         allow read, write: if request.auth.uid == userId;
       }
 
-      // Following: the follower writes their own entry (userId == current user)
+      // Following: the follower writes their own entry (path's userId is the follower).
+      // Body must be exactly { createdAt: <timestamp> } — no extra fields, no spoofing.
       match /following/{followedUserId} {
         allow read: if request.auth != null;
-        allow write: if request.auth.uid == userId;
+        allow create: if request.auth.uid == userId
+          && request.resource.data.keys().hasOnly(['createdAt'])
+          && request.resource.data.createdAt is timestamp;
+        allow delete: if request.auth.uid == userId;
       }
 
       // Followers: any authenticated user may write/delete their own entry in
-      // anyone's followers list (followerUserId == the person doing the following)
+      // anyone's followers list (the entry id is the follower's uid).
       match /followers/{followerUserId} {
         allow read: if request.auth != null;
-        allow write: if request.auth.uid == followerUserId;
+        allow create: if request.auth.uid == followerUserId
+          && request.resource.data.keys().hasOnly(['createdAt'])
+          && request.resource.data.createdAt is timestamp;
+        allow delete: if request.auth.uid == followerUserId;
       }
     }
 
@@ -55,25 +98,34 @@ service cloud.firestore {
       allow read: if request.auth != null
         && (resource.data.status == 'published'
             || resource.data.authorId == request.auth.uid);
+
       allow create: if request.auth != null
-        && request.resource.data.authorId == request.auth.uid;
+        && request.resource.data.authorId == request.auth.uid
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.title.size() <= 200
+        && (request.resource.data.status == 'draft'
+            || request.resource.data.status == 'published');
+
+      // Update: author can write any field; non-author can ONLY adjust likeCount
+      // or saveCount by ±1 (one counter per write).
       allow update: if request.auth != null
         && (
-          // Author can update any field
           resource.data.authorId == request.auth.uid
-          // Any authenticated user can increment like/save counts
-          || request.resource.data.diff(resource.data).affectedKeys()
-             .hasOnly(['likeCount', 'saveCount'])
+          || onlyCounterDelta('likeCount')
+          || onlyCounterDelta('saveCount')
         );
+
       allow delete: if request.auth != null
         && resource.data.authorId == request.auth.uid;
-
     }
 
-    // Conversion matrix: read-only for authenticated users; seed script writes unauthenticated via emulator
+    // Conversion matrix: read-only for authenticated users.
+    // Writes are denied — seed scripts run server-side via the Admin SDK, which
+    // bypasses Firestore rules entirely. Never widen this in production.
     match /conversionMatrix/{entry} {
       allow read: if request.auth != null;
-      allow write: if true;
+      allow write: if false;
     }
 
     // Comments on a recipe
@@ -84,10 +136,17 @@ service cloud.firestore {
         && request.resource.data.body is string
         && request.resource.data.body.size() > 0
         && request.resource.data.body.size() <= 2000;
-      // Only vote counter fields may be updated (by any authenticated user via transaction)
+
+      // Vote counters: any authenticated user may shift score, upvotes, or
+      // downvotes by ±1 (one counter per write).
       allow update: if request.auth != null
-        && request.resource.data.diff(resource.data).affectedKeys()
-           .hasOnly(['score', 'upvotes', 'downvotes']);
+        && (
+          resource.data.authorId == request.auth.uid
+          || onlyCounterDelta('score')
+          || onlyCounterDelta('upvotes')
+          || onlyCounterDelta('downvotes')
+        );
+
       allow delete: if request.auth != null
         && resource.data.authorId == request.auth.uid;
 

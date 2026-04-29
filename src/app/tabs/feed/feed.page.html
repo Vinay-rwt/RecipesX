@@ -4,6 +4,7 @@
       <div class="app-wordmark">recipe<span>share</span></div>
     </div>
     <ion-searchbar
+      *ngIf="activeTab() === 'forYou'"
       [(ngModel)]="searchQuery"
       (ionInput)="onSearch()"
       [debounce]="400"

@@ -41,8 +41,24 @@
         {{ errorMessage }}
       </div>
 
+      <div class="info-banner" *ngIf="infoMessage" role="status">
+        <ion-icon name="mail-outline" aria-hidden="true"></ion-icon>
+        {{ infoMessage }}
+      </div>
+
       <ion-button expand="block" type="submit" [disabled]="loginForm.invalid || isLoading" class="ion-margin-top">
         {{ isLoading ? 'Signing in...' : 'Sign In' }}
+      </ion-button>
+
+      <ion-button
+        type="button"
+        expand="block"
+        fill="clear"
+        size="small"
+        [disabled]="isSendingReset"
+        (click)="onForgotPassword()"
+        class="forgot-password-btn">
+        {{ isSendingReset ? 'Sending…' : 'Forgot password?' }}
       </ion-button>
     </form>
 

@@ -74,6 +74,7 @@
         *ngIf="!isOwnProfile()"
         [fill]="isFollowing() ? 'outline' : 'solid'"
         class="follow-btn"
+        [disabled]="pending()"
         (click)="onToggleFollow()"
         [attr.aria-label]="isFollowing() ? 'Unfollow ' + p.displayName : 'Follow ' + p.displayName">
         {{ isFollowing() ? 'Following' : 'Follow' }}

@@ -9,10 +9,21 @@
  *
  * This script connects to the Firestore emulator at localhost:8080.
  * It uses the Firebase client SDK (not Admin SDK) for simplicity.
+ *
+ * !!! DO NOT RUN AGAINST PRODUCTION !!!
+ * This script targets the demo-recipeshare project on the local emulator only.
+ * Production conversionMatrix data is loaded server-side via the Admin SDK.
  */
 
 import { initializeApp } from 'firebase/app';
 import { getFirestore, connectFirestoreEmulator, doc, setDoc } from 'firebase/firestore';
+
+if (process.env['GOOGLE_APPLICATION_CREDENTIALS']) {
+  throw new Error(
+    'Refusing to seed: GOOGLE_APPLICATION_CREDENTIALS is set, which would route writes to a real Firebase project. ' +
+    'Unset it and run only against the local emulator.'
+  );
+}
 
 const app = initializeApp({
   apiKey: 'demo-key',

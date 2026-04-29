@@ -1,5 +1,5 @@
 <ion-header>
-  <ion-toolbar>
+  <ion-toolbar color="primary">
     <ion-title>RecipeShare</ion-title>
   </ion-toolbar>
 </ion-header>
@@ -42,11 +42,11 @@
           type="password"
           formControlName="password"
           labelPlacement="floating"
-          placeholder="At least 6 characters"
+          placeholder="At least 8 characters"
         ></ion-input>
       </ion-item>
       <div class="validation-error" *ngIf="registerForm.get('password')?.touched && registerForm.get('password')?.errors?.['minlength']">
-        Password must be at least 6 characters.
+        Password must be at least 8 characters.
       </div>
 
       <ion-item>

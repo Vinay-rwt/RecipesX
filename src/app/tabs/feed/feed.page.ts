@@ -228,20 +228,25 @@ export class FeedPage implements ViewWillEnter {
   }
 
   private async _showToast(message: string): Promise<void> {
-    const toast = await this.toastCtrl.create({ message, duration: 2500, position: 'bottom' });
+    const toast = await this.toastCtrl.create({ message, duration: 2500, position: 'bottom', positionAnchor: 'main-tab-bar' });
     await toast.present();
   }
 
   onSearch(): void {
+    // Search and filter controls only apply to the For You feed.
+    // The Following feed is the followed-users-only stream and ignores text/cuisine/difficulty filters.
+    if (this.activeTab() !== 'forYou') return;
     this.feedService.setFilters({ ...this.feedService.filters(), searchQuery: this.searchQuery || undefined });
   }
 
   onCuisineChange(value: string): void {
+    if (this.activeTab() !== 'forYou') return;
     this.selectedCuisine = value;
     this.feedService.setFilters({ ...this.feedService.filters(), cuisineType: value || undefined });
   }
 
   onDifficultyChange(value: string): void {
+    if (this.activeTab() !== 'forYou') return;
     this.selectedDifficulty = value;
     this.feedService.setFilters({ ...this.feedService.filters(), difficulty: (value as any) || undefined });
   }

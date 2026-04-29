@@ -1,7 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import {
-  Firestore, doc, getDoc, setDoc, deleteDoc,
-  collection, getDocs, updateDoc, increment, writeBatch,
+  Firestore, doc, getDoc, collection, getDocs,
+  increment, runTransaction, serverTimestamp,
 } from '@angular/fire/firestore';
 
 @Injectable({ providedIn: 'root' })
@@ -17,26 +17,28 @@ export class FollowService {
     const currentUserRef = doc(this.firestore, `users/${currentUserId}`);
     const targetUserRef  = doc(this.firestore, `users/${targetUserId}`);
 
-    const exists = (await getDoc(followingRef)).exists();
-    const batch = writeBatch(this.firestore);
-
-    if (exists) {
-      batch.delete(followingRef);
-      batch.delete(followerRef);
-      batch.update(currentUserRef, { followingCount: increment(-1), updatedAt: new Date() });
-      batch.update(targetUserRef,  { followersCount: increment(-1), updatedAt: new Date() });
-      await batch.commit();
-      this._followingIds.update(s => { const n = new Set(s); n.delete(targetUserId); return n; });
-      return false;
-    } else {
-      batch.set(followingRef, { createdAt: new Date() });
-      batch.set(followerRef,  { createdAt: new Date() });
-      batch.update(currentUserRef, { followingCount: increment(1), updatedAt: new Date() });
-      batch.update(targetUserRef,  { followersCount: increment(1), updatedAt: new Date() });
-      await batch.commit();
-      this._followingIds.update(s => new Set([...s, targetUserId]));
+    const nowFollowing = await runTransaction(this.firestore, async (tx) => {
+      const exists = (await tx.get(followingRef)).exists();
+      if (exists) {
+        tx.delete(followingRef);
+        tx.delete(followerRef);
+        tx.update(currentUserRef, { followingCount: increment(-1), updatedAt: serverTimestamp() });
+        tx.update(targetUserRef,  { followersCount: increment(-1), updatedAt: serverTimestamp() });
+        return false;
+      }
+      tx.set(followingRef, { createdAt: serverTimestamp() });
+      tx.set(followerRef,  { createdAt: serverTimestamp() });
+      tx.update(currentUserRef, { followingCount: increment(1), updatedAt: serverTimestamp() });
+      tx.update(targetUserRef,  { followersCount: increment(1), updatedAt: serverTimestamp() });
       return true;
-    }
+    });
+
+    this._followingIds.update(s => {
+      const n = new Set(s);
+      if (nowFollowing) n.add(targetUserId); else n.delete(targetUserId);
+      return n;
+    });
+    return nowFollowing;
   }
 
   async isFollowing(currentUserId: string, targetUserId: string): Promise<boolean> {
@@ -53,5 +55,9 @@ export class FollowService {
   async getFollowers(userId: string): Promise<string[]> {
     const snap = await getDocs(collection(this.firestore, `users/${userId}/followers`));
     return snap.docs.map(d => d.id);
+  }
+
+  clearOnLogout(): void {
+    this._followingIds.set(new Set());
   }
 }

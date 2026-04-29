@@ -6,14 +6,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { IonicModule, IonicRouteStrategy } from '@ionic/angular';
 import { provideFirebaseApp, initializeApp } from '@angular/fire/app';
 import { provideAuth, getAuth, connectAuthEmulator } from '@angular/fire/auth';
-import {
-  provideFirestore,
-  initializeFirestore,
-  connectFirestoreEmulator,
-  persistentLocalCache,
-  persistentMultipleTabManager,
-} from '@angular/fire/firestore';
-import { getApp } from '@angular/fire/app';
+import { provideFirestore, getFirestore, connectFirestoreEmulator } from '@angular/fire/firestore';
 import { provideStorage, getStorage, connectStorageEmulator } from '@angular/fire/storage';
 
 import { environment } from '../environments/environment';
@@ -35,15 +28,7 @@ import { AppComponent } from './app.component';
       return auth;
     }),
     provideFirestore(() => {
-      // initializeFirestore lets us set the cache strategy before any
-      // getFirestore() call. persistentLocalCache + persistentMultipleTabManager
-      // is the v9+ replacement for the deprecated enableIndexedDbPersistence —
-      // it handles multiple tabs correctly without throwing on tab 2+.
-      const firestore = initializeFirestore(getApp(), {
-        localCache: persistentLocalCache({
-          tabManager: persistentMultipleTabManager(),
-        }),
-      });
+      const firestore = getFirestore();
       if (environment.useEmulators) {
         connectFirestoreEmulator(firestore, 'localhost', 8080);
       }

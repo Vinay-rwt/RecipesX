@@ -80,3 +80,6 @@ design-options/
 # Stray npm artifacts
 npx
 recipe-share@*
+
+# Tooling output
+graphify-out/

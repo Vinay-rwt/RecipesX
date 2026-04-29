@@ -13,6 +13,7 @@ import {
   orderBy,
 } from '@angular/fire/firestore';
 import { Recipe, generateSearchTokens } from '../models/recipe.model';
+import { mapRecipeDoc } from '../utils/firestore-mapper';
 
 @Injectable({ providedIn: 'root' })
 export class RecipeService {
@@ -78,7 +79,7 @@ export class RecipeService {
     try {
       const docRef = doc(this.firestore, `recipes/${id}`);
       const snap = await getDoc(docRef);
-      this._currentRecipe.set(snap.exists() ? (snap.data() as Recipe) : null);
+      this._currentRecipe.set(snap.exists() ? mapRecipeDoc(snap) : null);
     } finally {
       this._loading.set(false);
     }
@@ -93,7 +94,7 @@ export class RecipeService {
         orderBy('updatedAt', 'desc'),
       );
       const snap = await getDocs(q);
-      this._myRecipes.set(snap.docs.map(d => d.data() as Recipe));
+      this._myRecipes.set(snap.docs.map(mapRecipeDoc));
     } finally {
       this._loading.set(false);
     }
@@ -118,12 +119,15 @@ export class RecipeService {
     if (!ids.length) return [];
     const fetches = ids.map(id => getDoc(doc(this.firestore, `recipes/${id}`)));
     const snaps = await Promise.all(fetches);
-    return snaps
-      .filter(s => s.exists())
-      .map(s => ({ ...(s.data() as Recipe), id: s.id }));
+    return snaps.filter(s => s.exists()).map(mapRecipeDoc);
   }
 
   clearCurrentRecipe(): void {
+    this._currentRecipe.set(null);
+  }
+
+  clearOnLogout(): void {
+    this._myRecipes.set([]);
     this._currentRecipe.set(null);
   }
 }

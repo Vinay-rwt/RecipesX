@@ -13,7 +13,8 @@
     "emulators": "firebase emulators:start",
     "dev": "concurrently \"npm run emulators\" \"npm run start\"",
     "seed:conversions": "npx ts-node --compiler-options '{\"module\":\"commonjs\"}' scripts/seed-conversion-matrix.ts",
-    "seed:recipes": "npx ts-node --compiler-options '{\"module\":\"commonjs\"}' scripts/seed-recipes.ts"
+    "seed:recipes": "npx ts-node --compiler-options '{\"module\":\"commonjs\"}' scripts/seed-recipes.ts",
+    "backfill:follow-counters": "npx ts-node --compiler-options '{\"module\":\"commonjs\"}' scripts/backfill-follow-counters.ts"
   },
   "private": true,
   "dependencies": {
@@ -60,6 +61,7 @@
     "eslint-plugin-import": "^2.29.1",
     "eslint-plugin-jsdoc": "^48.2.1",
     "eslint-plugin-prefer-arrow": "1.2.2",
+    "firebase-admin": "^13.0.0",
     "jasmine-core": "~5.1.0",
     "jasmine-spec-reporter": "~5.0.0",
     "karma": "~6.4.0",
@@ -67,6 +69,7 @@
     "karma-coverage": "~2.2.0",
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
+    "ts-node": "^10.9.2",
     "typescript": "~5.9.0"
   },
   "description": "An Ionic project"

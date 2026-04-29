@@ -84,6 +84,7 @@ export class CollectionDetailPage implements ViewWillEnter {
         message: `Removed from "${col.name}"`,
         duration: 2000,
         position: 'bottom',
+        positionAnchor: 'main-tab-bar',
       });
       await toast.present();
     } catch {
@@ -91,6 +92,7 @@ export class CollectionDetailPage implements ViewWillEnter {
         message: 'Failed to remove recipe',
         duration: 2000,
         position: 'bottom',
+        positionAnchor: 'main-tab-bar',
       });
       await toast.present();
     }

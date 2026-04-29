@@ -9,6 +9,8 @@ import {
   GoogleAuthProvider,
   signOut,
   updateProfile,
+  sendEmailVerification,
+  sendPasswordResetEmail,
   User,
 } from '@angular/fire/auth';
 import {
@@ -21,12 +23,20 @@ import {
 import { Observable, of } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { UserProfile } from '../models/user.model';
+import { RecipeService } from './recipe.service';
+import { FollowService } from './follow.service';
+import { CollectionService } from './collection.service';
+import { UserProfileService } from './user-profile.service';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private auth = inject(Auth);
   private firestore = inject(Firestore);
   private router = inject(Router);
+  private recipeService = inject(RecipeService);
+  private followService = inject(FollowService);
+  private collectionService = inject(CollectionService);
+  private userProfileService = inject(UserProfileService);
 
   /** Raw Firebase Auth state — emits null when not authenticated */
   readonly authState$ = authState(this.auth);
@@ -50,6 +60,21 @@ export class AuthService {
     const credential = await createUserWithEmailAndPassword(this.auth, email, password);
     await updateProfile(credential.user, { displayName });
     await this.createUserDoc(credential.user, displayName);
+    // Best-effort verification email — failure here shouldn't block account creation.
+    try { await sendEmailVerification(credential.user); } catch { /* swallow */ }
+  }
+
+  async resendVerificationEmail(): Promise<void> {
+    if (!this.auth.currentUser) throw new Error('Not signed in');
+    await sendEmailVerification(this.auth.currentUser);
+  }
+
+  async sendPasswordReset(email: string): Promise<void> {
+    await sendPasswordResetEmail(this.auth, email);
+  }
+
+  isEmailVerified(): boolean {
+    return !!this.auth.currentUser?.emailVerified;
   }
 
   async loginWithGoogle(): Promise<void> {
@@ -67,6 +92,12 @@ export class AuthService {
 
   async logout(): Promise<void> {
     await signOut(this.auth);
+    // Reset in-memory user-scoped state across services so the previous user's
+    // data isn't briefly visible to a subsequent (or same-process) login.
+    this.userProfileService.clearOnLogout();
+    this.recipeService.clearOnLogout();
+    this.followService.clearOnLogout();
+    this.collectionService.clearOnLogout();
     this.router.navigate(['/auth/login']);
   }
 
