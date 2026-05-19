@@ -80,3 +80,7 @@ design-options/
 # Stray npm artifacts
 npx
 recipe-share@*
+
+# graphify tool output — regenerated locally, not for commit
+graphify-out/
+src/graphify-out/

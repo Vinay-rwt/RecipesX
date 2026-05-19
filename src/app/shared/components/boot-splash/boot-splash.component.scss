@@ -1,0 +1,77 @@
+:host {
+  display: contents;
+}
+
+.boot-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fbf6ee; // warm cream — pairs with Lottie's tan/brown palette
+  opacity: 1;
+  transition: opacity 250ms ease-out;
+
+  &.fading-out {
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 24px;
+}
+
+.lottie-host {
+  width: min(280px, 70vw);
+  aspect-ratio: 407 / 347;
+}
+
+.static-logo {
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+  border-radius: 24px;
+}
+
+.wordmark {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--ion-color-primary, #c75d3e); // terracotta brand color, fallback hex
+  opacity: 0;
+  animation: wordmark-in 600ms ease-out 600ms forwards;
+}
+
+@keyframes wordmark-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Reduced-motion: skip the entrance keyframe; just show the wordmark immediately.
+.boot-splash.reduced-motion .wordmark {
+  animation: none;
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wordmark {
+    animation: none;
+    opacity: 1;
+  }
+  .boot-splash {
+    transition-duration: 200ms;
+  }
+}

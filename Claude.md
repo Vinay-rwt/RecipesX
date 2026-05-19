@@ -78,3 +78,12 @@
   rate limiting, SOLID principles, etc.)
 - Treat me as a developer who wants to understand the "why", not just the "what"
 - Never just dump code — always pair it with reasoning
+
+## graphify
+
+This project has a graphify knowledge graph at graphify-out/.
+
+Rules:
+- Before answering architecture or codebase questions, read graphify-out/GRAPH_REPORT.md for god nodes and community structure
+- If graphify-out/wiki/index.md exists, navigate it instead of reading raw files
+- After modifying code files in this session, run `graphify update .` to keep the graph current (AST-only, no API cost)
