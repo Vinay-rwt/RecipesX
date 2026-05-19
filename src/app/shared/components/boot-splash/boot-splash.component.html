@@ -1,0 +1,7 @@
+<div class="boot-splash" [class.fading-out]="fadingOut" [class.reduced-motion]="reducedMotion">
+  <div class="content">
+    <div #lottieHost class="lottie-host" *ngIf="!reducedMotion"></div>
+    <img *ngIf="reducedMotion" src="assets/icon/favicon.png" class="static-logo" alt="" />
+    <h1 class="wordmark">RecipeShare</h1>
+  </div>
+</div>

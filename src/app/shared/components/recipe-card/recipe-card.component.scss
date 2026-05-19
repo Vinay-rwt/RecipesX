@@ -189,6 +189,37 @@
   &:hover { color: var(--rs-text-secondary); }
   &.liked { color: var(--rs-like); }
   &.saved { color: var(--rs-save); }
+
+  // Heart pop on like — fires when .liked is applied. transform-origin centers the scale.
+  &.liked svg {
+    transform-origin: center;
+    animation: heartPop 0.35s ease-out;
+  }
+
+  // Bookmark bounce on save — small vertical lift then settle.
+  &.saved svg {
+    transform-origin: center;
+    animation: bookmarkBounce 0.3s ease-out;
+  }
+}
+
+@keyframes heartPop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.4); }
+  70%  { transform: scale(0.9); }
+  100% { transform: scale(1); }
+}
+
+@keyframes bookmarkBounce {
+  0%   { transform: translateY(0) scale(1); }
+  35%  { transform: translateY(-4px) scale(1.15); }
+  70%  { transform: translateY(2px) scale(0.95); }
+  100% { transform: translateY(0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .social-action.liked svg,
+  .social-action.saved svg { animation: none; }
 }
 
 .social-spacer { flex: 1; }

@@ -17,7 +17,7 @@
   </ion-header>
 
   <!-- Loading skeleton -->
-  <div *ngIf="profileService.loading()">
+  <div *ngIf="profileService.loading()" class="fade-swap">
     <div class="profile-hero-skeleton">
       <ion-skeleton-text animated style="width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 12px;"></ion-skeleton-text>
       <ion-skeleton-text animated style="width: 40%; height: 1.2rem; margin: 0 auto 8px;"></ion-skeleton-text>
@@ -32,7 +32,7 @@
     <ion-button fill="outline" (click)="loadData()">Retry</ion-button>
   </div>
 
-  <div class="profile-content" *ngIf="!profileService.loading() && !profileService.error() && profileService.userProfile() as profile">
+  <div class="profile-content fade-swap" *ngIf="!profileService.loading() && !profileService.error() && profileService.userProfile() as profile">
 
     <!-- Profile hero -->
     <div class="profile-hero">

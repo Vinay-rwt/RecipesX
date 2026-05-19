@@ -1,3 +1,4 @@
 <ion-app>
+  <app-boot-splash *ngIf="showBootSplash()" (done)="onBootSplashDone()"></app-boot-splash>
   <ion-router-outlet></ion-router-outlet>
 </ion-app>

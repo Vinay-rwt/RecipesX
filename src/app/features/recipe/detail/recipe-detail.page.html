@@ -18,7 +18,7 @@
 
 <ion-content>
   <!-- Loading -->
-  <div *ngIf="loading()" class="ion-padding">
+  <div *ngIf="loading()" class="ion-padding fade-swap">
     <ion-skeleton-text animated style="height: 200px; border-radius: 0;"></ion-skeleton-text>
     <ion-skeleton-text animated style="width: 60%; height: 1.5rem; margin-top: 1rem;"></ion-skeleton-text>
     <ion-skeleton-text animated style="width: 40%; height: 1rem; margin-top: 0.5rem;"></ion-skeleton-text>
@@ -35,7 +35,7 @@
     </ion-button>
   </div>
 
-  <ng-container *ngIf="!loading() && recipe() as r">
+  <div *ngIf="!loading() && recipe() as r" class="fade-swap">
     <!-- Cover photo -->
     <div class="cover-photo">
       <img *ngIf="r.photoURLs?.length" [src]="r.photoURLs[0]" [alt]="r.title" />
@@ -49,11 +49,11 @@
 
     <!-- Social actions bar -->
     <div class="social-bar ion-padding-horizontal">
-      <ion-button fill="clear" (click)="toggleLike()" [attr.aria-label]="(isLiked() ? 'Unlike' : 'Like') + ' recipe, ' + (r.likeCount || 0) + ' likes'">
+      <ion-button class="like-action" [class.liked]="isLiked()" fill="clear" (click)="toggleLike()" [attr.aria-label]="(isLiked() ? 'Unlike' : 'Like') + ' recipe, ' + (r.likeCount || 0) + ' likes'">
         <ion-icon slot="start" [name]="isLiked() ? 'heart' : 'heart-outline'" [color]="isLiked() ? 'danger' : 'medium'" aria-hidden="true"></ion-icon>
         <span aria-hidden="true">{{ r.likeCount || 0 }}</span>
       </ion-button>
-      <ion-button fill="clear" (click)="toggleSave()" [attr.aria-label]="(isSaved() ? 'Unsave' : 'Save') + ' recipe, ' + (r.saveCount || 0) + ' saves'">
+      <ion-button class="save-action" [class.saved]="isSaved()" fill="clear" (click)="toggleSave()" [attr.aria-label]="(isSaved() ? 'Unsave' : 'Save') + ' recipe, ' + (r.saveCount || 0) + ' saves'">
         <ion-icon slot="start" [name]="isSaved() ? 'bookmark' : 'bookmark-outline'" [color]="isSaved() ? 'primary' : 'medium'" aria-hidden="true"></ion-icon>
         <span aria-hidden="true">{{ r.saveCount || 0 }}</span>
       </ion-button>
@@ -338,7 +338,7 @@
     </div>
     <!-- ===== END COMMENT SECTION ===== -->
 
-  </ng-container>
+  </div>
   <!-- Share FAB -->
   <ion-fab vertical="bottom" horizontal="end" slot="fixed">
     <ion-fab-button (click)="onShare()" color="primary" *ngIf="recipe()" aria-label="Share this recipe">

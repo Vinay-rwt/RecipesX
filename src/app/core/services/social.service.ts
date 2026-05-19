@@ -8,7 +8,12 @@ import {
 export class SocialService {
   private firestore = inject(Firestore);
 
-  // Reactive set of uncategorized-saved recipe IDs — stays live across navigation
+  // Reactive sets of liked / uncategorized-saved recipe IDs — stay live across
+  // navigation so the feed and detail pages see each other's mutations without
+  // depending on ionViewWillEnter re-fetch timing.
+  private _likedIds = signal<Set<string>>(new Set());
+  readonly likedIds = this._likedIds.asReadonly();
+
   private _uncategorizedSaveIds = signal<Set<string>>(new Set());
   readonly uncategorizedSaveIds = this._uncategorizedSaveIds.asReadonly();
 
@@ -21,10 +26,12 @@ export class SocialService {
     if (exists) {
       await deleteDoc(likeRef);
       await updateDoc(recipeRef, { likeCount: increment(-1) });
+      this._likedIds.update(s => { const n = new Set(s); n.delete(recipeId); return n; });
       return false;
     } else {
       await setDoc(likeRef, { createdAt: new Date() });
       await updateDoc(recipeRef, { likeCount: increment(1) });
+      this._likedIds.update(s => new Set([...s, recipeId]));
       return true;
     }
   }
@@ -33,9 +40,17 @@ export class SocialService {
     return (await getDoc(doc(this.firestore, `users/${userId}/likes/${recipeId}`))).exists();
   }
 
+  /** Loads liked recipe IDs from Firestore and seeds the reactive signal. */
   async getUserLikes(userId: string): Promise<Set<string>> {
     const snap = await getDocs(collection(this.firestore, `users/${userId}/likes`));
-    return new Set(snap.docs.map(d => d.id));
+    const ids = new Set<string>(snap.docs.map(d => d.id));
+    this._likedIds.set(ids);
+    return ids;
+  }
+
+  clearSocialState(): void {
+    this._likedIds.set(new Set());
+    this._uncategorizedSaveIds.set(new Set());
   }
 
   // ── Saves — uncategorized bucket ─────────────────────────────────────────

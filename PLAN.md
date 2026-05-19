@@ -875,39 +875,112 @@ Add purposeful motion that makes the app feel alive without being distracting. T
 
 ---
 
-### Step 1: Page Transition Animations
+### Step 0: Branded Boot Animation
 
-Give navigation a spatial feel — pages slide in from the right on forward navigation and slide back out on back navigation, matching the mental model of a stack.
+Plays on every cold launch — a ~2.5s warm food-themed Lottie animation with the RecipeShare wordmark, then fades into the feed. Sets brand tone before the user sees anything else.
 
-**What to do:**
+**Asset:** `src/assets/lottie/boot-splash.json` (already in place — fast-food loading from LottieFiles by Mohamed Dahish, 407×347, 30fps, 74 frames = 2.47s, native warm beige/brown colors)
 
-**Modify** `src/app/app-routing.module.ts` (or create a shared `route-animations.ts`):
-- Define a `routeAnimations` trigger using Angular's `@angular/animations`:
-  ```typescript
-  export const routeAnimations = trigger('routeAnimations', [
-    transition('* => forward', [
-      query(':enter', [style({ transform: 'translateX(100%)', opacity: 0 }), animate('280ms ease-out', style({ transform: 'translateX(0)', opacity: 1 }))], { optional: true }),
-      query(':leave', [animate('280ms ease-out', style({ transform: 'translateX(-30%)', opacity: 0 }))], { optional: true }),
-    ]),
-    transition('* => back', [
-      query(':enter', [style({ transform: 'translateX(-30%)', opacity: 0 }), animate('280ms ease-out', style({ transform: 'translateX(0)', opacity: 1 }))], { optional: true }),
-      query(':leave', [animate('280ms ease-out', style({ transform: 'translateX(100%)', opacity: 0 }))], { optional: true }),
-    ]),
-  ]);
-  ```
-- Attach `[@routeAnimations]="getRouteAnimationData(outlet)"` to the `<ion-router-outlet>` in `app.component.html`
-- `getRouteAnimationData()` reads `outlet.activatedRouteData['animation']` (set per-route in the route config)
+**Install:**
+```bash
+npm install lottie-web @capacitor/splash-screen
+npx cap sync
+```
 
-**Modify** `src/app/app-routing.module.ts`:
-- Add `data: { animation: 'forward' }` to forward-going routes (feed → recipe detail, profile → edit)
-- Tab switches should NOT use slide transitions — they stay in place
+**Create** `src/app/shared/components/boot-splash/boot-splash.component.ts`:
+- Standalone component, no inputs, emits `(done)` when finished
+- On `ngAfterViewInit`: `lottie.loadAnimation({ container, loop: false, autoplay: true, path: 'assets/lottie/boot-splash.json' })`
+- Listen for `complete` event → 250ms fade-out → emit `done`
+- Safety: hard `setTimeout(emit done, 3000)` — covers misfires/blocked assets
+- Reduced-motion: skip Lottie entirely, render static logo + wordmark, hold 600ms, emit `done`
 
-**Respect reduced motion:**
-```scss
-@media (prefers-reduced-motion: reduce) {
-  [routerAnimation] { animation: none !important; }
+**Create** `boot-splash.component.html`:
+```html
+<div class="boot-splash" [class.fading-out]="fadingOut">
+  <div #lottieHost class="lottie-host" *ngIf="!reducedMotion"></div>
+  <img *ngIf="reducedMotion" src="assets/icon/favicon.png" class="static-logo" alt="" />
+  <h1 class="wordmark">RecipeShare</h1>
+</div>
+```
+
+**Create** `boot-splash.component.scss`:
+- Fixed full-screen overlay, `z-index: 9999`, background `#FBF6EE` (warm cream — pairs with the Lottie's warm tans, transitions cleanly into feed)
+- `.lottie-host` centered, max-width 280px
+- `.wordmark` terracotta (`var(--ion-color-primary)`), fades in at 600ms via `@keyframes wordmarkIn`
+- `.fading-out` → 250ms opacity → 0
+- `@media (prefers-reduced-motion: reduce)` overrides everything to a single 600ms fade
+
+**Modify** `src/app/app.component.ts`:
+- Add `showBootSplash = signal(true)` (cold-boot only — components reconstruct on cold launch by definition, so no sessionStorage flag needed)
+- After splash mounts, call `SplashScreen.hide({ fadeOutDuration: 0 })` so native splash hands off seamlessly
+- `onBootSplashDone()` sets `showBootSplash.set(false)`
+
+**Modify** `src/app/app.component.html`:
+```html
+<ion-app>
+  <app-boot-splash *ngIf="showBootSplash()" (done)="onBootSplashDone()" />
+  <ion-router-outlet></ion-router-outlet>
+</ion-app>
+```
+
+**Modify** `capacitor.config.ts`:
+```typescript
+plugins: {
+  SplashScreen: {
+    launchShowDuration: 0,        // we hide manually
+    backgroundColor: '#FBF6EE',   // matches boot-splash bg → no flash
+    androidScaleType: 'CENTER_CROP',
+    showSpinner: false,
+  },
 }
 ```
+
+**Reduced motion:** component reads `window.matchMedia('(prefers-reduced-motion: reduce)').matches` once on init.
+
+**Files added/modified:**
+
+| File | Change |
+|---|---|
+| `src/assets/lottie/boot-splash.json` | NEW — Lottie asset (placed) |
+| `src/app/shared/components/boot-splash/boot-splash.component.ts` | NEW |
+| `src/app/shared/components/boot-splash/boot-splash.component.html` | NEW |
+| `src/app/shared/components/boot-splash/boot-splash.component.scss` | NEW |
+| `src/app/app.component.ts` | Mount/dismiss splash, hide native splash |
+| `src/app/app.component.html` | Render `<app-boot-splash>` |
+| `capacitor.config.ts` | SplashScreen plugin config |
+| `package.json` | Add `lottie-web`, `@capacitor/splash-screen` |
+
+**Verification:**
+- [ ] Cold launch: cream background → Lottie plays once → wordmark fades in → all fades out → feed appears
+- [ ] No white flash between native splash and Angular boot
+- [ ] Reduced-motion (DevTools → Rendering → Emulate prefers-reduced-motion: reduce): static logo + wordmark for 600ms, then fade
+- [ ] 3s safety timer: rename `boot-splash.json` → splash still dismisses gracefully
+
+---
+
+### Step 1: Page Transition Animations — IMPLEMENTED via Ionic mode (Option A)
+
+**Decision (2026-05-19):** The original plan layered Angular `@angular/animations` on top of `<ion-router-outlet>`. Rejected because `ion-router-outlet` already runs its own native page-transition machinery — stacking Angular animations on top fights the framework, breaks the iOS swipe-back gesture, and behaves inconsistently with nested tab outlets.
+
+**What we did instead:** set `mode: 'ios'` on `IonicModule.forRoot()` in `src/app/app.module.ts`. Ionic applies iOS-style slide-from-right transitions on both iOS and Android, suppresses slides on tab switches, gives us the swipe-back gesture for free on iOS, and respects `prefers-reduced-motion` out of the box.
+
+```typescript
+// src/app/app.module.ts
+imports: [BrowserModule, IonicModule.forRoot({ mode: 'ios' }), AppRoutingModule],
+```
+
+**Why this beat the original plan:**
+- 1 line instead of ~40 + per-route `data: { animation: 'forward' }` metadata
+- No risk of fighting `ion-router-outlet`'s internals or nested tab outlets
+- Free iOS swipe-back gesture
+- Battle-tested timing curves designed by the Ionic team
+- Reduced-motion already handled by Ionic
+
+**Verification:**
+- [x] Forward navigation (feed → recipe detail): page slides in from right
+- [x] Back navigation: page slides back out to right
+- [x] Tab switches: no slide (Ionic suppresses for `ion-tabs`)
+- [x] Build passes
 
 ---
 
@@ -962,161 +1035,200 @@ Mirror the like animation for the bookmark/save button — a brief vertical boun
 
 ---
 
-### Step 4: Feed Card Entrance Animation (Staggered)
+### Step 4: Feed Card Entrance Animation (Staggered) — IMPLEMENTED with CSS-only stagger
 
-Cards should appear as if sliding up from just below their natural position when the feed first loads, staggered slightly per card.
+**Decision (2026-05-19):** The original plan used Angular animations (`trigger`/`stagger`/`query`). Rejected because (a) it requires `BrowserAnimationsModule` (+30KB runtime), and (b) the `'* => *'` parent trigger re-fires on every list change, replaying the entrance on every like/save/infinite-scroll batch.
 
-**What to do:**
+**What we did instead:** pure CSS keyframes with a `--card-index` custom property bound from the `*ngFor` index. The animation plays once per card lifetime; later mutations to the recipe list don't replay it because `trackBy: trackByRecipeId` keeps DOM nodes stable.
 
-**Modify** `src/app/shared/components/recipe-card/recipe-card.component.ts`:
-- Add a `@HostBinding('@cardEntrance')` that fires when the component is created:
-  ```typescript
-  @HostBinding('@cardEntrance') readonly cardEntrance = true;
-  ```
-
-**Create** animation in `recipe-card.component.ts`:
-```typescript
-animations: [
-  trigger('cardEntrance', [
-    transition(':enter', [
-      style({ opacity: 0, transform: 'translateY(24px)' }),
-      animate('320ms cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-        style({ opacity: 1, transform: 'translateY(0)' })),
-    ]),
-  ]),
-]
+```html
+<!-- src/app/tabs/feed/feed.page.html (both For You and Following feeds) -->
+<app-recipe-card
+  *ngFor="let recipe of feedService.recipes(); let i = index; trackBy: trackByRecipeId"
+  [style.--card-index]="i"
+  ... >
+</app-recipe-card>
 ```
 
-**Stagger in `feed.page.html`** — wrap the `*ngFor` with an `[@.disabled]="isLoading()"` + use `query` + `stagger` in a parent trigger on the list container:
 ```typescript
-trigger('feedList', [
-  transition('* => *', [
-    query(':enter', [
-      style({ opacity: 0, transform: 'translateY(20px)' }),
-      stagger(60, [animate('300ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))]),
-    ], { optional: true }),
-  ]),
-])
+// src/app/tabs/feed/feed.page.ts
+trackByRecipeId(_: number, recipe: Recipe): string { return recipe.id!; }
 ```
 
-**Reduced motion:** disable the stagger, use a simple `opacity: 0 → 1` fade instead.
+```scss
+// src/app/tabs/feed/feed.page.scss
+.feed-list app-recipe-card {
+  animation: card-enter 320ms cubic-bezier(0.25, 0.46, 0.45, 0.94) backwards;
+  animation-delay: min(calc(var(--card-index, 0) * 60ms), 720ms);
+}
+@keyframes card-enter {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .feed-list app-recipe-card {
+    animation: card-fade 200ms ease-out backwards;
+    animation-delay: 0ms;
+  }
+  @keyframes card-fade { from { opacity: 0; } to { opacity: 1; } }
+}
+```
+
+**Why this beat the original plan:**
+- No `BrowserAnimationsModule` dependency
+- `trackBy` + once-per-element CSS animation → no replays on like/save updates
+- Infinite scroll: new batch's cards animate, existing cards stay put
+- `min(...720ms)` caps the delay so the 100th card doesn't queue for 6 seconds
+- `animation-fill-mode: backwards` keeps cards invisible during their delay window (no pre-flash)
+
+**Verification:**
+- [x] Cards stagger up on initial feed load
+- [x] Like/save does not retrigger the animation
+- [x] Infinite scroll batches: only new cards animate
+- [x] Tab switch (For You ↔ Following): existing cards don't replay
+- [x] Reduced-motion: simple opacity fade, no stagger or translation
+- [x] Build passes
 
 ---
 
-### Step 5: Skeleton → Content Fade
+### Step 5: Skeleton → Content Fade — IMPLEMENTED with CSS utility class
 
-Replace the abrupt skeleton-to-content swap on profile and recipe detail pages with a smooth cross-fade.
+**Decision (2026-05-19):** Original plan used Angular animations with `:enter` and `:leave` transitions. Rejected for the same reasons as Step 4 — would require `BrowserAnimationsModule`, and the perceptual effect is achievable with a single CSS class.
 
-**What to do:**
+**What we did:** added a `.fade-swap` utility class to `global.scss` and applied it to the skeleton and content wrappers on both pages.
 
-**Modify** `src/app/tabs/profile/profile.page.html`:
-- Wrap the skeleton block and the content block each in a `[@fadeSwap]` trigger:
-  ```html
-  <div *ngIf="loading()" @fadeSwap><!-- skeleton --></div>
-  <div *ngIf="!loading()" @fadeSwap><!-- content --></div>
-  ```
-
-**Modify** `src/app/features/recipe/detail/recipe-detail.page.html`:
-- Same treatment on the recipe-detail skeleton/content pair
-
-**Define** `fadeSwap` animation (shared in a `core/animations/` file):
-```typescript
-export const fadeSwap = trigger('fadeSwap', [
-  transition(':enter', [
-    style({ opacity: 0 }),
-    animate('200ms 50ms ease-out', style({ opacity: 1 })),
-  ]),
-  transition(':leave', [
-    animate('150ms ease-in', style({ opacity: 0 })),
-  ]),
-]);
+```scss
+// src/global.scss
+.fade-swap { animation: fadeSwap 220ms ease-out 50ms backwards; }
+@keyframes fadeSwap { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .fade-swap { animation: none; } }
 ```
+
+```html
+<!-- profile.page.html -->
+<div *ngIf="profileService.loading()" class="fade-swap">…skeleton…</div>
+<div class="profile-content fade-swap" *ngIf="!profileService.loading() && …">…content…</div>
+
+<!-- recipe-detail.page.html -->
+<div *ngIf="loading()" class="ion-padding fade-swap">…skeleton…</div>
+<div *ngIf="!loading() && recipe() as r" class="fade-swap">…content…</div>
+```
+
+The outer `<ng-container *ngIf>` on recipe-detail was converted to `<div *ngIf class="fade-swap">` so the utility class has an element to attach to. No descendant selectors broke.
+
+**Why this beat the original plan:**
+- No animations module dependency
+- Reusable utility — available app-wide for any empty-state, error-state, etc.
+- Skeleton snaps out (Angular destroys it on `*ngIf=false`) but content fades in to mask the gap — perceptually a cross-fade
+
+**Verification:**
+- [x] Profile: skeleton appears with shimmer, content fades in on load
+- [x] Recipe detail: same behavior
+- [x] Reduced-motion: skeleton appears, content snaps in instantly
+- [x] Build passes
 
 ---
 
-### Step 6: Tab Bar Icon Bounce on Tap
+### Step 6: Tab Bar Icon Bounce on Tap — IMPLEMENTED
 
-Give the active tab icon a subtle scale bounce so tapping feels registered even before the page transitions.
+Active tab icon scales `1 → 1.3 → 1` on tap so the press feels registered before the page transition starts.
 
-**What to do:**
+**What we did:**
+- `tabs.page.ts`: added an `activatingTab` signal that holds the tapped tab name for 250ms, then clears. Pending timer is cancelled on rapid taps so the bounce always plays fresh.
+- `tabs.page.html`: each `<ion-tab-button>` gets `(click)="onTabTap(...)"` and `[class.tab-bouncing]="activatingTab() === '...'"`.
+- `tabs.page.scss`: `tabBounce` keyframe + reduced-motion override.
 
-**Modify** `src/app/tabs/tabs.page.html`:
-- Add a `(click)` handler per tab button that sets an `activatingTab` signal
-- Add `[class.tab-bouncing]="activatingTab() === 'feed'"` (etc.) to each `ion-tab-button`
-
-**Modify** `src/app/tabs/tabs.page.scss`:
 ```scss
 ion-tab-button.tab-bouncing ion-icon {
   animation: tabBounce 0.25s ease-out;
+  transform-origin: center;
 }
 @keyframes tabBounce {
-  0%   { transform: scale(1); }
-  50%  { transform: scale(1.3); }
-  100% { transform: scale(1); }
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.3); }
+}
+@media (prefers-reduced-motion: reduce) {
+  ion-tab-button.tab-bouncing ion-icon { animation: none; }
 }
 ```
-- Clear `activatingTab` after 250ms in the click handler
+
+**Verification:**
+- [x] Tap a tab → its icon bounces (250ms)
+- [x] Rapid double-tap on same tab → animation re-fires (timer cancels and restarts)
+- [x] Reduced-motion: no scale, just navigation
+- [x] Build passes
 
 ---
 
-### Step 7: Pull-to-Refresh Custom Animation
+### Step 7: Pull-to-Refresh Brand Color — IMPLEMENTED
 
-Give the pull-to-refresh indicator the brand's terracotta color instead of the default Ionic grey.
+Pull-to-refresh spinner uses brand terracotta and the `crescent` spinner style for a cleaner look.
 
-**What to do:**
+**What we did:** edited `feed.page.html` and `feed.page.scss` only — profile page has no refresher.
 
-**Modify** feed and profile page scss:
+```html
+<ion-refresher slot="fixed" (ionRefresh)="onRefresh($event)">
+  <ion-refresher-content refreshingSpinner="crescent"></ion-refresher-content>
+</ion-refresher>
+```
 ```scss
-ion-refresher {
-  --color: var(--ion-color-primary); // terracotta
-}
-ion-refresher-content {
-  --refreshing-spinner: crescent;
+ion-refresher { --color: var(--ion-color-primary); }
+```
+
+**Verification:**
+- [x] Pull-to-refresh shows terracotta spinner
+- [x] Build passes
+
+---
+
+### Step 8: Reduced Motion Audit — IMPLEMENTED (refined)
+
+**Decision (2026-05-19):** The original plan's `*, *::before, *::after { animation-duration: 0.01ms !important; ... }` was rejected because it (a) kills Ionic's own reduced-motion-aware page-transition timing, and (b) disables the loading-skeleton shimmer, which is informative even for motion-sensitive users.
+
+**What we did instead:**
+- Every per-feature animation in Phase 16 already has its own `@media (prefers-reduced-motion: reduce)` block (boot splash, heart pop, bookmark bounce, card entrance stagger, fade-swap, tab bounce).
+- Added a **defense-in-depth fallback** in `global.scss` that catches any future keyframe animation missing its own override — but explicitly preserves `ion-skeleton-text`, anything class-matching `skeleton`, and `ion-spinner` so loading affordances still work.
+
+```scss
+@media (prefers-reduced-motion: reduce) {
+  *:not(ion-skeleton-text):not([class*="skeleton"]):not(ion-spinner) {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }
 ```
 
-This is purely a CSS theme change — no Angular animations required — but it makes the brand feel cohesive.
+**Verification:**
+- [x] DevTools → Rendering → Emulate prefers-reduced-motion: reduce → all Phase 16 animations either disabled or reduced to a static fade
+- [x] Skeleton shimmer still animates (informative loading state preserved)
+- [x] Ionic page transitions still respect Ionic's own reduced-motion logic
+- [x] Build passes
 
 ---
 
-### Step 8: Reduced Motion Audit
-
-**What to do:**
-
-- Add a global `prefers-reduced-motion` block to `src/global.scss`:
-  ```scss
-  @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
-      animation-duration: 0.01ms !important;
-      animation-iteration-count: 1 !important;
-      transition-duration: 0.01ms !important;
-    }
-  }
-  ```
-- Review every animation added in this phase and confirm it degrades gracefully (content is visible, interactions still work, just without motion)
-
----
-
-### Files to create / modify
+### Files actually changed (final)
 
 | File | Change |
 |---|---|
-| `src/app/core/animations/route-animations.ts` | NEW — shared `routeAnimations` trigger |
-| `src/app/core/animations/fade-swap.animation.ts` | NEW — `fadeSwap` trigger |
-| `src/app/app.component.html` | Add `[@routeAnimations]` binding |
-| `src/app/app.component.ts` | Import `BrowserAnimationsModule`, `getRouteAnimationData()` helper |
-| `src/app/app.module.ts` | Add `BrowserAnimationsModule` |
-| `src/app/shared/components/recipe-card/recipe-card.component.ts` | `cardEntrance` host binding + animation |
-| `src/app/shared/components/recipe-card/recipe-card.component.scss` | `heartPop`, `bookmarkBounce` keyframes |
-| `src/app/features/recipe/detail/recipe-detail.page.html` | `fadeSwap` on skeleton/content, `heartPop`/`bookmarkBounce` on buttons |
-| `src/app/features/recipe/detail/recipe-detail.page.scss` | Animation styles |
-| `src/app/tabs/feed/feed.page.html` | `feedList` stagger trigger |
-| `src/app/tabs/feed/feed.page.ts` | `feedList` animation import |
-| `src/app/tabs/profile/profile.page.html` | `fadeSwap` on skeleton/content |
-| `src/app/tabs/tabs.page.html` | Tab bounce click handler |
-| `src/app/tabs/tabs.page.ts` | `activatingTab` signal + clearance timer |
-| `src/app/tabs/tabs.page.scss` | `tabBounce` keyframe |
-| `src/global.scss` | `prefers-reduced-motion` global override |
+| `src/assets/lottie/boot-splash.json` | NEW — Lottie animation (Step 0) |
+| `src/app/shared/components/boot-splash/boot-splash.component.{ts,html,scss}` | NEW — Step 0 component (Lottie + wordmark + reduced-motion branch) |
+| `src/app/app.component.{ts,html}` | Mount/dismiss boot splash, hide native splash (Step 0) |
+| `src/app/app.module.ts` | Declare BootSplashComponent; `IonicModule.forRoot({ mode: 'ios' })` (Step 1) |
+| `capacitor.config.ts` | SplashScreen plugin config (Step 0) |
+| `angular.json` | Allowlist `lottie-web` under `allowedCommonJsDependencies` (Step 0) |
+| `package.json` / `package-lock.json` | `lottie-web`, `@capacitor/splash-screen` (Step 0) |
+| `src/app/shared/components/recipe-card/recipe-card.component.scss` | `heartPop`, `bookmarkBounce` keyframes (Steps 2, 3) |
+| `src/app/features/recipe/detail/recipe-detail.page.html` | `class="like-action"`, `class="save-action"`, `fade-swap` wrappers (Steps 2, 3, 5) |
+| `src/app/features/recipe/detail/recipe-detail.page.scss` | Heart pop + bookmark bounce keyframes scoped to detail page (Steps 2, 3) |
+| `src/app/features/recipe/detail/recipe-detail.page.ts` | Inject FeedService/FollowingFeedService, `_patchAllCounts` helper (Step 2.5 — count divergence bug fix) |
+| `src/app/core/services/social.service.ts` | `_likedIds` reactive signal + updates from `toggleLike`/`getUserLikes` (Step 2.5) |
+| `src/app/tabs/feed/feed.page.ts` | `likedRecipes`/`savedRecipes` → computed, `trackByRecipeId` (Steps 2.5, 4) |
+| `src/app/tabs/feed/feed.page.html` | `[style.--card-index]`, `trackBy`, refresher `crescent` spinner (Steps 4, 7) |
+| `src/app/tabs/feed/feed.page.scss` | `card-enter` stagger keyframe, terracotta refresher (Steps 4, 7) |
+| `src/app/tabs/profile/profile.page.html` | `fade-swap` on skeleton/content (Step 5) |
+| `src/app/tabs/tabs.page.{ts,html,scss}` | `activatingTab` signal + click handlers + `tabBounce` keyframe (Step 6) |
+| `src/global.scss` | `.fade-swap` utility, refined reduced-motion fallback (Steps 5, 8) |
+| `PLAN.md` | This document — kept in sync with reality (all steps) |
 
 ---
 

@@ -32,7 +32,7 @@
 
 <ion-content>
   <ion-refresher slot="fixed" (ionRefresh)="onRefresh($event)">
-    <ion-refresher-content></ion-refresher-content>
+    <ion-refresher-content refreshingSpinner="crescent"></ion-refresher-content>
   </ion-refresher>
 
   <!-- ── FOR YOU TAB ─────────────────────────────────────────────────── -->
@@ -73,7 +73,8 @@
     <!-- Recipe feed -->
     <div class="feed-list" *ngIf="!feedService.error() && feedService.recipes().length > 0">
       <app-recipe-card
-        *ngFor="let recipe of feedService.recipes()"
+        *ngFor="let recipe of feedService.recipes(); let i = index; trackBy: trackByRecipeId"
+        [style.--card-index]="i"
         [recipe]="recipe"
         [showSocialActions]="true"
         [showAuthor]="true"
@@ -128,7 +129,8 @@
     <!-- Following feed -->
     <div class="feed-list" *ngIf="!followingFeedService.error() && followingFeedService.recipes().length > 0">
       <app-recipe-card
-        *ngFor="let recipe of followingFeedService.recipes()"
+        *ngFor="let recipe of followingFeedService.recipes(); let i = index; trackBy: trackByRecipeId"
+        [style.--card-index]="i"
         [recipe]="recipe"
         [showSocialActions]="true"
         [showAuthor]="true"

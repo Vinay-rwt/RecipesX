@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { Auth } from '@angular/fire/auth';
 import { ActionSheetController, AlertController, InfiniteScrollCustomEvent, RefresherCustomEvent, ToastController, ViewWillEnter } from '@ionic/angular';
 import { FeedService } from '../../core/services/feed.service';
@@ -27,8 +27,14 @@ export class FeedPage implements ViewWillEnter {
   private actionSheetCtrl = inject(ActionSheetController);
   private alertCtrl = inject(AlertController);
 
-  likedRecipes = signal<Set<string>>(new Set());
-  savedRecipes = signal<Set<string>>(new Set());
+  // Derived from SocialService + CollectionService so any mutation from the
+  // detail page (or anywhere else) is reflected here without re-fetching.
+  readonly likedRecipes = computed(() => this.socialService.likedIds());
+  readonly savedRecipes = computed(() => {
+    const uncategorized = this.socialService.uncategorizedSaveIds();
+    const fromCollections = this.collectionService.collections().flatMap(c => c.recipeIds);
+    return new Set<string>([...uncategorized, ...fromCollections]);
+  });
   activeTab = signal<'forYou' | 'following'>('forYou');
 
   searchQuery = '';
@@ -95,12 +101,11 @@ export class FeedPage implements ViewWillEnter {
     const uid = this.auth.currentUser?.uid;
     if (!uid) { this._showToast('Sign in to like recipes'); return; }
     try {
+      // SocialService.toggleLike updates its own reactive `likedIds` signal,
+      // which feeds the `likedRecipes` computed above — no manual set needed.
       const liked = await this.socialService.toggleLike(uid, recipeId);
-      const newSet = new Set(this.likedRecipes());
       const delta: 1 | -1 = liked ? 1 : -1;
-      if (liked) newSet.add(recipeId); else newSet.delete(recipeId);
       this._activeService().patchRecipeCount(recipeId, 'likeCount', delta);
-      this.likedRecipes.set(newSet);
     } catch {
       this._showToast('Could not update like — please try again');
     }
@@ -127,7 +132,10 @@ export class FeedPage implements ViewWillEnter {
       const collectionId = this.collectionService.findCollectionForRecipe(recipeId);
 
       if (collectionId) {
-        // Saved in a collection → remove from that collection only
+        // Saved in a collection → remove from that collection only.
+        // collectionService._collections and socialService.uncategorizedSaveIds
+        // are the source of truth for `savedRecipes` (computed); both are kept
+        // reactive by their service methods, so no manual set is needed here.
         await this.collectionService.removeRecipeFromCollection(uid, collectionId, recipeId);
         await this.socialService.decrementSaveCount(recipeId);
       } else {
@@ -135,9 +143,6 @@ export class FeedPage implements ViewWillEnter {
         await this.socialService.unsaveUncategorized(uid, recipeId);
       }
 
-      const newSet = new Set(this.savedRecipes());
-      newSet.delete(recipeId);
-      this.savedRecipes.set(newSet);
       this._activeService().patchRecipeCount(recipeId, 'saveCount', -1);
       this._showToast('Removed from saves');
     } catch {
@@ -214,9 +219,8 @@ export class FeedPage implements ViewWillEnter {
         this._showToast('Saved');
       }
 
-      const newSet = new Set(this.savedRecipes());
-      newSet.add(recipeId);
-      this.savedRecipes.set(newSet);
+      // savedRecipes is a computed over socialService + collectionService —
+      // both have already updated their reactive state above.
       this._activeService().patchRecipeCount(recipeId, 'saveCount', 1);
     } catch {
       this._showToast('Could not save recipe — please try again');
@@ -228,8 +232,14 @@ export class FeedPage implements ViewWillEnter {
   }
 
   private async _showToast(message: string): Promise<void> {
-    const toast = await this.toastCtrl.create({ message, duration: 2500, position: 'bottom' });
+    const toast = await this.toastCtrl.create({ message, duration: 2500, position: 'bottom', positionAnchor: 'main-tab-bar' });
     await toast.present();
+  }
+
+  // trackBy keeps DOM nodes stable across signal re-emits so the entrance
+  // animation plays once per recipe lifetime, not every time the list updates.
+  trackByRecipeId(_: number, recipe: Recipe): string {
+    return recipe.id!;
   }
 
   onSearch(): void {
@@ -261,19 +271,12 @@ export class FeedPage implements ViewWillEnter {
     const uid = this.auth.currentUser?.uid;
     if (!uid) return;
 
-    const [likes, uncategorizedSaves, collections] = await Promise.all([
+    // Each call seeds its own reactive signal; the `likedRecipes` /
+    // `savedRecipes` computeds above pick up the changes automatically.
+    await Promise.all([
       this.socialService.getUserLikes(uid),
       this.socialService.getUserSaves(uid),
       this.collectionService.loadCollections(uid),
     ]);
-
-    // savedRecipes = uncategorized saves ∪ all recipes in any collection
-    const collectionSaves = new Set(
-      this.collectionService.collections().flatMap(c => c.recipeIds)
-    );
-    const allSaved = new Set([...uncategorizedSaves, ...collectionSaves]);
-
-    this.likedRecipes.set(likes);
-    this.savedRecipes.set(allSaved);
   }
 }

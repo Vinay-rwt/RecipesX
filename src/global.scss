@@ -414,3 +414,43 @@ ion-back-button {
     margin: 0;
   }
 }
+
+// ─── Utility: fade-swap ─────────────────────────────────────────────────────
+// Apply to any element that appears via *ngIf to fade it in gently. Pairs well
+// with skeleton → content swaps where the skeleton snaps out on *ngIf=false
+// and the content fades in to mask the gap. 50ms initial delay lets layout
+// settle before the eye registers the fade.
+
+.fade-swap {
+  animation: fadeSwap 220ms ease-out 50ms backwards;
+}
+
+@keyframes fadeSwap {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fade-swap { animation: none; }
+}
+
+// ─── Reduced-motion safety net ──────────────────────────────────────────────
+// Per-feature animations each have their own `prefers-reduced-motion` blocks
+// (heart pop, bookmark bounce, card entrance, tab bounce, boot splash, etc.).
+// This is a defense-in-depth fallback for any future keyframe animation that
+// forgets to include one.
+//
+// Deliberately scoped — we DO NOT use the common `*, *::before, *::after`
+// nuke-everything override because it (a) kills Ionic's own reduced-motion-
+// aware page transitions, and (b) disables the loading-skeleton shimmer,
+// which is informative even for users sensitive to motion.
+
+@media (prefers-reduced-motion: reduce) {
+  // Catch any keyframe animation that didn't opt-in to its own reduced-motion
+  // override. We allow `ion-skeleton-text` to keep shimmering (it signals
+  // loading state) and let Ionic manage its own transitions.
+  *:not(ion-skeleton-text):not([class*="skeleton"]):not(ion-spinner) {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

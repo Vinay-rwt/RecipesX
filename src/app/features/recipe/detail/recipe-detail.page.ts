@@ -13,6 +13,8 @@ import { Comment, VoteValue } from '../../../core/models/comment.model';
 import { getEquipmentById, EQUIPMENT_TYPES } from '../../../core/models/equipment.model';
 import { Recipe } from '../../../core/models/recipe.model';
 import { CollectionService } from '../../../core/services/collection.service';
+import { FeedService } from '../../../core/services/feed.service';
+import { FollowingFeedService } from '../../../core/services/following-feed.service';
 
 @Component({
   selector: 'app-recipe-detail',
@@ -33,6 +35,8 @@ export class RecipeDetailPage implements ViewWillEnter {
   private alertCtrl = inject(AlertController);
   private toastCtrl = inject(ToastController);
   private commentService = inject(CommentService);
+  private feedService = inject(FeedService);
+  private followingFeedService = inject(FollowingFeedService);
   readonly collectionService = inject(CollectionService);
   readonly profileService = inject(UserProfileService);
 
@@ -165,7 +169,7 @@ export class RecipeDetailPage implements ViewWillEnter {
       this.comments.update(list => [created, ...list]);
       this.newCommentBody = '';
     } catch {
-      const toast = await this.toastCtrl.create({ message: 'Failed to post comment.', duration: 2500, color: 'danger' });
+      const toast = await this.toastCtrl.create({ message: 'Failed to post comment.', duration: 2500, color: 'danger', positionAnchor: 'main-tab-bar' });
       await toast.present();
     } finally {
       this.postingComment.set(false);
@@ -180,7 +184,7 @@ export class RecipeDetailPage implements ViewWillEnter {
       this.replyBody = '';
       this.replyingToId.set(null);
     } catch {
-      const toast = await this.toastCtrl.create({ message: 'Failed to post reply.', duration: 2500, color: 'danger' });
+      const toast = await this.toastCtrl.create({ message: 'Failed to post reply.', duration: 2500, color: 'danger', positionAnchor: 'main-tab-bar' });
       await toast.present();
     }
   }
@@ -253,13 +257,25 @@ export class RecipeDetailPage implements ViewWillEnter {
 
   // ──────────────────────────────────────────────────────────────────────────
 
+  /**
+   * Patch the optimistic count in every place a stale value could be shown:
+   * the detail page's currentRecipe AND both feed services' local lists.
+   * Without the feed-side patches, navigating back from detail shows a stale
+   * count until the next feed reload.
+   */
+  private _patchAllCounts(recipeId: string, field: 'likeCount' | 'saveCount', delta: 1 | -1): void {
+    this.recipeService.patchCurrentRecipeCount(field, delta);
+    this.feedService.patchRecipeCount(recipeId, field, delta);
+    this.followingFeedService.patchRecipeCount(recipeId, field, delta);
+  }
+
   async toggleLike(): Promise<void> {
     const uid = this.auth.currentUser?.uid;
     const recipeId = this.recipe()?.id;
     if (!uid || !recipeId) return;
     const liked = await this.socialService.toggleLike(uid, recipeId);
     this.isLiked.set(liked);
-    this.recipeService.patchCurrentRecipeCount('likeCount', liked ? 1 : -1);
+    this._patchAllCounts(recipeId, 'likeCount', liked ? 1 : -1);
   }
 
   async toggleSave(): Promise<void> {
@@ -277,8 +293,8 @@ export class RecipeDetailPage implements ViewWillEnter {
         await this.socialService.unsaveUncategorized(uid, recipe.id);
       }
       this.isSaved.set(false);
-      this.recipeService.patchCurrentRecipeCount('saveCount', -1);
-      const toast = await this.toastCtrl.create({ message: 'Removed from saves', duration: 2000, position: 'bottom' });
+      this._patchAllCounts(recipe.id, 'saveCount', -1);
+      const toast = await this.toastCtrl.create({ message: 'Removed from saves', duration: 2000, position: 'bottom', positionAnchor: 'main-tab-bar' });
       await toast.present();
       return;
     }
@@ -343,16 +359,16 @@ export class RecipeDetailPage implements ViewWillEnter {
       await this.collectionService.addRecipeToCollection(uid, collectionId, recipe.id!, recipe.photoURLs?.[0]);
       await this.socialService.incrementSaveCount(recipe.id!);
       const colName = this.collectionService.collections().find(c => c.id === collectionId)?.name;
-      const toast = await this.toastCtrl.create({ message: colName ? `Saved to "${colName}"` : 'Saved', duration: 2000, position: 'bottom' });
+      const toast = await this.toastCtrl.create({ message: colName ? `Saved to "${colName}"` : 'Saved', duration: 2000, position: 'bottom', positionAnchor: 'main-tab-bar' });
       await toast.present();
     } else {
       // Uncategorized save — write to saves/ bucket
       await this.socialService.saveToUncategorized(uid, recipe.id!);
-      const toast = await this.toastCtrl.create({ message: 'Saved', duration: 2000, position: 'bottom' });
+      const toast = await this.toastCtrl.create({ message: 'Saved', duration: 2000, position: 'bottom', positionAnchor: 'main-tab-bar' });
       await toast.present();
     }
     this.isSaved.set(true);
-    this.recipeService.patchCurrentRecipeCount('saveCount', 1);
+    this._patchAllCounts(recipe.id!, 'saveCount', 1);
   }
 
   navigateToEdit(): void {
@@ -441,6 +457,7 @@ export class RecipeDetailPage implements ViewWillEnter {
         message: 'Could not generate image. Sharing as text instead.',
         duration: 3000,
         color: 'warning',
+        positionAnchor: 'main-tab-bar',
       });
       await toast.present();
       await this.shareService.shareText(recipe);
@@ -453,6 +470,7 @@ export class RecipeDetailPage implements ViewWillEnter {
       message: 'Link copied to clipboard',
       duration: 2000,
       color: 'success',
+      positionAnchor: 'main-tab-bar',
     });
     await toast.present();
   }
